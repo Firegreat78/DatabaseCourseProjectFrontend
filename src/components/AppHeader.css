@@ -1,0 +1,84 @@
+/* src/components/AppHeader.css */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #d0ffd0;
+  padding: 10px 20px;
+  border-bottom: 1px solid #88cc88;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dollar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #4cd964;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-section h1 {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+  font-size: 16px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #333;
+  padding: 5px 10px;
+  border-right: 1px solid #88cc88;
+  transition: color 0.2s;
+}
+
+.nav-link:last-child {
+  border-right: none;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: #007bff;
+  font-weight: bold;
+}
+
+.user-icon {
+  font-size: 32px;
+  color: #4cd964;
+  cursor: pointer;
+}
+
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-link:hover .dollar-circle,
+.logo-link:hover h1 {
+  color: #007bff; /* или любая другая акцентная реакция */
+}
+
+.logo-link:hover .dollar-circle {
+  background-color: #33c455; /* чуть темнее при наведении */
+}

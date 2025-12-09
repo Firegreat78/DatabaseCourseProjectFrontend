@@ -1,0 +1,122 @@
+/* src/components/OffersPage.css */
+
+.offers-container {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f0fff0;
+}
+
+/* === ВЕРХНЯЯ ПАНЕЛЬ НАВИГАЦИИ === */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #d0ffd0;
+  padding: 10px 20px;
+  border-bottom: 1px solid #88cc88;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dollar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #4cd964;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-section h1 {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+  font-size: 16px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #333;
+  padding: 5px 10px;
+  border-right: 1px solid #88cc88;
+  transition: color 0.2s;
+}
+
+.nav-links a:last-child {
+  border-right: none;
+}
+
+.nav-links a:hover {
+  color: #007bff;
+}
+
+.user-icon {
+  font-size: 32px;
+  color: #4cd964;
+  cursor: pointer;
+}
+
+/* === ОСНОВНОЕ СОДЕРЖИМОЕ === */
+.content {
+  padding: 20px;
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+.page-title {
+  font-size: 28px;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.offers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.offer-item {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.offer-id {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.offer-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.offer-details span:first-child {
+  font-weight: bold;
+  flex-grow: 1;
+}

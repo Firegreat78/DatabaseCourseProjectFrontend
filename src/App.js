@@ -1,35 +1,29 @@
-import React, { useState } from "react";
-import TableView from "./components/TableView";
+// src/App.js
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import UserLogin from './components/UserLogin';
+import UserRegistration from './components/UserRegistration';
+import EmployeeLogin from './components/EmployeeLogin';
+import AccountsList from './components/AccountsList';
+import PortfolioPage from './components/PortfolioPage';
+import OffersPage from './components/OffersPage';
+import ExchangePage from './components/ExchangePage';
+
 
 function App() {
-  const [tableName, setTableName] = useState("depository_account_operation_type");
-
-  const tables = [
-    "depository_account_operation_type",
-    "brokerage_account_operation_type",
-    "proposal_type",
-    "verification_status",
-    "position",
-    "security",
-    "currency",
-    "bank",
-  ];
-
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Данные из базы</h1>
-      <select
-        value={tableName}
-        onChange={(e) => setTableName(e.target.value)}
-      >
-        {tables.map((t) => (
-          <option key={t} value={t}>
-            {t}
-          </option>
-        ))}
-      </select>
-      <TableView tableName={tableName} />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<UserLogin />} />
+        <Route path="/login" element={<UserLogin />} />
+        <Route path="/register" element={<UserRegistration />} />
+        <Route path="/employee-login" element={<EmployeeLogin />} />
+		<Route path="/accounts" element={<AccountsList />} />
+		<Route path="/portfolio" element={<PortfolioPage />} />
+		<Route path="/offers" element={<OffersPage />} /> 
+		<Route path="/exchange" element={<ExchangePage />} />
+      </Routes>
+    </Router>
   );
 }
 
