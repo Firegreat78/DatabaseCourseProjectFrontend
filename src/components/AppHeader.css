@@ -1,84 +1,258 @@
 /* src/components/AppHeader.css */
-
 .app-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 76px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.7);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #d0ffd0;
-  padding: 10px 20px;
-  border-bottom: 1px solid #88cc88;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.logo-section {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.dollar-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #4cd964;
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-section h1 {
-  font-size: 28px;
-  font-weight: bold;
-  margin: 0;
-  color: #333;
-}
-
-.nav-links {
-  display: flex;
-  gap: 20px;
-  font-size: 16px;
-}
-
-.nav-link {
-  text-decoration: none;
-  color: #333;
-  padding: 5px 10px;
-  border-right: 1px solid #88cc88;
-  transition: color 0.2s;
-}
-
-.nav-link:last-child {
-  border-right: none;
-}
-
-.nav-link:hover,
-.nav-link.active {
-  color: #007bff;
-  font-weight: bold;
-}
-
-.user-icon {
-  font-size: 32px;
-  color: #4cd964;
-  cursor: pointer;
+  padding: 0 2rem;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 .logo-link {
   text-decoration: none;
-  color: inherit;
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
-.logo-link:hover .dollar-circle,
-.logo-link:hover h1 {
-  color: #007bff; /* или любая другая акцентная реакция */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  position: relative;
 }
 
-.logo-link:hover .dollar-circle {
-  background-color: #33c455; /* чуть темнее при наведении */
+.logo-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+}
+
+.logo:hover .logo-icon {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+}
+
+.logo-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  filter: blur(20px);
+  opacity: 0;
+  transition: opacity 0.4s;
+  z-index: -1;
+}
+
+.logo:hover .logo-glow {
+  opacity: 0.4;
+}
+
+.logo-text {
+  font-size: 1.8rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+/* Навигация */
+.nav {
+  display: flex;
+  gap: 2.5rem;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  color: #64748b;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-item:hover {
+  color: #4c1d95;
+  transform: translateY(-2px);
+}
+
+.nav-item.active {
+  color: #667eea;
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background: #667eea;
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(102, 126, 234, 0.6);
+}
+
+/* Профиль */
+.profile-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: #f1f5f9;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: #64748b;
+}
+
+.profile-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: #e2e8f0;
+  border-radius: 14px;
+  transition: all 0.3s;
+}
+
+.profile-link:hover .profile-avatar {
+  background: #667eea;
+  color: white;
+  transform: scale(1.1);
+}
+
+.profile-avatar.active {
+  background: #667eea;
+  color: white;
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0 1rem;
+    height: 68px;
+  }
+
+  .nav {
+    gap: 1.5rem;
+  }
+
+  .nav-item span {
+    font-size: 0.85rem;
+  }
+
+  .logo-text {
+    font-size: 1.6rem;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem; /* расстояние между профилем и кнопкой выхода */
+}
+
+/* Кнопка "Выйти" */
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.logout-button:hover {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+  transform: translateY(-2px);
+}
+
+.logout-button:hover svg {
+  stroke: #dc2626;
+}
+
+/* Активное состояние (если нужно) */
+.logout-button:active {
+  transform: translateY(0);
+}
+
+/* Иконка внутри кнопки */
+.logout-button svg {
+  stroke-width: 2;
+  transition: stroke 0.3s ease;
+}
+
+/* Текст "Выйти" скрываем на мобильных — остаётся только иконка */
+.logout-text {
+  display: inline;
+}
+
+@media (max-width: 768px) {
+  .header-right {
+    gap: 1rem;
+  }
+
+  .logout-button {
+    padding: 0.5rem;
+    background: #f1f5f9;
+    border-radius: 14px;
+  }
+
+  .logout-button:hover {
+    background: rgba(220, 38, 38, 0.15);
+  }
+
+  /* Скрываем текст на мобильных — только иконка выхода */
+  .logout-text {
+    display: none;
+  }
+
+  /* Уменьшаем размер иконки на мобильных */
+  .logout-button svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Опционально: лёгкая анимация при наведении на весь правый блок */
+.header-right > *:hover {
+  /* Можно добавить лёгкий эффект, если хочешь */
 }

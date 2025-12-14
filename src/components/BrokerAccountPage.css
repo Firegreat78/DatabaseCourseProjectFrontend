@@ -1,0 +1,317 @@
+/* src/components/BrokerAccountPage.css */
+.broker-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.broker-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.account-card {
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  overflow: hidden;
+  margin-top: 2rem;
+}
+
+.card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.back-button {
+  position: absolute;
+  left: 1.5rem;
+  top: 1.5rem;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.back-button:hover {
+  background: rgba(255,255,255,0.3);
+  transform: translateX(-4px);
+}
+
+.card-header h1 {
+  font-size: 2rem;
+  margin: 0.5rem 0;
+  font-weight: 600;
+}
+
+.balance-section {
+  padding: 2rem;
+  text-align: center;
+  background: #f8fafc;
+}
+
+.account-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.balance-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.currency {
+  font-size: 2rem;
+  color: #64748b;
+}
+
+.amount {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.action-buttons {
+  padding: 1.5rem 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-deposit, .btn-withdraw {
+  flex: 1;
+  padding: 1rem;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  transition: all 0.3s;
+}
+
+.btn-deposit {
+  background: #10b981;
+  color: white;
+}
+
+.btn-deposit:hover {
+  background: #059669;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(16,185,129,0.3);
+}
+
+.btn-withdraw {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-withdraw:hover:not(:disabled) {
+  background: #dc2626;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(239,68,68,0.3);
+}
+
+.btn-withdraw:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
+}
+
+.transactions-section {
+  padding: 0 2rem 2rem;
+}
+
+.transactions-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #1e293b;
+  margin: 1.5rem 0 1rem;
+  font-size: 1.3rem;
+}
+
+.empty-state {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2rem;
+  font-style: italic;
+}
+
+.transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  margin-bottom: 0.8rem;
+  transition: all 0.2s;
+}
+
+.transaction-item:hover {
+  background: #eef2ff;
+  transform: translateX(4px);
+}
+
+.tx-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.tx-type {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.tx-id {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.tx-amount.positive {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.tx-amount.negative {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* Модалка */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 420px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.modal h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: #1e293b;
+}
+
+.icon-deposit { color: #10b981; }
+.icon-withdraw { color: #ef4444; }
+
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 1.2rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 1.5rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102,126,234,0.2);
+}
+
+.available {
+  text-align: center;
+  color: #64748b;
+  margin: 1rem 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 1rem;
+  background: #e2e8f0;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-confirm {
+  flex: 2;
+  padding: 1rem;
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-confirm.deposit {
+  background: #10b981;
+}
+
+.btn-confirm.withdraw {
+  background: #ef4444;
+}
+
+.content-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  text-align: center;
+  color: #64748b;
+}
+
+.not-found h2 {
+  margin: 1rem 0;
+}
+
+.btn-back {
+  margin-top: 1rem;
+  padding: 0.8rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
