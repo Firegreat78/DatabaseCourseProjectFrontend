@@ -1,158 +1,342 @@
-/* === ГЛАВНАЯ ОБЕРТКА === */
-.accounts-container {
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-  background-color: #f0fff0;
+/* src/components/AccountsList.css — финальная версия с отличным контрастом */
+
+.accounts-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding-bottom: 4rem;
 }
 
-/* === ВЕРХНЯЯ ПАНЕЛЬ НАВИГАЦИИ === */
-.app-header {
+.accounts-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* Заголовок страницы */
+.page-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  background-color: #d0ffd0;
-  padding: 10px 20px;
-  border-bottom: 1px solid #88cc88;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.logo-section {
-  display: flex;
   align-items: center;
-  gap: 10px;
+  margin-bottom: 2rem;
 }
 
-.dollar-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #4cd964;
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-section h1 {
-  font-size: 28px;
-  font-weight: bold;
+.page-header h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1e293b;
   margin: 0;
-  color: #333;
 }
 
-.nav-links {
+/* Новый контейнер для кнопки обновления и переключателя валюты */
+.header-actions {
   display: flex;
-  gap: 20px;
-  font-size: 16px;
+  align-items: center;
+  gap: 1rem; /* расстояние между элементами */
 }
 
-.nav-links a {
-  text-decoration: none;
-  color: #333;
-  padding: 5px 10px;
-  border-right: 1px solid #88cc88;
-  transition: color 0.2s;
-}
-
-.nav-links a:last-child {
-  border-right: none;
-}
-
-.nav-links a:hover {
-  color: #007bff;
-}
-
-.user-icon {
-  font-size: 32px;
-  color: #4cd964;
-  cursor: pointer;
-}
-
-/* === ОСНОВНОЕ СОДЕРЖИМОЕ === */
-.content {
-  padding: 20px;
-  max-width: 600px;
-  margin: 20px auto;
-}
-
-.balance-section {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.balance-section h2 {
-  font-size: 24px;
-  margin-bottom: 10px;
-}
-
-.balance-value {
-  font-size: 28px;
-  font-weight: bold;
+/* Кнопка обновления — яркая иконка + тёмный текст */
+.refresh-btn {
+  background: rgba(102, 126, 234, 0.18);
+  border: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-}
-
-.refresh-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
   cursor: pointer;
-  color: #555;
+  transition: all 0.3s ease;
+  color: #4c1d95;
 }
 
 .refresh-btn:hover {
-  color: #007bff;
+  background: #667eea;
+  ;
+  color: white;
+  transform: rotate(180deg) scale(1.05);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
 }
 
-.growth {
-  font-size: 18px;
-  margin-top: 5px;
+/* Карточка общего баланса */
+.total-balance-card {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.09);
+  margin-bottom: 2.5rem;
 }
 
-.positive {
-  color: #00cc00;
+.balance-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  color: #475569;
+  margin-bottom: 1.2rem;
+  font-weight: 600;
 }
 
-.negative {
-  color: #cc0000;
+.balance-header h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  color: #334155;
 }
 
-.accounts-list {
+.balance-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.7rem;
+  font-size: 4rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.balance-amount .currency {
+  font-size: 2.4rem;
+  color: #475569;
+  font-weight: 700;
+}
+
+.balance-hint {
+  color: #64748b;
+  margin-top: 1rem;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+/* Сетка счетов */
+.accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.8rem;
+}
+
+.account-card-link {
+  text-decoration: none;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.account-card-link:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.18);
+}
+
+.account-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 22px;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  justify-content: space-between;
 }
 
-.account-item {
+.card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
+  margin-bottom: 1.5rem;
 }
 
-.account-item.add-button {
+.account-number {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.arrow-icon {
+  color: #94a3b8;
+  transition: all 0.3s ease;
+}
+
+.account-card-link:hover .arrow-icon {
+  color: #667eea;
+  transform: translateX(8px);
+}
+
+.card-balance {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.card-balance .currency {
+  font-size: 1.8rem;
+  color: #475569;
+  font-weight: 700;
+}
+
+/* Кнопка "Добавить счёт" — максимальный контраст */
+.add-account {
+  border: 3px dashed #cbd5e1;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  font-size: 24px;
+  gap: 1.2rem;
   cursor: pointer;
-  color: #888;
-  transition: color 0.2s;
+  transition: all 0.3s ease;
+  color: #475569;
+  font-size: 1.15rem;
+  font-weight: 600;
 }
 
-.account-item.add-button:hover {
-  color: #007bff;
+.add-account:hover {
+  border-color: #667eea;
+  background: #eef2ff;
+  color: #4c1d95;
+  transform: translateY(-6px);
+  box-shadow: 0 15px 30px rgba(102, 126, 234, 0.2);
 }
 
-.amount {
-  font-weight: bold;
-  font-size: 20px;
+.add-icon {
+  width: 72px;
+  height: 72px;
+  background: #e0e7ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #667eea;
+  transition: all 0.3s;
+}
+
+.add-account:hover .add-icon {
+  background: #667eea;
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Адаптив */
+@media (max-width: 768px) {
+  .accounts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .balance-amount {
+    font-size: 3.4rem;
+  }
+
+  .balance-amount .currency {
+    font-size: 2rem;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .accounts-content {
+    padding: 1.5rem 1rem;
+  }
+
+  .total-balance-card {
+    padding: 2rem 1.5rem;
+  }
+}
+
+.currency-toggle {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 16px;
+  padding: 6px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.currency-btn {
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #64748b;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 52px;
+}
+
+.currency-btn:hover {
+  color: #4c1d95;
+}
+
+.currency-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Адаптив для переключателя и header-actions */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.2rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .currency-toggle {
+    flex: 1;
+    max-width: 140px;
+    justify-self: flex-end;
+  }
+
+  .currency-btn {
+    padding: 10px 16px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-actions {
+    gap: 0.8rem;
+  }
+
+  .refresh-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .currency-toggle {
+    padding: 4px;
+  }
+
+  .currency-btn {
+    padding: 8px 14px;
+  }
+}
+
+.loading-text {
+  font-size: 1.4rem;
+  color: #94a3b8;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.error-text {
+  font-size: 1.2rem;
+  color: #ef4444;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
