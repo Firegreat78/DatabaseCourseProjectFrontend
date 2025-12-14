@@ -8,6 +8,9 @@ import AccountsList from './components/AccountsList';
 import PortfolioPage from './components/PortfolioPage';
 import OffersPage from './components/OffersPage';
 import ExchangePage from './components/ExchangePage';
+import VerifierMainPage from './components/VerifierMain';
+import BrokerMainPage from './components/BrokerMain';
+import AdminMainPage from './components/AdminMain';
 
 
 function App() {
@@ -18,6 +21,9 @@ function App() {
         <Route path="/login" element={<UserLogin />} />
         <Route path="/register" element={<UserRegistration />} />
         <Route path="/employee-login" element={<EmployeeLogin />} />
+        <Route path="/verifier/main" element={<VerifierMainPage />} />
+        <Route path="/broker/main" element={<BrokerMainPage />} />
+        <Route path="/admin/main" element={<AdminMainPage />} />
 		<Route path="/accounts" element={<AccountsList />} />
 		<Route path="/portfolio" element={<PortfolioPage />} />
 		<Route path="/offers" element={<OffersPage />} /> 
