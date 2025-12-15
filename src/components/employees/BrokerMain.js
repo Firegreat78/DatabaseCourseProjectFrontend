@@ -3,11 +3,15 @@ import EmployeeHeader from "./EmployeeHeader";
 import "./AdminMain.css";
 import { useFetchTable } from "./useFetchTable";
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
+
+
 const BrokerMainPage = () => {
   const { user } = useAuth(); // токен и роль сотрудника
   const token = localStorage.getItem("authToken"); // можно взять из контекста
   const { data: deals, loading, error } = useFetchTable("brokerage_account", token);
-
+  const navigate = useNavigate();
   if (loading) return <div className="admin-content">Загрузка...</div>;
   if (error) return <div className="admin-content">Ошибка: {error}</div>;
 
@@ -22,17 +26,18 @@ const BrokerMainPage = () => {
 
         <div className="admin-list">
           {deals.map((deal) => (
-            <div key={deal.id} className="admin-row">
-              <div className="admin-left">
-                <div className="admin-id">ИД: {deal.id}</div>
-                <div className="admin-name">{deal.description || deal.account_name}</div>
-              </div>
-              <div className={`admin-action ${deal.status || "active"}`}>
-                {deal.status === "active" && "Активна"}
-                {deal.status === "blocked" && "Заблокирована"}
-                {deal.status === "suspended" && "Приостановлена"}
-              </div>
-            </div>
+            <div className="admin-row" key={deal.id} onClick={() => navigate(`/broker/deals/${deal.id}`)}>
+  <div className="admin-left">
+    <div className="admin-id">ID: {deal.id}</div>
+    <div className="admin-name">{deal.description}</div>
+  </div>
+  <div className={`admin-action ${deal.status}`}>
+    {deal.status === "active" && "Активна"}
+    {deal.status === "blocked" && "Заблокирована"}
+    {deal.status === "suspended" && "Приостановлена"}
+  </div>
+</div>
+
           ))}
         </div>
       </div>
