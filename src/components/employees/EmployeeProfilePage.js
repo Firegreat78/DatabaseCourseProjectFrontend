@@ -1,16 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import EmployeeHeader from './EmployeeHeader';
 import './EmployeeProfilePage.css';
-
-import {
-  User,
-  FileText,
-  ShieldCheck,
-  Briefcase,
-  LogOut,
-} from 'lucide-react';
+import { User, FileText, ShieldCheck, Briefcase, LogOut } from 'lucide-react';
 
 const roleMap = {
   1: 'Мегаадминистратор',
@@ -20,27 +13,55 @@ const roleMap = {
 };
 
 const EmployeeProfilePage = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const navigate = useNavigate();
 
-  if (!user) return null;
+  const [employeeData, setEmployeeData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // 🔧 Мок-данные (потом заменишь на API)
-  const employeeData = {
-    contractNumber: `EMP-${user.id}-2024`,
-    employmentStatus: 'Активен',
-    roleLevel: roleMap[user.role] || 'Неизвестно',
-  };
+  // ❌ useEffect больше не вызывается условно
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchEmployee = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/staff/${user.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error('Не удалось получить данные сотрудника');
+        const data = await res.json();
+        setEmployeeData({
+          contractNumber: data.contract_number,
+          employmentStatus: data.employment_status_id === 1 ? 'Активен' : 'Неактивен',
+          roleLevel: roleMap[data.rights_level] || 'Неизвестно',
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmployee();
+  }, [user, token]);
 
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
   };
 
+  if (!user) return <p>Пользователь не авторизован</p>;
+  if (loading) return <p>Загрузка...</p>;
+  if (!employeeData) return <p>Данные сотрудника недоступны</p>;
+
   return (
     <div className="employee-profile-page">
       <EmployeeHeader />
-
       <main className="employee-profile-content">
         <div className="employee-profile-card">
           <div className="employee-profile-header">

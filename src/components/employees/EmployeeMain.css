@@ -1,0 +1,75 @@
+.employee-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.user-item:hover {
+  transform: translateY(-2px);
+}
+
+.user-info {
+  font-weight: 500;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.status-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+/* Статусы */
+.status-indicator.active {
+  background-color: #10b981; /* зеленый */
+}
+.status-indicator.blocked {
+  background-color: #ef4444; /* красный */
+}
+.status-indicator.suspended {
+  background-color: #f59e0b; /* оранжевый */
+}
+
+/* Адаптив */
+@media (max-width: 640px) {
+  .employee-page {
+    padding: 1rem;
+  }
+
+  .user-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .status-indicator {
+    margin-top: 0.5rem;
+  }
+}

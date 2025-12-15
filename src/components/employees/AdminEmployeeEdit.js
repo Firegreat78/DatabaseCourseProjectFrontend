@@ -11,8 +11,7 @@ const roleOptions = [
   { value: 4, label: 'Верификатор' },
 ];
 
-
-
+const API_BASE_URL = 'http://localhost:8000';
 
 const AdminEmployeeEdit = () => {
   const { id } = useParams();
@@ -25,16 +24,29 @@ const availableRoles = user?.role === '1'
   : roleOptions.filter(r => r.value > 2); // только брокер и верификатор
 
   useEffect(() => {
-    // 🔧 mock загрузка
-    setForm({
-      id,
-      login: 'broker01',
-      password: '',
-      contractNumber: 'EMP-2024-001',
-      employmentStatus: 'Активен',
-      role: 3,
-    });
-  }, [id]);
+  const fetchStaffData = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/staff/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+      });
+      const data = await response.json();
+      setForm({
+        id: data.id,
+        login: data.login,
+        password: '', // не показываем пароль
+        contractNumber: data.contract_number,
+        role: data.rights_level,
+        employmentStatus: data.employment_status_id,
+      });
+    } catch (err) {
+      console.error('Ошибка загрузки сотрудника:', err);
+    }
+  };
+
+  fetchStaffData();
+}, [id]);
+
+
 
   if (!form) return null;
 
@@ -43,13 +55,28 @@ const availableRoles = user?.role === '1'
   };
 
   const handleSave = async () => {
-    setSaving(true);
+  setSaving(true);
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/staff/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      },
+      body: JSON.stringify(form),
+    });
 
-    // 👉 отправка на API
-    console.log('SAVE:', form);
+    if (!response.ok) throw new Error('Ошибка при обновлении');
 
-    setTimeout(() => setSaving(false), 800);
-  };
+    alert('Сотрудник успешно обновлён');
+  } catch (err) {
+    console.error(err);
+    alert('Не удалось обновить сотрудника');
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   return (
     <div className="admin-employee-edit">
@@ -112,7 +139,6 @@ const availableRoles = user?.role === '1'
 </select>
 
       </div>
-
       <button onClick={handleSave} disabled={saving}>
         {saving ? 'Сохранение...' : 'Сохранить изменения'}
       </button>
