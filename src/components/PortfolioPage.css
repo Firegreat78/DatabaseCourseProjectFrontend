@@ -1,159 +1,181 @@
 /* src/components/PortfolioPage.css */
 
 .portfolio-container {
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-  background-color: #f0fff0;
+  min-height: 100vh;
+  background: #f9fafb;
 }
 
-/* === ВЕРХНЯЯ ПАНЕЛЬ НАВИГАЦИИ (копия из AccountsList) === */
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: #d0ffd0;
-  padding: 10px 20px;
-  border-bottom: 1px solid #88cc88;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.logo-section {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.dollar-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #4cd964;
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-section h1 {
-  font-size: 28px;
-  font-weight: bold;
-  margin: 0;
-  color: #333;
-}
-
-.nav-links {
-  display: flex;
-  gap: 20px;
-  font-size: 16px;
-}
-
-.nav-links a {
-  text-decoration: none;
-  color: #333;
-  padding: 5px 10px;
-  border-right: 1px solid #88cc88;
-  transition: color 0.2s;
-}
-
-.nav-links a:last-child {
-  border-right: none;
-}
-
-.nav-links a:hover {
-  color: #007bff;
-}
-
-.user-icon {
-  font-size: 32px;
-  color: #4cd964;
-  cursor: pointer;
-}
-
-/* === ОСНОВНОЕ СОДЕРЖИМОЕ === */
 .content {
-  padding: 20px;
-  max-width: 600px;
-  margin: 20px auto;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
 }
 
-.account-info {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-.balance-section {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.balance-section h2 {
-  font-size: 24px;
-  margin-bottom: 10px;
-}
-
-.balance-value {
-  font-size: 28px;
-  font-weight: bold;
+.page-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  margin-bottom: 2.5rem;
+}
+
+.page-header h1 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
 }
 
 .refresh-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  color: #555;
+  color: #6b7280;
+  transition: all 0.2s ease;
 }
 
 .refresh-btn:hover {
-  color: #007bff;
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #374151;
 }
 
-.growth {
-  font-size: 18px;
-  margin-top: 5px;
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.positive {
-  color: #00cc00;
+.status-message {
+  text-align: center;
+  padding: 4rem 1rem;
+  font-size: 1.1rem;
+  color: #6b7280;
 }
 
-.negative {
-  color: #cc0000;
+.status-message.error {
+  color: #ef4444;
 }
 
-.assets-list {
+.empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: #6b7280;
+}
+
+.empty-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.empty-subtitle {
+  font-size: 1.05rem;
+}
+
+.securities-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1.2rem;
 }
 
-.asset-item {
+.security-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1.6rem;
+  transition: border-color 0.2s ease;
+}
+
+.security-card:hover {
+  border-color: #9ca3af;
+}
+
+.security-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.security-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.dividends-badge {
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: 8px;
+}
+
+.security-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.detail-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
+  font-size: 0.95rem;
 }
 
-.asset-item .ticker {
-  font-weight: bold;
-  font-size: 18px;
+.detail-row .label {
+  color: #9ca3af;
+  font-weight: 500;
 }
 
-.asset-item .quantity,
-.asset-item .price {
-  font-size: 16px;
+.detail-row .value {
+  color: #111827;
+  font-weight: 600;
+  text-align: right;
+}
+
+.isin {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.auth-message {
+  text-align: center;
+  padding: 6rem 1rem;
+  font-size: 1.1rem;
+  color: #6b7280;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Адаптив */
+@media (max-width: 768px) {
+  .security-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+
+  .detail-row .value {
+    text-align: left;
+  }
 }

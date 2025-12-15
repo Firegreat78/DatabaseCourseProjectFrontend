@@ -1,122 +1,171 @@
 /* src/components/OffersPage.css */
 
 .offers-container {
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-  background-color: #f0fff0;
+  min-height: 100vh;
+  background: #f9fafb;
 }
 
-/* === ВЕРХНЯЯ ПАНЕЛЬ НАВИГАЦИИ === */
-.app-header {
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.page-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  background-color: #d0ffd0;
-  padding: 10px 20px;
-  border-bottom: 1px solid #88cc88;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.logo-section {
-  display: flex;
   align-items: center;
-  gap: 10px;
+  margin-bottom: 2.5rem;
 }
 
-.dollar-circle {
+.page-header h1 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.refresh-btn {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  background-color: #4cd964;
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.logo-section h1 {
-  font-size: 28px;
-  font-weight: bold;
-  margin: 0;
-  color: #333;
-}
-
-.nav-links {
-  display: flex;
-  gap: 20px;
-  font-size: 16px;
-}
-
-.nav-links a {
-  text-decoration: none;
-  color: #333;
-  padding: 5px 10px;
-  border-right: 1px solid #88cc88;
-  transition: color 0.2s;
-}
-
-.nav-links a:last-child {
-  border-right: none;
-}
-
-.nav-links a:hover {
-  color: #007bff;
-}
-
-.user-icon {
-  font-size: 32px;
-  color: #4cd964;
   cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
 }
 
-/* === ОСНОВНОЕ СОДЕРЖИМОЕ === */
-.content {
-  padding: 20px;
-  max-width: 600px;
-  margin: 20px auto;
+.refresh-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #374151;
 }
 
-.page-title {
-  font-size: 28px;
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status-message {
   text-align: center;
-  margin-bottom: 20px;
-  color: #333;
+  padding: 4rem 1rem;
+  font-size: 1.1rem;
+  color: #6b7280;
+}
+
+.status-message.error {
+  color: #ef4444;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: #6b7280;
+}
+
+.empty-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.empty-subtitle {
+  font-size: 1.05rem;
 }
 
 .offers-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1.2rem;
 }
 
-.offer-item {
-  display: flex;
-  flex-direction: column;
-  padding: 15px;
+.offer-card {
   background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1.6rem;
+  transition: border-color 0.2s ease;
 }
 
-.offer-id {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 5px;
+.offer-card:hover {
+  border-color: #9ca3af;
+}
+
+.offer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.offer-type {
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: 10px;
+}
+
+.offer-type.покупка {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.offer-type.продажа {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.offer-ticker {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #111827;
 }
 
 .offer-details {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 0.8rem;
 }
 
-.offer-details span:first-child {
-  font-weight: bold;
-  flex-grow: 1;
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.detail-row .label {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.detail-row .value {
+  color: #111827;
+  font-weight: 600;
+}
+
+.auth-message {
+  text-align: center;
+  padding: 6rem 1rem;
+  font-size: 1.1rem;
+  color: #6b7280;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .offer-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
