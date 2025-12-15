@@ -1,0 +1,103 @@
+.employee-profile-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.employee-profile-content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.employee-profile-card {
+  background: white;
+  border-radius: 22px;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.09);
+  overflow: hidden;
+}
+
+.employee-profile-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+
+.employee-profile-header h1 {
+  margin: 0.6rem 0 0.3rem;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.employee-profile-header p {
+  opacity: 0.9;
+}
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.employee-info-list {
+  padding: 2rem;
+  display: grid;
+  gap: 1.4rem;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.info-row svg {
+  color: #667eea;
+}
+
+.label {
+  display: block;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.status.active {
+  color: #16a34a;
+}
+
+.employee-profile-actions {
+  padding: 2rem;
+}
+
+.btn-logout {
+  width: 100%;
+  background: transparent;
+  color: #ef4444;
+  border: 2px solid #fee2e2;
+  padding: 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+  background: #fee2e2;
+  transform: translateY(-2px);
+}

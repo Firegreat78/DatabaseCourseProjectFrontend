@@ -1,7 +1,7 @@
 // src/components/VerifierMain.jsx
 
 import React from 'react';
-import AppHeader from './AppHeader';
+import EmployeeHeader from './EmployeeHeader';
 import './VerifierMain.css';
 
 const VerifierMainPage = () => {
@@ -13,9 +13,7 @@ const VerifierMainPage = () => {
 
   return (
     <div className="employee-page">
-      <header className="app-header">
-        <AppHeader />
-      </header>
+      <EmployeeHeader />
       
       <main className="content">
         <h2 className="page-title">Управление пользователями</h2>

@@ -8,17 +8,20 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 // Компоненты
 import UserLogin from './components/UserLogin';
 import UserRegistration from './components/UserRegistration';
-import EmployeeLogin from './components/EmployeeLogin';
+import EmployeeLogin from './components/employees/EmployeeLogin';
 import AccountsList from './components/AccountsList';
 import PortfolioPage from './components/PortfolioPage';
 import OffersPage from './components/OffersPage';
 import ExchangePage from './components/ExchangePage';
-import VerifierMainPage from './components/VerifierMain';
-import BrokerMainPage from './components/BrokerMain';
-import AdminMainPage from './components/AdminMain';
+import VerifierMainPage from './components/employees/VerifierMain';
+import BrokerMainPage from './components/employees/BrokerMain';
+import AdminMainPage from './components/employees/AdminMain';
 import ProfilePage from './components/ProfilePage';
 import VerificationPage from './components/VerificationPage';
 import BrokerAccountPage from './components/BrokerAccountPage';
+import EmployeeProfilePage from './components/employees/EmployeeProfilePage';
+import AdminEmployeeEdit from './components/employees/AdminEmployeeEdit';
+import AdminEmployeeCreate from './components/employees/AdminEmployeeCreate';
 
 // Компонент для защиты роутов
 const ProtectedRoute = ({ children }) => {
@@ -67,6 +70,9 @@ function App() {
           <Route path="/verifier/main" element={<VerifierMainPage />} />
           <Route path="/broker/main" element={<BrokerMainPage />} />
           <Route path="/admin/main" element={<AdminMainPage />} />
+          <Route path="/employee/profile" element={<EmployeeProfilePage />} />
+          <Route path="/admin/employees/new" element={<AdminEmployeeCreate />} />
+          <Route path="/admin/employees/:id" element={<AdminEmployeeEdit />} />
 
           {/* Защищённые страницы — доступ только после логина */}
           <Route

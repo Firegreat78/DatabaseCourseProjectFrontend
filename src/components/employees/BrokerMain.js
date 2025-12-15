@@ -1,7 +1,7 @@
 // src/components/BrokerMain.jsx
 
 import React from 'react';
-import AppHeader from './AppHeader';
+import EmployeeHeader from './EmployeeHeader';
 import './BrokerMain.css';
 
 const BrokerMainPage = () => {
@@ -13,9 +13,7 @@ const BrokerMainPage = () => {
 
   return (
     <div className="employee-page">
-      <header className="app-header">
-        <AppHeader />
-      </header>
+      <EmployeeHeader />
       
       <main className="content">
         <h2 className="page-title">Ведение сделок</h2>
