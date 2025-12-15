@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from './AppHeader';
+import { useAuth } from '../context/AuthContext';
+
 import {
   User,
   Calendar,
@@ -16,6 +18,7 @@ import './VerificationPage.css';
 
 const VerificationPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth(); // user = { id, role, token }
 
   const [formData, setFormData] = useState({
     lastName: '',
@@ -26,9 +29,11 @@ const VerificationPage = () => {
     gender: 'м',
     birthDate: '',
     birthPlace: '',
+    registrationPlace: '',  // <-- добавлено
     issueDate: '',
     issuedBy: ''
   });
+
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -45,23 +50,41 @@ const VerificationPage = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setIsSubmitting(true);
+  e.preventDefault();
+  setError('');
+  setSuccess('');
+  setIsSubmitting(true);
 
-    try {
-      // Мок-отправка
-      await new Promise(res => setTimeout(res, 1800));
-
-      setSuccess('Верификация успешно отправлена! Ожидайте подтверждения в течение 1–3 дней.');
-      // setTimeout(() => navigate('/profile'), 3000);
-    } catch (err) {
-      setError('Ошибка отправки данных. Попробуйте позже.');
-    } finally {
+  try {
+    if (!user?.token) {
+      setError('Пользователь не авторизован');
       setIsSubmitting(false);
+      return;
     }
-  };
+
+    const response = await fetch('http://localhost:8000/api/passport', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.token}`, // <-- токен из контекста
+      },
+      body: JSON.stringify(formData)
+    });
+
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.detail || 'Ошибка сервера');
+    }
+
+    setSuccess('Верификация успешно отправлена! Ожидайте подтверждения в течение 1–3 дней.');
+    // setTimeout(() => navigate('/profile'), 3000);
+  } catch (err) {
+    setError(err.message || 'Ошибка отправки данных. Попробуйте позже.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="verification-page">
@@ -148,6 +171,13 @@ const VerificationPage = () => {
               <input type="text" name="issuedBy" value={formData.issuedBy} onChange={handleChange} required />
               <label><Building size={18} /> Кем выдан</label>
             </div>
+            <div className="input-group">
+              <input
+                type="text" name="registrationPlace" value={formData.registrationPlace} onChange={handleChange} required
+              />
+              <label><Building size={18} /> Место прописки</label>
+            </div>
+
 
             <button type="submit" disabled={isSubmitting} className="submit-button">
               {isSubmitting ? (
