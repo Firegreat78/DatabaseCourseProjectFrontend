@@ -1,6 +1,7 @@
 // src/components/BrokerAccountPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import AppHeader from './AppHeader';
 import {
   ArrowLeft,
@@ -18,63 +19,73 @@ import './BrokerAccountPage.css';
 const BrokerAccountPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(''); // 'deposit' | 'withdraw'
   const [amount, setAmount] = useState('');
+  const [account, setAccount] = useState(null);
+const [transactions, setTransactions] = useState([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState('');
 
-  // Mock-данные счетов
-  const mockAccounts = [
-    {
-      number: '2281337',
-      balance: 117,
-      currency: '$',
-      transactions: [
-        { id: 7892, type: 'Снятие', amount: -17, currency: '$' },
-        { id: 7888, type: 'Продажа акций', amount: +34, currency: '$' },
-        { id: 7878, type: 'Пополнение', amount: +100, currency: '$' },
-      ]
-    },
-    {
-      number: '5252',
-      balance: 52,
-      currency: '$',
-      transactions: [
-        { id: 7893, type: 'Снятие', amount: -5, currency: '$' },
-        { id: 7889, type: 'Пополнение', amount: +57, currency: '$' },
-      ]
-    },
-    {
-      number: '5051',
-      balance: 1000,
-      currency: '₽',
-      transactions: [
-        { id: 7894, type: 'Снятие', amount: -200, currency: '₽' },
-        { id: 7890, type: 'Пополнение', amount: +1200, currency: '₽' },
-      ]
+	useEffect(() => {
+  if (!user) return;
+
+  const fetchAccountData = async () => {
+    try {
+      setLoading(true);
+
+      const headers = {
+        Authorization: `Bearer ${user.token}`,
+      };
+
+      const [accountRes, txRes] = await Promise.all([
+        fetch(`http://localhost:8000/api/brokerage-accounts/${id}`, { headers }),
+        fetch(`http://localhost:8000/api/brokerage-accounts/${id}/operations`, { headers }),
+      ]);
+
+      if (!accountRes.ok) throw new Error('Счёт не найден');
+
+      setAccount(await accountRes.json());
+      setTransactions(await txRes.json());
+    } catch (err) {
+      setError('Не удалось загрузить данные счёта');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const account = mockAccounts.find(acc => acc.number === id);
+  fetchAccountData();
+}, [id, user]);
+
 
   // Если счёт не найден
-  if (!account) {
-    return (
-      <div className="broker-page">
-        <AppHeader />
-        <main className="content-center">
-          <div className="not-found">
-            <AlertCircle size={64} strokeWidth={1.5} />
-            <h2>Счёт не найден</h2>
-            <p>Брокерский счёт с номером {id} не существует.</p>
-            <button onClick={() => navigate(-1)} className="btn-back">
-              <ArrowLeft size={18} /> Назад
-            </button>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  if (loading) {
+  return (
+    <div className="broker-page">
+      <AppHeader />
+      <main className="content-center">
+        <Loader2 size={48} className="spin" />
+      </main>
+    </div>
+  );
+}
+
+if (error || !account) {
+  return (
+    <div className="broker-page">
+      <AppHeader />
+      <main className="content-center">
+        <AlertCircle size={64} />
+        <h2>Счёт не найден</h2>
+        <p>{error}</p>
+        <button onClick={() => navigate(-1)} className="btn-back">
+          <ArrowLeft size={18} /> Назад
+        </button>
+      </main>
+    </div>
+  );
+}
 
   const handleOpenModal = (type) => {
     setModalType(type);
@@ -82,32 +93,43 @@ const BrokerAccountPage = () => {
     setShowModal(true);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const value = parseFloat(amount);
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!value || value <= 0) {
-      alert('Введите корректную сумму');
-      return;
-    }
-    if (modalType === 'withdraw' && value > account.balance) {
-      alert('Недостаточно средств на счёте');
-      return;
-    }
+  const value = parseFloat(amount);
 
-    const newTx = {
-      id: Date.now(),
-      type: modalType === 'deposit' ? 'Пополнение' : 'Снятие',
-      amount: modalType === 'deposit' ? value : -value,
-      currency: account.currency
+  if (!value || value <= 0) {
+    alert('Введите корректную сумму');
+    return;
+  }
+
+  try {
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${user.token}`,
     };
 
-    // В реальном проекте — мутируем мок-данные или отправляем на бэкенд
-    account.transactions.unshift(newTx);
-    account.balance += newTx.amount;
+    const response = await fetch(
+      `http://localhost:8000/api/brokerage-accounts/${id}/balance-change-requests`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+  amount: (modalType === 'deposit' ? value : -value).toFixed(2),
+		}),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Ошибка при создании запроса');
+    }
 
     setShowModal(false);
-  };
+    alert('Запрос отправлен и ожидает обработки');
+  } catch (err) {
+    alert('Не удалось отправить запрос');
+  }
+};
 
   return (
     <div className="broker-page">
@@ -127,7 +149,7 @@ const BrokerAccountPage = () => {
           <div className="balance-section">
             <div className="account-number">
               <Wallet size={20} />
-              <span>Счёт №{account.number}</span>
+              <span>Счёт №{account.id}</span>
             </div>
             <div className="balance-amount">
               <span className="currency">{account.currency}</span>
@@ -160,23 +182,26 @@ const BrokerAccountPage = () => {
               <History size={20} />
               История операций
             </h3>
-            {account.transactions.length === 0 ? (
-              <p className="empty-state">Операций пока нет</p>
-            ) : (
-              <div className="transactions-list">
-                {account.transactions.map(tx => (
-                  <div key={tx.id} className="transaction-item">
-                    <div className="tx-info">
-                      <span className="tx-type">{tx.type}</span>
-                      <span className="tx-id">#{tx.id}</span>
-                    </div>
-                    <span className={`tx-amount ${tx.amount > 0 ? 'positive' : 'negative'}`}>
-                      {tx.amount > 0 ? '+' : ''}{Math.abs(tx.amount).toLocaleString('ru-RU')} {tx.currency}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {transactions.length === 0 ? (
+  <p className="empty-state">Операций пока нет</p>
+) : (
+  <div className="transactions-list">
+    {transactions.map((tx, index) => (
+      <div key={index} className="transaction-item">
+        <div className="tx-info">
+          <span className="tx-type">{tx['Тип операции']}</span>
+          <span className="tx-id">
+            {new Date(tx['Время']).toLocaleString('ru-RU')}
+          </span>
+        </div>
+        <span className={`tx-amount ${tx['Сумма операции'] > 0 ? 'positive' : 'negative'}`}>
+          {tx['Сумма операции'] > 0 ? '+' : ''}
+          {Math.abs(tx['Сумма операции']).toLocaleString('ru-RU')} {tx['Символ валюты']}
+        </span>
+      </div>
+    ))}
+  </div>
+)}
           </div>
         </div>
       </main>
