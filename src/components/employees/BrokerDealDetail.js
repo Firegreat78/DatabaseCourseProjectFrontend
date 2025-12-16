@@ -8,6 +8,7 @@ const API_BASE_URL = "http://localhost:8000";
 const BrokerDealDetail = () => {
   const { id } = useParams(); // ID сделки/заявки
   const navigate = useNavigate();
+  // Токен больше не нужен для GET-запроса, но сохраняем для PATCH-запросов
   const token = localStorage.getItem("authToken");
 
   const [dealData, setDealData] = useState(null);
@@ -18,10 +19,14 @@ const BrokerDealDetail = () => {
   const fetchDeal = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/proposal/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error("Ошибка загрузки сделки");
+      // Убираем заголовок авторизации для GET-запроса
+      const response = await fetch(`${API_BASE_URL}/api/broker/proposal/${id}`);
+      
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Ошибка загрузки сделки");
+      }
+      
       const data = await response.json();
       setDealData(data);
     } catch (err) {
@@ -36,6 +41,13 @@ const BrokerDealDetail = () => {
   }, [id]);
 
   const handleAction = async (action) => {
+    // Проверяем наличие токена перед выполнением действий
+    if (!token) {
+      alert("Требуется авторизация для выполнения этого действия");
+      navigate("/login");
+      return;
+    }
+
     setActionLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/proposal/${id}`, {
@@ -85,35 +97,40 @@ const BrokerDealDetail = () => {
                 user.verification_status_id === 2 ? "Не верифицирован" :
                 "Заявка на верификацию"
               }</div>
-              <div className="admin-name"><b>Паспорт:</b> {user.passports?.[0] ? `${user.passports[0].series} ${user.passports[0].number}, ${user.passports[0].last_name} ${user.passports[0].first_name} ${user.passports[0].patronymic}` : "Не указан"}</div>
-              <div className="admin-name"><b>Сумма сделки:</b> {amount}</div>
+              <div className="admin-name"><b>Паспорт:</b> {user.passports?.[0] ? 
+                `${user.passports[0].series} ${user.passports[0].number}, ${user.passports[0].last_name} ${user.passports[0].first_name} ${user.passports[0].patronymic}` 
+                : "Не указан"
+              }</div>
+              <div className="admin-name"><b>Сумма сделки:</b> {amount?.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₽</div>
               <div className="admin-name"><b>Ценная бумага:</b> {security.name}</div>
               <div className="admin-name"><b>Тип предложения:</b> {proposal_type.type}</div>
+              <div className="admin-name"><b>Дата создания:</b> {new Date(dealData.created_at).toLocaleString('ru-RU')}</div>
             </div>
           </div>
 
-          {user.verification_status_id === 3 && (
+          {/* Показываем кнопки только если есть токен (авторизованный пользователь) */}
+          {token && user.verification_status_id === 3 && (
             <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
               <button
                 className="admin-row add-row"
                 onClick={() => handleAction("approve")}
                 disabled={actionLoading}
               >
-                Верифицировать
+                {actionLoading ? "Обработка..." : "Верифицировать"}
               </button>
               <button
-                className="admin-row add-row"
+                className="admin-row add-row reject-btn"
                 onClick={() => handleAction("reject")}
                 disabled={actionLoading}
               >
-                Отклонить
+                {actionLoading ? "Обработка..." : "Отклонить"}
               </button>
             </div>
           )}
 
           <div style={{ marginTop: "1rem" }}>
             <button
-              className="admin-row add-row"
+              className="admin-row add-row back-btn"
               onClick={() => navigate(-1)}
             >
               Назад

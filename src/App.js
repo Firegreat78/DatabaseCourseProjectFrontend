@@ -111,7 +111,7 @@ function App() {
           />
           
           {/* Редирект на главную для неизвестных путей */}
-          <Route path="*" element={<Navigate to="/accounts" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </AuthProvider>
 

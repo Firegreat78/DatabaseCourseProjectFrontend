@@ -23,6 +23,7 @@ const availableRoles = user?.role === '1'
   ? roleOptions
   : roleOptions.filter(r => r.value > 2); // только брокер и верификатор
 
+
   useEffect(() => {
   const fetchStaffData = async () => {
     try {
