@@ -179,3 +179,29 @@
     text-align: left;
   }
 }
+.page-header-actions {
+  display: flex;
+  gap: 20px; /* Расстояние между кнопками */
+  align-items: center;
+}
+
+.add-offer-btn {
+  background-color: #4f29d8; /* Зеленая кнопка */
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.add-offer-btn:hover {
+  background-color: #7944ce;
+}
+
+.add-offer-btn:disabled {
+  background-color: #7944ce;
+  cursor: not-allowed;
+}
