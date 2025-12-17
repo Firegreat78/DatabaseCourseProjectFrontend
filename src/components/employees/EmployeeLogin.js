@@ -30,12 +30,10 @@ const EmployeeLogin = () => {
       });
 
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.detail || 'Ошибка входа');
       }
 
-      // 🔑 КЛЮЧЕВОЕ МЕСТО
       login({
         token: data.access_token,
         user_id: data.user_id,
