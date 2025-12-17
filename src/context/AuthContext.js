@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // { id, role, token }
+  const [user, setUser] = useState(null); // { id, role, token, isStaff }
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -13,33 +13,43 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     const userId = localStorage.getItem('userId');
-    const role = localStorage.getItem('role');
+    const role = localStorage.getItem('role');        // может быть строка или число в виде строки
+    const isStaff = localStorage.getItem('isStaff') === 'true';
 
     if (token && userId) {
-      setUser({ id: userId, role: role || 'user', token });
+      setUser({
+        id: userId,
+        role: role,              // оставляем как есть (строка)
+        token,
+        isStaff,                 // флаг, сотрудник или обычный пользователь
+      });
     }
     setLoading(false);
   }, []);
 
   const login = (userData) => {
-    const { token, user_id, role = 'user' } = userData;
+    const { token, user_id, role = 'user', isStaff = false } = userData;
 
     // Сохраняем в localStorage
     localStorage.setItem('authToken', token);
     localStorage.setItem('userId', user_id);
-    localStorage.setItem('role', role);
+    localStorage.setItem('role', role);                    // роль как строка (для клиентов) или число как строка (для staff)
+    localStorage.setItem('isStaff', isStaff ? 'true' : 'false');
 
     // Сохраняем в состояние
-    setUser({ id: user_id, role, token });
-
-    // Переходим на главную страницу приложения (без id в URL)
-    navigate('/accounts');
+    setUser({
+      id: user_id,
+      role: role,          // оставляем как пришло
+      token,
+      isStaff,
+    });
   };
 
   const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userId');
     localStorage.removeItem('role');
+    localStorage.removeItem('isStaff');
     setUser(null);
     navigate('/login');
   };

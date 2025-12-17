@@ -13,6 +13,7 @@ const OffersPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const fetchOffers = async (isRefresh = false) => {
     if (!user?.id || !user?.token) {
@@ -72,19 +73,27 @@ const OffersPage = () => {
 
       <div className="content">
         <div className="page-header">
-          <h1>Мои предложения</h1>
-          <button
-            className="refresh-btn"
-            onClick={handleRefresh}
-            disabled={loading || refreshing}
-            title="Обновить данные"
-          >
-            <RefreshCw
-              size={20}
-              style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }}
-            />
-          </button>
-        </div>
+  <h1>Мои предложения</h1>
+  <div className="header-actions">
+    <button
+      onClick={() => setShowCreateModal(true)}
+      className="btn-new-offer"
+    >
+      + Новое предложение
+    </button>
+    <button
+      className="refresh-btn"
+      onClick={handleRefresh}
+      disabled={loading || refreshing}
+      title="Обновить данные"
+    >
+      <RefreshCw
+        size={20}
+        style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }}
+      />
+    </button>
+  </div>
+</div>
 
         {loading && !refreshing ? (
           <div className="status-message loading">Загрузка предложений...</div>
@@ -111,19 +120,35 @@ const OffersPage = () => {
                     <span className="label">Количество</span>
                     <span className="value">{Number(offer["Количество"]).toLocaleString('ru-RU')} шт.</span>
                   </div>
-                  {/* Если позже добавишь цену — раскомментируй */}
-                  {/* <div className="detail-row">
-                    <span className="label">Цена</span>
-                    <span className="value">— ₽</span>
-                  </div> */}
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Модальное окно создания нового предложения */}
+        {showCreateModal && (
+          <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+            <div className="modal create-offer-modal" onClick={(e) => e.stopPropagation()}>
+              <h2>Новое предложение</h2>
+              <p className="modal-subtitle">
+                Здесь будет форма для создания заявки на покупку или продажу.
+              </p>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="btn-cancel"
+                >
+                  Закрыть
+                </button>
+                {/* В будущем здесь будет кнопка "Создать" после реализации формы */}
+              </div>
+            </div>
           </div>
         )}
       </div>
     </div>
   );
 };
-
 export default OffersPage;
