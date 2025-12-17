@@ -13,7 +13,6 @@ import {
   Minus,
   Loader2,
   AlertCircle,
-  XCircle
 } from 'lucide-react';
 import './BrokerAccountPage.css';
 
@@ -29,41 +28,31 @@ const BrokerAccountPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [cancellingId, setCancellingId] = useState(null);
-  const [showConfirmCancel, setShowConfirmCancel] = useState(null);
+
+  const fetchAccountData = async () => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      const headers = {
+        Authorization: `Bearer ${user.token}`,
+      };
+      const [accountRes, txRes] = await Promise.all([
+        fetch(`http://localhost:8000/api/brokerage-accounts/${id}`, { headers }),
+        fetch(`http://localhost:8000/api/brokerage-accounts/${id}/operations`, { headers }),
+      ]);
+      if (!accountRes.ok) throw new Error('Счёт не найден');
+      if (!txRes.ok) throw new Error('Не удалось загрузить операции');
+      const txData = await txRes.json();
+      setAccount(await accountRes.json());
+      setTransactions(txData);
+    } catch (err) {
+      setError(err.message || 'Не удалось загрузить данные счёта');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!user) return;
-
-    const fetchAccountData = async () => {
-      try {
-        setLoading(true);
-        const headers = {
-          Authorization: `Bearer ${user.token}`,
-        };
-
-        const [accountRes, txRes] = await Promise.all([
-          fetch(`http://localhost:8000/api/brokerage-accounts/${id}`, { headers }),
-          fetch(`http://localhost:8000/api/brokerage-accounts/${id}/operations`, { headers }),
-        ]);
-
-        if (!accountRes.ok) throw new Error('Счёт не найден');
-        if (!txRes.ok) throw new Error('Не удалось загрузить операции');
-
-        const txData = await txRes.json();
-
-        // Фильтруем: показываем только операции, где status_id !== 2 (не отменённые)
-        const filteredTx = txData.filter(tx => tx.status_id !== 2);
-
-        setAccount(await accountRes.json());
-        setTransactions(filteredTx);
-      } catch (err) {
-        setError(err.message || 'Не удалось загрузить данные счёта');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchAccountData();
   }, [id, user]);
 
@@ -80,13 +69,11 @@ const BrokerAccountPage = () => {
       alert('Введите корректную сумму');
       return;
     }
-
     try {
       const headers = {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${user.token}`,
       };
-
       const response = await fetch(
         `http://localhost:8000/api/brokerage-accounts/${id}/balance-change-requests`,
         {
@@ -97,55 +84,20 @@ const BrokerAccountPage = () => {
           }),
         }
       );
-
       if (!response.ok) {
-        throw new Error('Ошибка при создании запроса');
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Ошибка при изменении баланса');
       }
-
+      const result = await response.json();
       setShowModal(false);
-      alert('Запрос отправлен и ожидает обработки');
-      // Можно перезагрузить операции
-      // fetchAccountData(); // если хочешь сразу увидеть новый запрос
+      alert('Баланс успешно изменён');
+
+      // Чтобы избежать частичного обновления account и возможных undefined полей,
+      // просто перезагружаем все данные одной функцией — это надёжнее и проще
+      fetchAccountData();
+      // Если запрос на историю провалился — можно просто ничего не делать, баланс уже обновлён
     } catch (err) {
-      alert('Не удалось отправить запрос: ' + err.message);
-    }
-  };
-
-  const handleCancelRequest = async (requestId) => {
-    setShowConfirmCancel(requestId);
-  };
-
-  const confirmCancel = async () => {
-    if (!showConfirmCancel) return;
-    const requestId = showConfirmCancel;
-    setShowConfirmCancel(null);
-
-    try {
-      setCancellingId(requestId);
-      const response = await fetch(
-        `http://localhost:8000/api/brokerage-accounts/${id}/balance-change-requests/${requestId}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${user.token}`,
-          },
-          body: JSON.stringify({ status_id: 2 }), // 2 = Отменён
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Не удалось отменить запрос');
-      }
-
-      // Удаляем отменённый запрос из списка
-      setTransactions((prev) => prev.filter((tx) => tx.request_id !== requestId));
-
-      alert('Запрос успешно отменён');
-    } catch (err) {
-      alert('Ошибка при отмене: ' + err.message);
-    } finally {
-      setCancellingId(null);
+      alert('Не удалось изменить баланс: ' + err.message);
     }
   };
 
@@ -228,22 +180,13 @@ const BrokerAccountPage = () => {
             ) : (
               <div className="transactions-list">
                 {transactions.map((tx, index) => (
-                  <div
-                    key={index}
-                    className={`transaction-item ${
-                      tx['Источник'] === 'Запрос на изменение' ? 'pending-request' : ''
-                    }`}
-                  >
+                  <div key={index} className="transaction-item">
                     <div className="tx-info">
                       <span className="tx-type">{tx['Тип операции']}</span>
                       <span className="tx-id">
                         {new Date(tx['Время']).toLocaleString('ru-RU')}
                       </span>
-                      {tx['Источник'] === 'Запрос на изменение' && (
-                        <span className="tx-source"> (Ожидает подтверждения)</span>
-                      )}
                     </div>
-
                     <div className="tx-amount-wrapper">
                       <span
                         className={`tx-amount ${
@@ -251,18 +194,9 @@ const BrokerAccountPage = () => {
                         }`}
                       >
                         {tx['Сумма операции'] > 0 ? '+' : ''}
-                        {Math.abs(tx['Сумма операции']).toLocaleString('ru-RU')} {tx['Символ валюты']}
+                        {Math.abs(tx['Сумма операции']).toLocaleString('ru-RU')}{' '}
+                        {tx['Символ валюты']}
                       </span>
-
-                      {tx['Источник'] === 'Запрос на изменение' && (
-                        <button
-                          onClick={() => handleCancelRequest(tx.request_id)}
-                          className="btn-cancel-request"
-                          disabled={cancellingId === tx.request_id}
-                        >
-                          {cancellingId === tx.request_id ? 'Отмена...' : 'Отменить'}
-                        </button>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -303,13 +237,11 @@ const BrokerAccountPage = () => {
                 />
                 <label>Сумма ({account.currency})</label>
               </div>
-
               {modalType === 'withdraw' && (
                 <p className="available">
                   Доступно: {account.balance.toLocaleString('ru-RU')} {account.currency}
                 </p>
               )}
-
               <div className="modal-actions">
                 <button type="button" onClick={() => setShowModal(false)} className="btn-cancel">
                   Отмена
@@ -319,24 +251,6 @@ const BrokerAccountPage = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Модальное окно подтверждения отмены */}
-      {showConfirmCancel && (
-        <div className="modal-overlay" onClick={() => setShowConfirmCancel(null)}>
-          <div className="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Отменить запрос?</h3>
-            <p>Это действие нельзя отменить.</p>
-            <div className="modal-actions">
-              <button type="button" onClick={() => setShowConfirmCancel(null)} className="btn-cancel">
-                Нет
-              </button>
-              <button type="button" onClick={confirmCancel} className="btn-confirm danger">
-                Да, отменить
-              </button>
-            </div>
           </div>
         </div>
       )}
