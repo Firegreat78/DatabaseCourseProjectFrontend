@@ -31,17 +31,17 @@ const VerifierMainPage = () => {
 
   const getStatusLabel = (statusId) => {
     switch(statusId) {
-      case 1: return "Верифицирован";
-      case 2: return "Не верифицирован";
-      case 3: return "Заявка на верификацию";
+      case 1: return "Не верифицирован";
+      case 2: return "Верифицирован";
+      case 3: return "Ожидает верификации";
       default: return "Неизвестно";
     }
   };
 
   const getStatusClass = (statusId) => {
     switch(statusId) {
-      case 1: return "active";
-      case 2: return "blocked";
+      case 1: return "blocked";
+      case 2: return "active";
       case 3: return "suspended";
       default: return "";
     }

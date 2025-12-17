@@ -20,8 +20,8 @@ const AdminEmployeeEdit = () => {
   const { user } = useAuth();
   // Ограничение для не-мегаадмина
 const availableRoles = user?.role === '1'
-  ? roleOptions
-  : roleOptions.filter(r => r.value > 2); // только брокер и верификатор
+  ? roleOptions.filter(r => r.value < 4)
+  : roleOptions.filter(r => r.value > 2 || r.value < 4); // только брокер и верификатор
 
 
   useEffect(() => {

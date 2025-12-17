@@ -55,6 +55,7 @@ const PublicRoute = ({ children }) => {
 
   // Если уже залогинен — сразу отправляем на счета
   return user ? <Navigate to="/accounts" replace /> : children;
+  //return user
 };
 
 function App() {
@@ -111,7 +112,7 @@ function App() {
           />
           
           {/* Редирект на главную для неизвестных путей */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/accounts" replace />} />
         </Routes>
       </AuthProvider>
 

@@ -14,7 +14,7 @@ const AdminEmployeeCreate = () => {
     password: '',
     contract_number: '',
     rights_level: '3',
-    employment_status_id: '',
+    employment_status_id: '1',
   });
   const [statuses, setStatuses] = useState([]);
 
@@ -40,7 +40,7 @@ const AdminEmployeeCreate = () => {
 
   const handleCreate = async () => {
     try {
-      await fetch(`${API_BASE_URL}/api/staff`, {
+      await fetch(`${API_BASE_URL}/api/staff/new`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

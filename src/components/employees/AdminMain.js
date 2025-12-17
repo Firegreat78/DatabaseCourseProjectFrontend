@@ -63,6 +63,14 @@ const AdminMainPage = () => {
           />
         </div>
 
+        <div
+            className="admin-row add-row"
+            onClick={() => navigate('/admin/employees/new')}
+          >
+            <Plus size={24} />
+            <span>Добавить сотрудника</span>
+          </div>
+
         <div className="admin-list">
           {filteredItems.map((item) => (
             <div
@@ -84,13 +92,7 @@ const AdminMainPage = () => {
             </div>
           ))}
 
-          <div
-            className="admin-row add-row"
-            onClick={() => navigate('/admin/employees/new')}
-          >
-            <Plus size={24} />
-            <span>Добавить сотрудника</span>
-          </div>
+          
         </div>
       </main>
     </div>

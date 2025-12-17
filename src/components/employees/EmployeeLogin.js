@@ -51,7 +51,7 @@ const EmployeeLogin = () => {
       } else if (role === 4) {
         navigate('/verifier/main');
       } else {
-        navigate('/employee/dashboard');
+        throw new Error(data.detail || 'Ошибка входа');
       }
     } catch (err) {
       setError(err.message || 'Ошибка при входе');
