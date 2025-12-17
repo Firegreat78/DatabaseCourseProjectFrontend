@@ -91,7 +91,7 @@ const BrokerDealDetail = () => {
           <div className="admin-row">
             <div className="admin-left">
               <div className="admin-name">
-                <b>Пользователь:</b> {user.login} ({user.email})
+                <b>Счёт:</b> {} 
               </div>
 
               <div className="admin-name">

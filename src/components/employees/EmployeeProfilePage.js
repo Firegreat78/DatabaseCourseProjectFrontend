@@ -3,15 +3,14 @@ import EmployeeHeader from './EmployeeHeader';
 import './EmployeeProfilePage.css';
 import { User, FileText, ShieldCheck, Briefcase, LogOut, AlertTriangle } from 'lucide-react';
 
-const STAFF_ID = 1;
+const STAFF_ID = 2;
 
 const roleMap = {
   1: 'Мегаадминистратор',
   2: 'Администратор',
   3: 'Брокер',
   4: 'Верификатор',
-  5: 'Старший верификатор',
-  6: 'Системный администратор'
+  5: 'Система'
 };
 
 const EmployeeProfilePage = () => {
