@@ -36,6 +36,14 @@ export const AuthProvider = ({ children }) => {
     navigate('/accounts');
   };
 
+  const employee_logout = () =>{
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('role');
+    setUser(null);
+    navigate('/employee-login');
+  }
+
   const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userId');
@@ -45,7 +53,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, employee_logout }}>
       {children}
     </AuthContext.Provider>
   );

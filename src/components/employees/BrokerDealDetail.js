@@ -64,7 +64,7 @@ const BrokerDealDetail = () => {
       }
 
       alert("Заявка обработана");
-      navigate("/broker/main"); // при необходимости поменяй маршрут
+      navigate("/broker/main");
     } catch (err) {
       alert(err.message);
     } finally {
@@ -76,7 +76,7 @@ const BrokerDealDetail = () => {
   if (error) return <div className="admin-content">Ошибка: {error}</div>;
   if (!dealData) return <div className="admin-content">Заявка не найдена</div>;
 
-  const { user, security, amount, proposal_type, created_at } = dealData;
+  const { security, amount, proposal_type, account} = dealData;
 
   return (
     <div className="admin-page">
@@ -91,7 +91,7 @@ const BrokerDealDetail = () => {
           <div className="admin-row">
             <div className="admin-left">
               <div className="admin-name">
-                <b>Счёт:</b> {} 
+                <b>Счёт:</b> {account} 
               </div>
 
               <div className="admin-name">
@@ -108,11 +108,6 @@ const BrokerDealDetail = () => {
 
               <div className="admin-name">
                 <b>Тип заявки:</b> {proposal_type.type}
-              </div>
-
-              <div className="admin-name">
-                <b>Дата создания:</b>{" "}
-                {new Date(created_at).toLocaleString("ru-RU")}
               </div>
             </div>
           </div>

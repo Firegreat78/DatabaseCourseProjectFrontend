@@ -10,7 +10,7 @@ import {
 import '../AppHeader.css';
 
 const EmployeeHeader = () => {
-  const { user, logout } = useAuth();
+  const { user, employee_logout } = useAuth();
 
   // Если пользователь не авторизован — хедер не отображаем
   // (на страницах логина/регистрации он и не нужен)
@@ -20,7 +20,7 @@ const EmployeeHeader = () => {
 
   const handleLogout = () => {
     if (window.confirm('Вы действительно хотите выйти из аккаунта?')) {
-      logout(); // очистит localStorage и перенаправит на /login
+      employee_logout(); // очистит localStorage и перенаправит на /login
     }
   };
 

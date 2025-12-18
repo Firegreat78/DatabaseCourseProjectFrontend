@@ -78,7 +78,7 @@ function App() {
           <Route path="/admin/employees/:id" element={<AdminEmployeeEdit />} />
           <Route path="/verifier/users/:id" element={<VerifierUserDetail />} />
           <Route path="/broker/deals/:id" element={<BrokerDealDetail />} />
-
+          
           {/* Защищённые страницы — доступ только после логина */}
           <Route
             path="/accounts"
@@ -111,8 +111,8 @@ function App() {
             element={<ProtectedRoute><BrokerAccountPage /></ProtectedRoute>}
           />
           
-          {/* Редирект на главную для неизвестных путей */}
-          <Route path="*" element={<Navigate to="/accounts" replace />} />
+          {/* Редирект на главную для неизвестных путей <Route path="*" element={<Navigate to="/accounts" replace />} />*/}
+          
         </Routes>
       </AuthProvider>
 

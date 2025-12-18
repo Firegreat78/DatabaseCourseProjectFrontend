@@ -15,27 +15,35 @@ const AdminMainPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchStaff = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/staff`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-        });
-        const data = await response.json();
+  if (!user) return;
 
-        // Фильтруем по роли: только мегаадмин видит админов и мегаадминов
-        let filtered = data;
-        if (user.role !== '1') {
-          filtered = data.filter(item => item.rights_level !== '1' && item.rights_level !== '2');
-        }
+  const fetchStaff = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/staff`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
+      const data = await response.json();
 
-        setAdminItems(filtered);
-      } catch (err) {
-        console.error('Ошибка загрузки сотрудников:', err);
+      let filtered = data;
+      if (user.role !== '1') {
+        filtered = data.filter(
+          item =>
+            item.rights_level !== '1' &&
+            item.rights_level !== '2' &&
+            item.rights_level !== '5'
+        );
       }
-    };
 
-    fetchStaff();
-  }, [user.role]);
+      setAdminItems(filtered);
+    } catch (err) {
+      console.error('Ошибка загрузки сотрудников:', err);
+    }
+  };
+
+  fetchStaff();
+  }, [user]);
 
   const filteredItems = adminItems.filter(
     (item) =>

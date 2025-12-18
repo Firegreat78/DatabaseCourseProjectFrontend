@@ -1,175 +1,174 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import EmployeeHeader from "./EmployeeHeader";
-import "./AdminMain.css"; // Используем предоставленный CSS
-import { useNavigate } from 'react-router-dom';
+import "./AdminMain.css";
+
+const API_BASE_URL = "http://localhost:8000";
 
 const BrokerMainPage = () => {
   const token = localStorage.getItem("authToken");
-  const [deals, setDeals] = useState([]);
+  const navigate = useNavigate();
+
+  const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const navigate = useNavigate();
+
+  // Загрузка списка ID заявок
+  const fetchProposalIds = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/proposal`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Ошибка загрузки заявок");
+      }
+
+      const data = await response.json();
+      return data.map((p) => p.id);
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  // Загрузка полной информации по каждой заявке
+  const fetchProposalById = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/broker/proposal/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Ошибка загрузки заявки");
+      }
+
+      return await response.json();
+    } catch (err) {
+      console.error("Ошибка загрузки заявки", id, err.message);
+      return null;
+    }
+  };
+
+  const fetchAllProposals = async () => {
+    setLoading(true);
+    try {
+      const ids = await fetchProposalIds();
+      const dataPromises = ids.map((id) => fetchProposalById(id));
+      const results = await Promise.all(dataPromises);
+      setProposals(results.filter((p) => p !== null));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDeals = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/api/proposal", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error("Ошибка загрузки данных");
-        }
-        
-        const data = await response.json();
-        setDeals(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDeals();
+    fetchAllProposals();
   }, [token]);
 
-  const filteredDeals = deals.filter(deal => {
+  const formatAmount = (amount) =>
+    Number(amount).toLocaleString("ru-RU", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  // Фильтр поиска
+  const filteredProposals = proposals.filter((p) => {
     if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase();
     return (
-      deal.id.toString().includes(query) ||
-      deal.user?.login?.toLowerCase().includes(query) ||
-      deal.security?.name?.toLowerCase().includes(query) ||
-      deal.proposal_type?.type?.toLowerCase().includes(query)
+      p.id.toString().includes(q) ||
+      p.account.toString().includes(q) ||
+      p.security?.name?.toLowerCase().includes(q) ||
+      p.proposal_type?.type?.toLowerCase().includes(q) ||
+      p.amount.toString().includes(q)
     );
   });
 
-  const formatAmount = (amount) => {
-    if (!amount) return "0.00";
-    return Number(amount).toLocaleString('ru-RU', { 
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+  // Преобразование статуса в текст и цвет
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 1:
+        return { text: "Отклонена", color: "red" };
+      case 2:
+        return { text: "Подтверждена", color: "green" };
+      case 3:
+        return { text: "Ожидает подтверждения", color: "blue" };
+      default:
+        return { text: "Неизвестно", color: "gray" };
+    }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "Не указана";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  if (loading)
+    return (
+      <div className="admin-content">Загрузка...</div>
+    );
 
-  if (loading) return (
-    <div className="admin-page">
-      <EmployeeHeader />
-      <div className="admin-content">
-        <div className="page-header">
-          <h1>Ведение сделок</h1>
-        </div>
-        <div className="admin-list">
-          <div className="admin-row">
-            <div className="admin-left">
-              <div className="admin-name">Загрузка...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-  
-  if (error) return (
-    <div className="admin-page">
-      <EmployeeHeader />
-      <div className="admin-content">
-        <div className="page-header">
-          <h1>Ведение сделок</h1>
-        </div>
-        <div className="admin-list">
-          <div className="admin-row">
-            <div className="admin-left">
-              <div className="admin-name">Ошибка: {error}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  if (error)
+    return (
+      <div className="admin-content">Ошибка: {error}</div>
+    );
 
   return (
     <div className="admin-page">
       <EmployeeHeader />
-
       <div className="admin-content">
-        <div className="page-header">
-          <h1>Ведение сделок</h1>
-        </div>
+        <h1>Заявки брокера</h1>
 
-        {/* Строка поиска */}
         <div className="admin-search">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
           <input
             type="text"
-            placeholder="Поиск по сделкам..."
+            placeholder="Поиск по заявкам..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
         <div className="admin-list">
-          {filteredDeals.map((deal) => (
-            <div 
-              className="admin-row" 
-              key={deal.id} 
-              onClick={() => navigate(`/broker/deals/${deal.id}`)}
-            >
-              <div className="admin-left">
-                <div className="admin-id">ID: {deal.id}</div>
-                <div className="admin-name">{deal.user?.login || "Пользователь не указан"}</div>
-                <div className="admin-action">
-                  {deal.security?.name || "Ценная бумага не указана"} • 
-                  {deal.proposal_type?.type || "Тип не указан"} • 
-                  {formatAmount(deal.amount)} ₽
+          {filteredProposals.length > 0 ? (
+            filteredProposals.map((p) => {
+              const { security, proposal_type, amount, account, status } = p;
+              const statusLabel = getStatusLabel(status);
+
+              return (
+                <div
+                  className="admin-row"
+                  key={p.id}
+                  onClick={() => navigate(`/broker/deals/${p.id}`)}
+                >
+                  <div className="admin-left">
+                    <div className="admin-id">ID заявки: {p.id}</div>
+                    <div className="admin-name">Счёт № {account}</div>
+                    <div className="admin-action">
+                      {security?.name ?? "—"} {proposal_type?.type ?? "—"} • {formatAmount(amount)} ₽
+                    </div>
+                    <div
+                      className="admin-status"
+                      style={{
+                        marginTop: "4px",
+                        fontWeight: "bold",
+                        color: statusLabel.color,
+                      }}
+                    >
+                      {statusLabel.text}
+                    </div>
+                  </div>
                 </div>
-                <div className="admin-action">
-                  {formatDate(deal.created_at)}
-                </div>
-              </div>
-              <div className={`admin-action ${deal.status}`}>
-                <div style={{ 
-                  padding: "4px 12px", 
-                  borderRadius: "20px", 
-                  backgroundColor: deal.status === "active" ? "#dcfce7" : 
-                                  deal.status === "blocked" ? "#fee2e2" : "#fef3c7",
-                  color: deal.status === "active" ? "#166534" : 
-                         deal.status === "blocked" ? "#b91c1c" : "#854d0e"
-                }}>
-                  {deal.status === "active" && "Активна"}
-                  {deal.status === "blocked" && "Заблокирована"}
-                  {deal.status === "suspended" && "На верификации"}
-                </div>
-              </div>
-            </div>
-          ))}
-          
-          {filteredDeals.length === 0 && (
+              );
+            })
+          ) : (
             <div className="admin-row">
-              <div className="admin-left">
-                <div className="admin-name">Сделки не найдены</div>
-              </div>
+              <div className="admin-name">Заявки не найдены</div>
             </div>
           )}
-          
         </div>
       </div>
     </div>

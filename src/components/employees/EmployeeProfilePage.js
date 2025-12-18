@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import EmployeeHeader from './EmployeeHeader';
 import './EmployeeProfilePage.css';
+import { useAuth } from '../../context/AuthContext';
 import { User, FileText, ShieldCheck, Briefcase, LogOut, AlertTriangle } from 'lucide-react';
 
-const STAFF_ID = 2;
+const STAFF_ID = 10;
 
 const roleMap = {
   1: 'Мегаадминистратор',
@@ -13,15 +14,22 @@ const roleMap = {
   5: 'Система'
 };
 
+const statusMap = {
+  1: 'Активен',
+  2: 'Уволен',
+  3: 'Отпуск'
+};
+
 const EmployeeProfilePage = () => {
   const [employeeData, setEmployeeData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchEmployee = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/staff/${STAFF_ID}`);
+        const response = await fetch(`http://localhost:8000/api/staff/${user?.id}`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -65,7 +73,7 @@ const EmployeeProfilePage = () => {
           <div className="employee-profile-header">
             <User size={48} />
             <h1>Профиль сотрудника</h1>
-            <p>ID сотрудника: {STAFF_ID}</p>
+            <p>ID сотрудника: {user?.id}</p>
             <p>Логин: {employeeData.login}</p>
           </div>
 
@@ -82,7 +90,7 @@ const EmployeeProfilePage = () => {
               <Briefcase size={20} />
               <div>
                 <span className="label">Статус</span>
-                <span className="value">{employeeData.employmentStatus}</span>
+                <span className="value">{statusMap[employeeData.employmentStatus]}</span>
               </div>
             </div>
 

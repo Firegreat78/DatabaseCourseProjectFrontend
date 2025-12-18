@@ -44,7 +44,8 @@ const EmployeeLogin = () => {
 
       // редирект по роли
       const role = Number(data.role);
-      if (role === 1 || role === 2) {
+      if (role == null) {throw new Error(data.detail || 'Ошибка входа');} 
+      else if (role === 1 || role === 2) {
         navigate('/admin/main');
       } else if (role === 3) {
         navigate('/broker/main');
