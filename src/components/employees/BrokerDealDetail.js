@@ -76,7 +76,12 @@ const BrokerDealDetail = () => {
   if (error) return <div className="admin-content">Ошибка: {error}</div>;
   if (!dealData) return <div className="admin-content">Заявка не найдена</div>;
 
-  const { security, amount, proposal_type, account} = dealData;
+  const { security, amount, proposal_type, account, status } = dealData;
+
+  const statusText = {
+    1: "Отклонена",
+    2: "Подтверждена",
+  };
 
   return (
     <div className="admin-page">
@@ -91,7 +96,7 @@ const BrokerDealDetail = () => {
           <div className="admin-row">
             <div className="admin-left">
               <div className="admin-name">
-                <b>Счёт:</b> {account} 
+                <b>Счёт:</b> {account}
               </div>
 
               <div className="admin-name">
@@ -103,16 +108,17 @@ const BrokerDealDetail = () => {
               </div>
 
               <div className="admin-name">
-                <b>Ценная бумага:</b> {security.name}
+                <b>Ценная бумага:</b> {security?.name}
               </div>
 
               <div className="admin-name">
-                <b>Тип заявки:</b> {proposal_type.type}
+                <b>Тип заявки:</b> {proposal_type?.type}
               </div>
             </div>
           </div>
 
-          {token && (
+          {/* КНОПКИ ИЛИ СТАТУС */}
+          {status === 3 && token ? (
             <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
               <button
                 className="admin-row add-row"
@@ -129,6 +135,10 @@ const BrokerDealDetail = () => {
               >
                 {actionLoading ? "Обработка..." : "Отклонить заявку"}
               </button>
+            </div>
+          ) : (
+            <div className="admin-name" style={{ marginTop: "1rem" }}>
+              <b>Статус:</b> {statusText[status] || "Неизвестен"}
             </div>
           )}
 

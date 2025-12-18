@@ -121,7 +121,6 @@ const PortfolioPage = () => {
                 <div key={index} className="security-card">
                   <div className="security-header">
                     <div className="security-name">{asset.security_name}</div>
-                    {asset.has_dividends && <span className="dividends-badge">Дивиденды</span>}
                   </div>
 
                   <div className="security-details">

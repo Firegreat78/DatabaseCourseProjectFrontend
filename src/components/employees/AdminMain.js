@@ -1,6 +1,5 @@
-// src/components/employees/AdminMain.js
 import React, { useState, useEffect } from 'react';
-import { Search, ArrowRight, Shield, Plus } from 'lucide-react';
+import { Search, ArrowRight, Shield, Plus, TrendingUp } from 'lucide-react';
 import EmployeeHeader from './EmployeeHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -15,34 +14,34 @@ const AdminMainPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-  if (!user) return;
+    if (!user) return;
 
-  const fetchStaff = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/staff`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
-      const data = await response.json();
+    const fetchStaff = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/staff`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        });
+        const data = await response.json();
 
-      let filtered = data;
-      if (user.role !== '1') {
-        filtered = data.filter(
-          item =>
-            item.rights_level !== '1' &&
-            item.rights_level !== '2' &&
-            item.rights_level !== '5'
-        );
+        let filtered = data;
+        if (user.role !== '1') {
+          filtered = data.filter(
+            item =>
+              item.rights_level !== '1' &&
+              item.rights_level !== '2' &&
+              item.rights_level !== '5'
+          );
+        }
+
+        setAdminItems(filtered);
+      } catch (err) {
+        console.error('Ошибка загрузки сотрудников:', err);
       }
+    };
 
-      setAdminItems(filtered);
-    } catch (err) {
-      console.error('Ошибка загрузки сотрудников:', err);
-    }
-  };
-
-  fetchStaff();
+    fetchStaff();
   }, [user]);
 
   const filteredItems = adminItems.filter(
@@ -71,14 +70,24 @@ const AdminMainPage = () => {
           />
         </div>
 
+        {/* КНОПКИ ДЕЙСТВИЙ */}
         <div
-            className="admin-row add-row"
-            onClick={() => navigate('/admin/employees/new')}
-          >
-            <Plus size={24} />
-            <span>Добавить сотрудника</span>
-          </div>
+          className="admin-row add-row"
+          onClick={() => navigate('/admin/employees/new')}
+        >
+          <Plus size={24} />
+          <span>Добавить сотрудника</span>
+        </div>
 
+        <div
+          className="admin-row add-row"
+          onClick={() => navigate('/admin/exchange')}
+        >
+          <TrendingUp size={24} />
+          <span>Управление биржей</span>
+        </div>
+
+        {/* СПИСОК СОТРУДНИКОВ */}
         <div className="admin-list">
           {filteredItems.map((item) => (
             <div
@@ -99,8 +108,6 @@ const AdminMainPage = () => {
               <ArrowRight size={20} className="arrow-icon" />
             </div>
           ))}
-
-          
         </div>
       </main>
     </div>

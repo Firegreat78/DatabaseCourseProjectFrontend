@@ -24,6 +24,7 @@ import AdminEmployeeEdit from './components/employees/AdminEmployeeEdit';
 import AdminEmployeeCreate from './components/employees/AdminEmployeeCreate';
 import VerifierUserDetail from './components/employees/VerifierUserDetail';
 import BrokerDealDetail from './components/employees/BrokerDealDetail';
+import ExchangeAdminPage from './components/employees/ExchangeAdminPage';
 
 // Компонент для защиты роутов
 const ProtectedRoute = ({ children }) => {
@@ -78,7 +79,7 @@ function App() {
           <Route path="/admin/employees/:id" element={<AdminEmployeeEdit />} />
           <Route path="/verifier/users/:id" element={<VerifierUserDetail />} />
           <Route path="/broker/deals/:id" element={<BrokerDealDetail />} />
-          
+          <Route path="/admin/exchange" element={<ExchangeAdminPage />} />
           {/* Защищённые страницы — доступ только после логина */}
           <Route
             path="/accounts"
