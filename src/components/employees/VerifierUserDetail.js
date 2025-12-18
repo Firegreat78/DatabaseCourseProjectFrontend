@@ -50,8 +50,8 @@ const VerifierUserDetail = () => {
     if (
       !window.confirm(
         statusId === 1
-          ? "Верифицировать пользователя?"
-          : "Отклонить пользователя?"
+          ? "Отклонить пользователя?"
+          : "Верифицировать пользователя?"
       )
     )
       return;
@@ -131,24 +131,24 @@ const VerifierUserDetail = () => {
           </div>
 
           {passport.verification_status_id === 3 && (
-  <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-    <button
-      className="admin-row add-row"
-      onClick={() => handleVerify(2)}
-      disabled={updating}
-    >
-      Верифицировать
-    </button>
+          <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+            <button
+              className="admin-row add-row"
+              onClick={() => handleVerify(2)}
+              disabled={updating}
+            >
+              Верифицировать
+            </button>
 
-    <button
-      className="admin-row add-row"
-      onClick={() => handleVerify(1)}
-      disabled={updating}
-    >
-      Отклонить
-    </button>
-  </div>
-)}
+            <button
+              className="admin-row add-row"
+              onClick={() => handleVerify(1)}
+              disabled={updating}
+            >
+              Отклонить
+            </button>
+          </div>
+        )}
 
 
           <div style={{ marginTop: "1rem" }}>

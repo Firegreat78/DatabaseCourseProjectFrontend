@@ -4,8 +4,6 @@ import './EmployeeProfilePage.css';
 import { useAuth } from '../../context/AuthContext';
 import { User, FileText, ShieldCheck, Briefcase, LogOut, AlertTriangle } from 'lucide-react';
 
-const STAFF_ID = 10;
-
 const roleMap = {
   1: 'Мегаадминистратор',
   2: 'Администратор',
