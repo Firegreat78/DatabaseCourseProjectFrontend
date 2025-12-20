@@ -274,3 +274,26 @@
   background-color: #5d5e5d;
   cursor: not-allowed;
 }
+
+.offer-status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.offer-status.rejected {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.offer-status.approved {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.offer-status.pending {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}

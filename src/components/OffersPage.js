@@ -32,6 +32,20 @@ const OffersPage = () => {
     setQuantity('');
   };
 
+  // ===== Статусы предложений =====
+  const getStatusInfo = (statusId) => {
+    switch (statusId) {
+      case 1:
+        return { text: 'Отклонено', color: 'rejected' };
+      case 2:
+        return { text: 'Одобрено', color: 'approved' };
+      case 3:
+        return { text: 'На рассмотрении', color: 'pending' };
+      default:
+        return { text: 'Неизвестно', color: 'pending' };
+    }
+  };
+
   // ===== Fetch offers =====
   const fetchOffers = async (isRefresh = false) => {
     if (!user?.token) return;
@@ -136,7 +150,6 @@ const OffersPage = () => {
         throw new Error(err.detail || 'Ошибка создания предложения');
       }
 
-      // 🔑 НЕ добавляем вручную — перечитываем список
       await fetchOffers();
       closeModal();
     } catch (err) {
@@ -203,27 +216,34 @@ const OffersPage = () => {
           </div>
         ) : (
           <div className="offers-list">
-            {offers.map((offer) => (
-              <div key={offer.id} className="offer-card">
-                <div className="offer-header">
-                  <span className={`offer-type ${offer.type.toLowerCase()}`}>
-                    {offer.type}
-                  </span>
-                  <span className="offer-ticker">
-                    {offer.security_name}
-                  </span>
-                </div>
+            {offers.map((offer) => {
+              const statusInfo = getStatusInfo(offer.proposal_status);
 
-                <div className="offer-details">
-                  <div className="detail-row">
-                    <span className="label">Количество</span>
-                    <span className="value">
-                      {Number(offer.quantity).toLocaleString('ru-RU')} шт.
+              return (
+                <div key={offer.id} className="offer-card">
+                  <div className="offer-header">
+                    <span className={`offer-type ${offer.offer_type.toLowerCase()}`}>
+                      {offer.offer_type}
+                    </span>
+                    <span className={`offer-status ${statusInfo.color}`}>
+                      {statusInfo.text}
+                    </span>
+                    <span className="offer-ticker">
+                      {offer.security_name}
                     </span>
                   </div>
+
+                  <div className="offer-details">
+                    <div className="detail-row">
+                      <span className="label">Количество</span>
+                      <span className="value">
+                        {Number(offer.quantity).toLocaleString('ru-RU')} шт.
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
