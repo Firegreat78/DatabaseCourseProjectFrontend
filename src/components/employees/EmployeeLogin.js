@@ -1,3 +1,4 @@
+// src/pages/EmployeeLogin.jsx (или где у тебя лежит)
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -8,7 +9,6 @@ const API_BASE_URL = 'http://localhost:8000';
 const EmployeeLogin = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-
   const [loginValue, setLoginValue] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -37,7 +37,8 @@ const EmployeeLogin = () => {
       login({
         token: data.access_token,
         user_id: data.user_id,
-        role: data.role,
+        role: data.role,        
+        isStaff: true,
       });
 
       // редирект по роли
@@ -59,14 +60,13 @@ const EmployeeLogin = () => {
     }
   };
 
+  // остальной JSX без изменений
   return (
     <div className="employee-login-page">
       <main className="main-content">
         <div className="login-container">
           <h1>Вход для сотрудников</h1>
-
           {error && <div className="error-message">{error}</div>}
-
           <form onSubmit={handleSubmit}>
             <input
               value={loginValue}
@@ -85,7 +85,6 @@ const EmployeeLogin = () => {
               {isLoading ? 'ВХОД...' : 'ВОЙТИ'}
             </button>
           </form>
-
           <div className="client-link">
             Вход для клиентов? <Link to="/login">Вход</Link>
           </div>
