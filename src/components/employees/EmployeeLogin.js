@@ -42,18 +42,18 @@ const EmployeeLogin = () => {
         isStaff: true,
       });
 
-      // Редирект по числовой роли
-      const roleStr = data.role;
-      if (roleStr === "megaadmin" || roleStr === "admin") {
-  navigate('/admin/main');
-} else if (roleStr === "broker") {
-  navigate('/broker/main');
-} else if (roleStr === "verifier") {
-  navigate('/verifier/main');
-} else {
-	alert(data);
-  navigate('/employee/dashboard');  // или куда нужно для неизвестной роли
-}
+      // редирект по роли
+      const role = Number(data.role);
+      if (role == null) {throw new Error(data.detail || 'Ошибка входа');} 
+      else if (role === 1 || role === 2) {
+        navigate('/admin/main');
+      } else if (role === 3) {
+        navigate('/broker/main');
+      } else if (role === 4) {
+        navigate('/verifier/main');
+      } else {
+        throw new Error(data.detail || 'Ошибка входа');
+      }
     } catch (err) {
       setError(err.message || 'Ошибка при входе');
     } finally {

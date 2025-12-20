@@ -55,7 +55,7 @@
   background-color: #ef4444; /* красный */
 }
 .status-indicator.suspended {
-  background-color: #f59e0b; /* оранжевый */
+  background-color: #ff8800; /* оранжевый */
 }
 
 /* Адаптив */

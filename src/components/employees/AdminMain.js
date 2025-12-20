@@ -1,6 +1,5 @@
-// src/components/employees/AdminMain.js
 import React, { useState, useEffect } from 'react';
-import { Search, ArrowRight, Shield, Plus } from 'lucide-react';
+import { Search, ArrowRight, Shield, Plus, TrendingUp } from 'lucide-react';
 import EmployeeHeader from './EmployeeHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -15,17 +14,25 @@ const AdminMainPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!user) return;
+
     const fetchStaff = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/staff`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
         });
         const data = await response.json();
 
-        // Фильтруем по роли: только мегаадмин видит админов и мегаадминов
         let filtered = data;
         if (user.role !== '1') {
-          filtered = data.filter(item => item.rights_level !== '1' && item.rights_level !== '2');
+          filtered = data.filter(
+            item =>
+              item.rights_level !== '1' &&
+              item.rights_level !== '2' &&
+              item.rights_level !== '5'
+          );
         }
 
         setAdminItems(filtered);
@@ -35,7 +42,7 @@ const AdminMainPage = () => {
     };
 
     fetchStaff();
-  }, [user.role]);
+  }, [user]);
 
   const filteredItems = adminItems.filter(
     (item) =>
@@ -63,6 +70,24 @@ const AdminMainPage = () => {
           />
         </div>
 
+        {/* КНОПКИ ДЕЙСТВИЙ */}
+        <div
+          className="admin-row add-row"
+          onClick={() => navigate('/admin/employees/new')}
+        >
+          <Plus size={24} />
+          <span>Добавить сотрудника</span>
+        </div>
+
+        <div
+          className="admin-row add-row"
+          onClick={() => navigate('/admin/exchange')}
+        >
+          <TrendingUp size={24} />
+          <span>Управление биржей</span>
+        </div>
+
+        {/* СПИСОК СОТРУДНИКОВ */}
         <div className="admin-list">
           {filteredItems.map((item) => (
             <div
@@ -83,14 +108,6 @@ const AdminMainPage = () => {
               <ArrowRight size={20} className="arrow-icon" />
             </div>
           ))}
-
-          <div
-            className="admin-row add-row"
-            onClick={() => navigate('/admin/employees/new')}
-          >
-            <Plus size={24} />
-            <span>Добавить сотрудника</span>
-          </div>
         </div>
       </main>
     </div>

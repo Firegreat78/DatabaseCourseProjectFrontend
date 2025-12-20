@@ -1,75 +1,78 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import EmployeeHeader from './EmployeeHeader';
 import './EmployeeProfilePage.css';
-import { User, FileText, ShieldCheck, Briefcase, LogOut } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { User, FileText, ShieldCheck, Briefcase, LogOut, AlertTriangle } from 'lucide-react';
 
 const roleMap = {
   1: 'Мегаадминистратор',
   2: 'Администратор',
   3: 'Брокер',
   4: 'Верификатор',
+  5: 'Система'
+};
+
+const statusMap = {
+  1: 'Активен',
+  2: 'Уволен',
+  3: 'Отпуск'
 };
 
 const EmployeeProfilePage = () => {
-  const { user, logout, token } = useAuth();
-  const navigate = useNavigate();
-
   const [employeeData, setEmployeeData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { user } = useAuth();
 
-  // ❌ useEffect больше не вызывается условно
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
     const fetchEmployee = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/staff/${user.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!res.ok) throw new Error('Не удалось получить данные сотрудника');
-        const data = await res.json();
+        const response = await fetch(`http://localhost:8000/api/staff/${user?.id}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || 'Ошибка загрузки профиля');
+        }
+
         setEmployeeData({
-          contractNumber: data.contract_number,
-          employmentStatus: data.employment_status_id === 1 ? 'Активен' : 'Неактивен',
-          roleLevel: roleMap[data.rights_level] || 'Неизвестно',
+          contractNumber: data.contract_number ?? 'Не указан',
+          employmentStatus: data.employment_status,
+          roleLevel: roleMap[data.rights_level] ?? 'Неизвестно',
+          login: data.login,
         });
       } catch (err) {
-        console.error(err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
     fetchEmployee();
-  }, [user, token]);
+  }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
-  };
+  if (loading) {
+    return <div className="admin-content">Загрузка...</div>;
+  }
 
-  if (!user) return <p>Пользователь не авторизован</p>;
-  if (loading) return <p>Загрузка...</p>;
-  if (!employeeData) return <p>Данные сотрудника недоступны</p>;
+  if (error) {
+    return (
+      <div className="admin-content">
+        <AlertTriangle /> {error}
+      </div>
+    );
+  }
 
   return (
     <div className="employee-profile-page">
       <EmployeeHeader />
+
       <main className="employee-profile-content">
         <div className="employee-profile-card">
           <div className="employee-profile-header">
-            <div className="avatar">
-              <User size={48} strokeWidth={1.5} />
-            </div>
+            <User size={48} />
             <h1>Профиль сотрудника</h1>
-            <p>ID сотрудника: {user.id}</p>
+            <p>ID сотрудника: {user?.id}</p>
+            <p>Логин: {employeeData.login}</p>
           </div>
 
           <div className="employee-info-list">
@@ -84,27 +87,18 @@ const EmployeeProfilePage = () => {
             <div className="info-row">
               <Briefcase size={20} />
               <div>
-                <span className="label">Статус трудоустройства</span>
-                <span className="value status active">
-                  {employeeData.employmentStatus}
-                </span>
+                <span className="label">Статус</span>
+                <span className="value">{statusMap[employeeData.employmentStatus]}</span>
               </div>
             </div>
 
             <div className="info-row">
               <ShieldCheck size={20} />
               <div>
-                <span className="label">Уровень прав</span>
+                <span className="label">Роль</span>
                 <span className="value">{employeeData.roleLevel}</span>
               </div>
             </div>
-          </div>
-
-          <div className="employee-profile-actions">
-            <button onClick={handleLogout} className="btn-logout">
-              <LogOut size={18} />
-              Выйти из системы
-            </button>
           </div>
         </div>
       </main>
