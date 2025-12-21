@@ -47,53 +47,68 @@ const VerifierUserDetail = () => {
   }, [id, token]);
 
   const handleVerify = async (statusId) => {
-    if (
-      !window.confirm(
-        statusId === 1
-          ? "Отклонить пользователя? Его паспорт будет удалён."
-          : "Верифицировать пользователя?"
-      )
+  if (
+    !window.confirm(
+      statusId === 1
+        ? "Отклонить пользователя? Его паспорт будет удалён."
+        : "Верифицировать пользователя?"
     )
-      return;
+  )
+    return;
 
-    setUpdating(true);
-    try {
-      if (statusId === 1) {
-        // DELETE паспорт
-        const deleteResp = await fetch(`${API_BASE_URL}/api/user/${id}/passport`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!deleteResp.ok) throw new Error("Ошибка удаления паспорта");
-      }
-
-      // Обновление статуса
-      const response = await fetch(`${API_BASE_URL}/api/user/${id}`, {
-        method: "PUT",
+  setUpdating(true);
+  try {
+    if (statusId === 1) {
+      // DELETE паспорт
+      const deleteResp = await fetch(`${API_BASE_URL}/api/user/${id}/passport`, {
+        method: "DELETE",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ verification_status_id: statusId }),
       });
 
-      if (!response.ok) throw new Error("Ошибка обновления статуса");
+      if (!deleteResp.ok) throw new Error("Ошибка удаления паспорта");
+    } else if (statusId === 2) {
+      // --- НОВЫЙ БЛОК ---
+      // Вызов эндпоинта, который выполнит verify_user_passport
+      const verifyResp = await fetch(`${API_BASE_URL}/api/user/${id}/verify_passport`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      alert(
-        statusId === 1
-          ? "Паспорт удалён, пользователь отклонён"
-          : "Пользователь верифицирован"
-      );
-      navigate("/verifier/main");
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setUpdating(false);
+      if (!verifyResp.ok) {
+        const errorData = await verifyResp.json().catch(() => ({ detail: "Неизвестная ошибка" }));
+        throw new Error(errorData.detail || "Ошибка при верификации паспорта");
+      }
+      // ------------------
     }
-  };
+
+    // Обновление статуса (для обоих случаев: 1 или 2)
+    const response = await fetch(`${API_BASE_URL}/api/user/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ verification_status_id: statusId }),
+    });
+
+    if (!response.ok) throw new Error("Ошибка обновления статуса");
+
+    alert(
+      statusId === 1
+        ? "Паспорт удалён, пользователь отклонён"
+        : "Пользователь верифицирован"
+    );
+    navigate("/verifier/main");
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    setUpdating(false);
+  }
+};
 
 if (loading) return <div className="admin-content">Загрузка...</div>;
 if (error) return <div className="admin-content">Ошибка: {error}</div>;
