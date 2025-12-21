@@ -155,7 +155,7 @@ const BrokerAccountPage = () => {
         throw new Error(errData.detail || 'Ошибка при изменении баланса');
       }
 
-      alert('Запрос на изменение баланса отправлен');
+      alert('Баланс успешно изменён');
       setShowModal(false);
       fetchAccountData();
     } catch (err) {
