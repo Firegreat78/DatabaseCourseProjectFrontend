@@ -50,7 +50,7 @@ const VerifierUserDetail = () => {
     if (
       !window.confirm(
         statusId === 1
-          ? "Отклонить пользователя?"
+          ? "Отклонить пользователя? Его паспорт будет удалён."
           : "Верифицировать пользователя?"
       )
     )
@@ -58,6 +58,19 @@ const VerifierUserDetail = () => {
 
     setUpdating(true);
     try {
+      if (statusId === 1) {
+        // DELETE паспорт
+        const deleteResp = await fetch(`${API_BASE_URL}/api/user/${id}/passport`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!deleteResp.ok) throw new Error("Ошибка удаления паспорта");
+      }
+
+      // Обновление статуса
       const response = await fetch(`${API_BASE_URL}/api/user/${id}`, {
         method: "PUT",
         headers: {
@@ -65,18 +78,23 @@ const VerifierUserDetail = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ verification_status_id: statusId }),
-    });
+      });
 
-    if (!response.ok) throw new Error("Ошибка обновления статуса");
+      if (!response.ok) throw new Error("Ошибка обновления статуса");
 
-    alert("Статус пользователя обновлён");
-    navigate("/verifier/main");
-      } catch (err) {
-        alert(err.message);
-      } finally {
-        setUpdating(false);
-      }
-};
+      alert(
+        statusId === 1
+          ? "Паспорт удалён, пользователь отклонён"
+          : "Пользователь верифицирован"
+      );
+      navigate("/verifier/main");
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
 if (loading) return <div className="admin-content">Загрузка...</div>;
 if (error) return <div className="admin-content">Ошибка: {error}</div>;
 if (!passport)
