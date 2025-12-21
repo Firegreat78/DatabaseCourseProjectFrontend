@@ -181,19 +181,19 @@ const isNotVerified = clientData?.verificationStatusId === 1 || clientData?.veri
           </div>
 
           <div className="profile-actions">
-            {!isVerified && (
-              <button 
-                onClick={() => navigate('/verification')} 
-                className="btn-primary"
-              >
-                Верифицировать аккаунт
-              </button>
-            )}
+  {clientData?.verificationStatusId === 1 && ( // <-- Изменённое условие
+    <button 
+      onClick={() => navigate('/verification')} 
+      className="btn-primary"
+    >
+      Верифицировать аккаунт
+    </button>
+  )}
 
-            <button onClick={handleLogout} className="btn-logout">
-              <LogOut size={18} /> Выйти из аккаунта
-            </button>
-          </div>
+  <button onClick={handleLogout} className="btn-logout">
+    <LogOut size={18} /> Выйти из аккаунта
+  </button>
+</div>
         </div>
       </main>
     </div>
