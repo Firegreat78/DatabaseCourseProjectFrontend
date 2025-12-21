@@ -26,7 +26,7 @@ const ProfilePage = () => {
         setClientData({
           email: data.email,
           registrationDate: data.registration_date,
-          isVerified: data.is_verified,
+          verificationStatusId: data.verification_status_id,
           rubAccount: data.rub_account,
           usdAccount: data.usd_account,
         });
@@ -56,7 +56,8 @@ const ProfilePage = () => {
     );
   }
 
-  const isVerified = clientData?.isVerified;
+  const isVerified = clientData?.verificationStatusId === 2;
+
 
   return (
     <div className="client-profile-page">
