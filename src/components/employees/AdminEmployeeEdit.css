@@ -1,7 +1,15 @@
+/* AdminEmployeeEdit.css */
 .admin-employee-edit {
   max-width: 820px;
   margin: 0 auto;
   padding: 2rem 1rem 3rem;
+  box-sizing: border-box;
+}
+
+.admin-employee-edit *,
+.admin-employee-edit *::before,
+.admin-employee-edit *::after {
+  box-sizing: border-box;
 }
 
 .admin-employee-edit h1 {
@@ -11,6 +19,7 @@
   background: linear-gradient(135deg, #667eea, #764ba2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Карточка формы */
@@ -26,6 +35,7 @@
 /* Поля формы */
 .form-group {
   margin-bottom: 1.6rem;
+  width: 100%;
 }
 
 .form-group label {
@@ -44,16 +54,20 @@
   padding: 0 1rem;
   border-radius: 14px;
   border: 2px solid #e2e8f0;
-  background: #f8fafc;
+  background-color: #f8fafc;
   font-size: 1rem;
   font-weight: 500;
   color: #0f172a;
   transition: all 0.25s ease;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 /* Disabled (ID) */
 .form-group input:disabled {
-  background: #f1f5f9;
+  background-color: #f1f5f9;
   color: #94a3b8;
   cursor: not-allowed;
   border-style: dashed;
@@ -64,22 +78,40 @@
 .form-group select:focus {
   outline: none;
   border-color: #667eea;
-  background: #ffffff;
+  background-color: #ffffff;
   box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
 }
 
-/* Select стрелка */
-.form-group select {
-  appearance: none;
-  background-image:
-    linear-gradient(45deg, transparent 50%, #667eea 50%),
-    linear-gradient(135deg, #667eea 50%, transparent 50%);
-  background-position:
-    calc(100% - 20px) calc(50% - 3px),
-    calc(100% - 14px) calc(50% - 3px);
-  background-size: 6px 6px;
-  background-repeat: no-repeat;
-  padding-right: 2.5rem;
+/* Стрелка только для select */
+.form-group.select-with-arrow {
+  position: relative;
+}
+
+.form-group.select-with-arrow::after {
+  content: '';
+  position: absolute;
+  right: 1rem;
+  /* Смещаем стрелку вниз, чтобы она была по центру поля ввода */
+  top: calc(50% + 0.7rem); /* label (~1.35rem) + половина отступа (0.225rem) */
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #667eea;
+  pointer-events: none;
+  transition: transform 0.3s ease;
+  z-index: 2;
+}
+
+/* Стрелка в состоянии фокуса (переворачивается вверх) */
+.form-group.select-with-arrow:focus-within::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* Убираем стандартную стрелку в IE */
+.form-group select::-ms-expand {
+  display: none;
 }
 
 /* Кнопка */
@@ -96,10 +128,11 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   box-shadow: 0 15px 35px rgba(102, 126, 234, 0.35);
   transition: all 0.25s ease;
+  box-sizing: border-box;
 }
 
 /* Hover */
-.admin-employee-edit button:hover {
+.admin-employee-edit button:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 20px 45px rgba(102, 126, 234, 0.45);
 }
@@ -122,6 +155,18 @@
   .admin-employee-edit h1 {
     font-size: 1.6rem;
   }
+  
+  .form-group input,
+  .form-group select {
+    height: 48px;
+    font-size: 0.95rem;
+  }
+  
+  /* Адаптивная стрелка */
+  .form-group.select-with-arrow::after {
+    right: 0.8rem;
+    top: calc(50% + 0.6rem); /* Уменьшаем смещение для мобильных */
+  }
 }
 
 /* AdminEmployeeEdit.css */
@@ -139,7 +184,7 @@
 }
 
 .button-disabled {
-  background-color: #d1d5db !important;
+  background: linear-gradient(135deg, #a5b4fc 0%, #c084fc 100%) !important;
   cursor: not-allowed !important;
   opacity: 0.8;
 }

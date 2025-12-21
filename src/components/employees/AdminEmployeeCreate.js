@@ -244,7 +244,7 @@ const AdminEmployeeCreate = () => {
         {errors.contract_number && touched.contract_number && <span className="error-message">{errors.contract_number}</span>}
       </div>
 
-      <div className="form-group">
+      <div className="form-group select-with-arrow">
         <label>Уровень прав</label>
         <select
           name="rights_level"
@@ -262,7 +262,7 @@ const AdminEmployeeCreate = () => {
         </select>
       </div>
 
-      <div className="form-group">
+      <div className="form-group select-with-arrow">
         <label>Статус трудоустройства</label>
         <select
           name="employment_status_id"

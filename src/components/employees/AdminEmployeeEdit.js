@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import './AdminEmployeeEdit.css';
 import { useAuth } from '../../context/AuthContext';
 
-
 const roleOptions = [
   { value: 1, label: 'Мегаадминистратор' },
   { value: 2, label: 'Администратор' },
@@ -18,36 +17,33 @@ const AdminEmployeeEdit = () => {
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const { user } = useAuth();
-  // Ограничение для не-мегаадмина
-const availableRoles = user?.role === '1'
-  ? roleOptions.filter(r => r.value < 4)
-  : roleOptions.filter(r => r.value > 2 || r.value < 4); // только брокер и верификатор
-
+  
+  const availableRoles = user?.role === '1'
+    ? roleOptions.filter(r => r.value < 4)
+    : roleOptions.filter(r => r.value > 2 && r.value < 5);
 
   useEffect(() => {
-  const fetchStaffData = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/staff/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-      });
-      const data = await response.json();
-      setForm({
-        id: data.id,
-        login: data.login,
-        password: '', // не показываем пароль
-        contractNumber: data.contract_number,
-        role: data.rights_level,
-        employmentStatus: data.employment_status_id,
-      });
-    } catch (err) {
-      console.error('Ошибка загрузки сотрудника:', err);
-    }
-  };
+    const fetchStaffData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/staff/${id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+        });
+        const data = await response.json();
+        setForm({
+          id: data.id,
+          login: data.login,
+          password: '',
+          contractNumber: data.contract_number,
+          role: data.rights_level,
+          employmentStatus: data.employment_status_id,
+        });
+      } catch (err) {
+        console.error('Ошибка загрузки сотрудника:', err);
+      }
+    };
 
-  fetchStaffData();
-}, [id]);
-
-
+    fetchStaffData();
+  }, [id]);
 
   if (!form) return null;
 
@@ -56,28 +52,27 @@ const availableRoles = user?.role === '1'
   };
 
   const handleSave = async () => {
-  setSaving(true);
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/staff/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-      },
-      body: JSON.stringify(form),
-    });
+    setSaving(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/staff/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify(form),
+      });
 
-    if (!response.ok) throw new Error('Ошибка при обновлении');
+      if (!response.ok) throw new Error('Ошибка при обновлении');
 
-    alert('Сотрудник успешно обновлён');
-  } catch (err) {
-    console.error(err);
-    alert('Не удалось обновить сотрудника');
-  } finally {
-    setSaving(false);
-  }
-};
-
+      alert('Сотрудник успешно обновлён');
+    } catch (err) {
+      console.error(err);
+      alert('Не удалось обновить сотрудника');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="admin-employee-edit">
@@ -114,32 +109,32 @@ const availableRoles = user?.role === '1'
         />
       </div>
 
-      <div className="form-group">
+      <div className="form-group select-with-arrow">
         <label>Статус трудоустройства</label>
         <select
           value={form.employmentStatus}
           onChange={(e) => handleChange('employmentStatus', e.target.value)}
         >
-          <option>Активен</option>
-          <option>Уволен</option>
-          <option>Отпуск</option>
+          <option value="1">Активен</option>
+          <option value="2">Уволен</option>
+          <option value="3">Отпуск</option>
         </select>
       </div>
 
-      <div className="form-group">
+      <div className="form-group select-with-arrow">
         <label>Уровень прав</label>
         <select
-  value={form.role}
-  onChange={(e) => handleChange('role', Number(e.target.value))}
->
-  {availableRoles.map((r) => (
-    <option key={r.value} value={r.value}>
-      {r.label}
-    </option>
-  ))}
-</select>
-
+          value={form.role}
+          onChange={(e) => handleChange('role', Number(e.target.value))}
+        >
+          {availableRoles.map((r) => (
+            <option key={r.value} value={r.value}>
+              {r.label}
+            </option>
+          ))}
+        </select>
       </div>
+
       <button onClick={handleSave} disabled={saving}>
         {saving ? 'Сохранение...' : 'Сохранить изменения'}
       </button>
