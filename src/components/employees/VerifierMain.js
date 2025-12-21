@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import EmployeeHeader from "./EmployeeHeader";
-import { Search, ArrowRight } from 'lucide-react';
+import { Search, ArrowRight, Filter } from 'lucide-react';
 import { useFetchTable } from "./useFetchTable";
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from "react-router-dom";
@@ -13,17 +13,30 @@ const VerifierMainPage = () => {
 
   const { data: users, loading, error } = useFetchTable("user", token);
   const [query, setQuery] = useState('');
+  const [showPendingOnly, setShowPendingOnly] = useState(true); // Состояние для переключателя
 
   if (loading) return <div className="admin-content">Загрузка...</div>;
   if (error) return <div className="admin-content">Ошибка: {error}</div>;
 
-  // Сначала фильтруем и сортируем: заявки на верификацию первыми
-  const sortedUsers = users
-    .slice() // копируем массив
-    .sort((a, b) => (a.verification_status_id === 3 ? -1 : 1));
+  // Фильтрация и сортировка данных
+  let filteredUsers = users.slice(); // Создаем копию массива
 
-  // Применяем поиск
-  const filteredUsers = sortedUsers.filter(
+  // Фильтрация по статусу, если включен переключатель
+  if (showPendingOnly) {
+    filteredUsers = filteredUsers.filter(u => u.verification_status_id === 3);
+    // Сортировка новых заявок первыми
+    filteredUsers.sort((a, b) => b.id - a.id);
+  } else {
+    // Общая сортировка: ожидающие верификации вверху
+    filteredUsers.sort((a, b) => {
+      if (a.verification_status_id === 3 && b.verification_status_id !== 3) return -1;
+      if (a.verification_status_id !== 3 && b.verification_status_id === 3) return 1;
+      return 0;
+    });
+  }
+
+  // Применение поиска
+  filteredUsers = filteredUsers.filter(
     u =>
       u.login.toLowerCase().includes(query.toLowerCase()) ||
       String(u.id).includes(query)
@@ -56,33 +69,51 @@ const VerifierMainPage = () => {
           <h1>Верификация пользователей</h1>
         </div>
 
-        <div className="admin-search">
-          <Search size={18} />
-          <input
-            type="text"
-            placeholder="Поиск по ID или логину..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+        <div className="admin-filters">
+          <div className="admin-search">
+            <Search size={18} />
+            <input
+              type="text"
+              placeholder="Поиск по ID или логину..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          
+          <div 
+            className={`filter-toggle ${showPendingOnly ? 'active' : ''}`}
+            onClick={() => setShowPendingOnly(!showPendingOnly)}
+          >
+            <Filter size={18} />
+            <span>Только ожидающие верификации</span>
+          </div>
         </div>
 
         <div className="admin-list">
-          {filteredUsers.map((u) => (
-            <div
-              key={u.id}
-              className="admin-row"
-              onClick={() => navigate(`/verifier/users/${u.id}`)}
-            >
-              <div className="admin-left">
-                <div className="admin-id">ID: {u.id}</div>
-                <div className="admin-name">{u.login || u.name}</div>
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map((u) => (
+              <div
+                key={u.id}
+                className="admin-row"
+                onClick={() => navigate(`/verifier/users/${u.id}`)}
+              >
+                <div className="admin-left">
+                  <div className="admin-id">ID: {u.id}</div>
+                  <div className="admin-name">{u.login || u.name}</div>
+                </div>
+                <div className={`admin-action ${getStatusClass(u.verification_status_id)}`}>
+                  {getStatusLabel(u.verification_status_id)}
+                </div>
+                <ArrowRight size={20} className="arrow-icon" />
               </div>
-              <div className={`admin-action ${getStatusClass(u.verification_status_id)}`}>
-                {getStatusLabel(u.verification_status_id)}
-              </div>
-              <ArrowRight size={20} className="arrow-icon" />
+            ))
+          ) : (
+            <div className="no-results">
+              {showPendingOnly 
+                ? "Нет заявок, ожидающих верификации" 
+                : "Пользователи не найдены"}
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

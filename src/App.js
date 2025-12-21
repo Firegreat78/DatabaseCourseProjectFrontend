@@ -66,6 +66,7 @@ function App() {
         <Routes>
           {/* Публичные страницы */}
           <Route path="/" element={<PublicRoute><UserLogin /></PublicRoute>} />
+          {/*<Route path="" element={<PublicRoute><UserLogin /></PublicRoute>} />*/}
           <Route path="/login" element={<PublicRoute><UserLogin /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><UserRegistration /></PublicRoute>} />
           <Route path="/employee-login" element={<EmployeeLogin />} /> {/* Можно тоже защитить отдельно */}
@@ -112,7 +113,7 @@ function App() {
             element={<ProtectedRoute><BrokerAccountPage /></ProtectedRoute>}
           />
           
-          {/* Редирект на главную для неизвестных путей <Route path="*" element={<Navigate to="/accounts" replace />} />*/}
+          {/* Редирект на главную для неизвестных путей */<Route path="*" element={<Navigate to="/login" replace />} />}
           
         </Routes>
       </AuthProvider>

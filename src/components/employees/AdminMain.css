@@ -133,3 +133,48 @@
     padding: 1.4rem;
   }
 }
+
+
+.admin-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+  background: #f8fafc;
+}
+
+.filter-toggle:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.filter-toggle.active {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.filter-toggle svg {
+  color: #3b82f6;
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+  font-style: italic;
+  border: 1px dashed #e2e8f0;
+  border-radius: 8px;
+  margin-top: 20px;
+}
