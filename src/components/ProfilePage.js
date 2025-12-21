@@ -86,6 +86,9 @@ const ProfilePage = () => {
   };
 
   const isVerified = clientData?.verificationStatusId === 2;
+const isPendingVerification = clientData?.verificationStatusId === 3;
+const isNotVerified = clientData?.verificationStatusId === 1 || clientData?.verificationStatusId === undefined;
+  
 
   // Если пользователь заблокирован — показываем только хедер и сообщение
   if (isBanned) {
@@ -162,8 +165,16 @@ const ProfilePage = () => {
               {isVerified ? <ShieldCheck size={20} /> : <ShieldAlert size={20} />}
               <div>
                 <span className="label">Верификация аккаунта</span>
-                <span className={`value status ${isVerified ? 'verified' : 'not-verified'}`}>
-                  {isVerified ? 'Верифицирован' : 'Не верифицирован'}
+                <span
+                  className={`value status ${
+                    isVerified ? 'verified' : isPendingVerification ? 'pending' : 'not-verified'
+                  }`}
+                >
+                  {isVerified
+                    ? 'Верифицирован'
+                    : isPendingVerification
+                    ? 'Ожидает верификации'
+                    : 'Не верифицирован'}
                 </span>
               </div>
             </div>
