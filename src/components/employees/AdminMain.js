@@ -1,235 +1,109 @@
-import React, { useState } from "react";
-import EmployeeHeader from "./EmployeeHeader";
-import { Search, ArrowRight, Filter, User, Mail, Calendar, CheckCircle, XCircle, Clock, Shield, Ban } from 'lucide-react';
-import { useFetchTable } from "./useFetchTable";
+import React, { useState, useEffect } from 'react';
+import { Search, ArrowRight, Shield, Plus, TrendingUp } from 'lucide-react';
+import AdminHeader from './AdminHeader';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 import './AdminMain.css';
 
-const AdminUsersPage = () => {
+const API_BASE_URL = 'http://localhost:8000';
+
+const AdminMainPage = () => {
+  const [query, setQuery] = useState('');
+  const [adminItems, setAdminItems] = useState([]);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const token = localStorage.getItem("authToken");
 
-  const { data: users, loading, error, refetch } = useFetchTable("user", token);
-  const [query, setQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
+  useEffect(() => {
+    if (!user) return;
 
-  if (loading) return <div className="admin-content">Загрузка...</div>;
-  if (error) return <div className="admin-content">Ошибка: {error}</div>;
+    const fetchStaff = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/staff`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        });
+        const data = await response.json();
 
-  // Фильтрация данных
-  let filteredUsers = users.slice();
+        let filtered = data;
+        if (user.role !== '1') {
+          filtered = data.filter(
+            item =>
+              item.rights_level !== '1' &&
+              item.rights_level !== '2' &&
+              item.rights_level !== '5'
+          );
+        }
 
-  // Применение фильтров
-  if (activeFilter === 'pending') {
-    filteredUsers = filteredUsers.filter(u => u.verification_status_id === 3);
-  } else if (activeFilter === 'blocked') {
-    filteredUsers = filteredUsers.filter(u => u.block_status_id === 2);
-  } else if (activeFilter === 'verified') {
-    filteredUsers = filteredUsers.filter(u => u.verification_status_id === 2);
-  }
+        setAdminItems(filtered);
+      } catch (err) {
+        console.error('Ошибка загрузки сотрудников:', err);
+      }
+    };
 
-  // Применение поиска
-  filteredUsers = filteredUsers.filter(
-    u =>
-      u.login.toLowerCase().includes(query.toLowerCase()) ||
-      u.email.toLowerCase().includes(query.toLowerCase()) ||
-      String(u.id).includes(query)
+    fetchStaff();
+  }, [user]);
+
+  const filteredItems = adminItems.filter(
+    (item) =>
+      item.login.toLowerCase().includes(query.toLowerCase()) ||
+      item.contract_number.toLowerCase().includes(query.toLowerCase()) ||
+      String(item.id).includes(query)
   );
-
-  // Сортировка по дате регистрации (новые сверху)
-  filteredUsers.sort((a, b) => new Date(b.registration_date) - new Date(a.registration_date));
-
-  const getVerificationStatusLabel = (statusId) => {
-    switch(statusId) {
-      case 1: return "Не верифицирован";
-      case 2: return "Верифицирован";
-      case 3: return "Ожидает верификации";
-      default: return "Неизвестно";
-    }
-  };
-
-  const getVerificationStatusIcon = (statusId) => {
-    switch(statusId) {
-      case 1: return <XCircle size={16} />;
-      case 2: return <CheckCircle size={16} />;
-      case 3: return <Clock size={16} />;
-      default: return null;
-    }
-  };
-
-  const getVerificationStatusClass = (statusId) => {
-    switch(statusId) {
-      case 1: return "not-verified";
-      case 2: return "verified";
-      case 3: return "pending";
-      default: return "";
-    }
-  };
-
-  const getBlockStatusLabel = (statusId) => {
-    switch(statusId) {
-      case 1: return "Активен";
-      case 2: return "Заблокирован";
-      default: return "Неизвестно";
-    }
-  };
-
-  const getBlockStatusIcon = (statusId) => {
-    return statusId === 1 ? <Shield size={16} /> : <Ban size={16} />;
-  };
-
-  const getBlockStatusClass = (statusId) => {
-    return statusId === 1 ? "active" : "blocked";
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-
-  const handleUserClick = (userId) => {
-    navigate(`/admin/users/${userId}`);
-  };
-
-  // Статистика
-  const stats = {
-    total: users.length,
-    pending: users.filter(u => u.verification_status_id === 3).length,
-    blocked: users.filter(u => u.block_status_id === 2).length,
-    verified: users.filter(u => u.verification_status_id === 2).length
-  };
 
   return (
     <div className="admin-page">
-      <EmployeeHeader />
+      <AdminHeader />
 
-      <div className="admin-content">
+      <main className="admin-content">
         <div className="page-header">
-          <h1>Управление пользователями</h1>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-value">{stats.total}</div>
-              <div className="stat-label">Всего</div>
-            </div>
-            <div className="stat-card pending">
-              <div className="stat-value">{stats.pending}</div>
-              <div className="stat-label">Ожидают</div>
-            </div>
-            <div className="stat-card verified">
-              <div className="stat-value">{stats.verified}</div>
-              <div className="stat-label">Верифицированы</div>
-            </div>
-            <div className="stat-card blocked">
-              <div className="stat-value">{stats.blocked}</div>
-              <div className="stat-label">Заблокированы</div>
-            </div>
-          </div>
+          <h1>Администрирование</h1>
         </div>
 
-        <div className="admin-filters">
-          <div className="admin-search">
-            <Search size={20} />
-            <input
-              type="text"
-              placeholder="Поиск по ID, логину или email..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
-          
-          <div className="filter-group">
-            <div 
-              className={`filter-toggle ${activeFilter === 'all' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('all')}
-            >
-              <User size={16} />
-              <span>Все</span>
-            </div>
-            
-            <div 
-              className={`filter-toggle ${activeFilter === 'pending' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('pending')}
-            >
-              <Clock size={16} />
-              <span>Ожидают</span>
-            </div>
-            
-            <div 
-              className={`filter-toggle ${activeFilter === 'verified' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('verified')}
-            >
-              <CheckCircle size={16} />
-              <span>Верифицированы</span>
-            </div>
-            
-            <div 
-              className={`filter-toggle ${activeFilter === 'blocked' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('blocked')}
-            >
-              <Ban size={16} />
-              <span>Заблокированы</span>
-            </div>
-          </div>
+        <div className="admin-search">
+          <Search size={18} />
+          <input
+            type="text"
+            placeholder="Поиск по ID, логину или договору..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </div>
 
+        {/* КНОПКИ ДЕЙСТВИЙ */}
+        <div
+          className="admin-row add-row"
+          onClick={() => navigate('/admin/employees/new')}
+        >
+          <Plus size={24} />
+          <span>Добавить сотрудника</span>
+        </div>
+
+        {/* СПИСОК СОТРУДНИКОВ */}
         <div className="admin-list">
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((u) => (
-              <div
-                key={u.id}
-                className="admin-row"
-                onClick={() => handleUserClick(u.id)}
-              >
-                <div className="admin-left">
-                  <div className="user-id-container">
-                    <div className="admin-id">
-                      ID: {u.id}
-                    </div>
-                    <div className={`status-badge ${getVerificationStatusClass(u.verification_status_id)}`}>
-                      {getVerificationStatusIcon(u.verification_status_id)}
-                      <span>{getVerificationStatusLabel(u.verification_status_id)}</span>
-                    </div>
-                    <div className={`block-status ${getBlockStatusClass(u.block_status_id)}`}>
-                      {getBlockStatusIcon(u.block_status_id)}
-                      <span>{getBlockStatusLabel(u.block_status_id)}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="user-main-info">
-                    <div className="admin-name">
-                      <User size={18} />
-                      <span>{u.login}</span>
-                    </div>
-                    <div className="user-email">
-                      <Mail size={16} />
-                      <span>{u.email}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="user-reg-date">
-                    <Calendar size={16} />
-                    <span>Зарегистрирован: {formatDate(u.registration_date)}</span>
-                  </div>
+          {filteredItems.map((item) => (
+            <div
+              key={item.id}
+              className="admin-row"
+              onClick={() => navigate(`/admin/employees/${item.id}`)}
+            >
+              <div className="admin-left">
+                <div className="admin-id">
+                  <Shield size={18} />
+                  <span>ID {item.id}</span>
                 </div>
-                
-                <ArrowRight size={20} className="arrow-icon" />
+
+                <div className="admin-name">{item.login}</div>
+                <div className="admin-action">{item.contract_number}</div>
               </div>
-            ))
-          ) : (
-            <div className="no-results">
-              Пользователи не найдены
+
+              <ArrowRight size={20} className="arrow-icon" />
             </div>
-          )}
+          ))}
         </div>
-      </div>
+      </main>
     </div>
   );
 };
 
-export default AdminUsersPage;
+export default AdminMainPage;

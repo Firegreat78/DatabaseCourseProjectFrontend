@@ -69,7 +69,7 @@ const AdminHeader = () => {
       {/* Правая часть: профиль + выход */}
       <div className="header-right">
         <NavLink
-          to="/admin/profile"
+          to="/employee/profile"
           className={({ isActive }) => `profile-link ${isActive ? 'active' : ''}`}
         >
           <div className="profile-avatar">
