@@ -11,6 +11,7 @@ const OffersPage = () => {
   const { user } = useAuth();
 
   const [offers, setOffers] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -32,6 +33,8 @@ const OffersPage = () => {
   const [selectedAccount, setSelectedAccount] = useState('');
   const [quantity, setQuantity] = useState('');
 
+  const [cancellingId, setCancellingId] = useState(null);
+
   const openModal = () => setModalOpen(true);
   const closeModal = () => {
     setModalOpen(false);
@@ -39,6 +42,8 @@ const OffersPage = () => {
     setSelectedAccount('');
     setQuantity('');
   };
+
+  
 
   // ===== Статусы предложений =====
   const getStatusInfo = (statusId) => {
@@ -75,6 +80,44 @@ const OffersPage = () => {
       setIsVerified(false);
     } finally {
       setVerificationLoading(false);
+    }
+  };
+
+  // ===== Отмена предложения =====
+  const handleCancelOffer = async (proposalId) => {
+    if (!window.confirm('Вы уверены, что хотите отменить это предложение?')) {
+      return;
+    }
+
+    setCancellingId(proposalId);
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/proposal/${proposalId}/cancel`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Ошибка отмены предложения: ${res.status}`);
+      }
+
+      const data = await res.json();
+      
+      // Показываем сообщение об успехе
+      alert(data.message || 'Предложение успешно отменено');
+      
+      // Обновляем список предложений
+      await fetchOffers();
+      
+    } catch (err) {
+      console.error('Ошибка при отмене предложения:', err);
+      alert(err.message || 'Не удалось отменить предложение');
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -341,7 +384,27 @@ const OffersPage = () => {
                       </span>
                     </div>
                   </div>
+                   {offer.proposal_status === 3 && (
+                    <div className="offer-actions">
+                      <button
+                        className="cancel-btn"
+                        onClick={() => handleCancelOffer(offer.id)}
+                        disabled={cancellingId === offer.id}
+                      >
+                        {cancellingId === offer.id ? (
+                          <>
+                            <RefreshCw size={16} className="spinning" /> Отмена...
+                          </>
+                        ) : (
+                          <>
+                            <X size={16} /> Отменить
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
+                
               );
             })}
           </div>

@@ -57,6 +57,7 @@ const PublicRoute = ({ children }) => {
   if (loading) return <div>Загрузка...</div>;
 
   // Если уже залогинен — сразу отправляем на счета
+  
   return user ? <Navigate to="/accounts" replace /> : children;
   //return user
 };
@@ -68,7 +69,6 @@ function App() {
         <Routes>
           {/* Публичные страницы */}
           <Route path="/" element={<PublicRoute><UserLogin /></PublicRoute>} />
-          {/*<Route path="" element={<PublicRoute><UserLogin /></PublicRoute>} />*/}
           <Route path="/login" element={<PublicRoute><UserLogin /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><UserRegistration /></PublicRoute>} />
           <Route path="/employee-login" element={<EmployeeLogin />} /> {/* Можно тоже защитить отдельно */}
