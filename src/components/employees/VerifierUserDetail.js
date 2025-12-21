@@ -77,22 +77,23 @@ const VerifierUserDetail = () => {
         setUpdating(false);
       }
 };
+if (loading) return <div className="admin-content">Загрузка...</div>;
+if (error) return <div className="admin-content">Ошибка: {error}</div>;
+if (!passport)
+  return <div className="admin-content">Паспорт не найден</div>;
 
-  if (loading) return <div className="admin-content">Загрузка...</div>;
-  if (error) return <div className="admin-content">Ошибка: {error}</div>;
-  if (!passport)
-    return <div className="admin-content">Паспорт не найден</div>;
+const canVerify = [1, 3].includes(passport.verification_status_id);
 
-  return (
-    <div className="admin-page">
-      <EmployeeHeader />
+return (
+  <div className="admin-page">
+    <EmployeeHeader />
 
-      <div className="admin-content">
-        <div className="page-header">
-          <h1>Паспорт пользователя (ID: {passport.user_id})</h1>
-        </div>
+    <div className="admin-content">
+      <div className="page-header">
+        <h1>Паспорт пользователя (ID: {passport.user_id})</h1>
+      </div>
 
-        <div className="admin-list">
+      <div className="admin-list">
           <div className="admin-row">
             <div className="admin-left">
               <div className="admin-name">
@@ -130,26 +131,25 @@ const VerifierUserDetail = () => {
             </div>
           </div>
 
-          {passport.verification_status_id === 3 && (
-          <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-            <button
-              className="admin-row add-row"
-              onClick={() => handleVerify(2)}
-              disabled={updating}
-            >
-              Верифицировать
-            </button>
+            {canVerify && (
+            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+              <button
+                className="admin-row add-row"
+                onClick={() => handleVerify(2)}
+                disabled={updating}
+              >
+                Верифицировать
+              </button>
 
-            <button
-              className="admin-row add-row"
-              onClick={() => handleVerify(1)}
-              disabled={updating}
-            >
-              Отклонить
-            </button>
-          </div>
-        )}
-
+              <button
+                className="admin-row add-row"
+                onClick={() => handleVerify(1)}
+                disabled={updating}
+              >
+                Отклонить
+              </button>
+            </div>
+          )}
 
           <div style={{ marginTop: "1rem" }}>
             <button
