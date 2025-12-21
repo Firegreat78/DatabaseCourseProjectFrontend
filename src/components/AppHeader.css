@@ -252,7 +252,30 @@
   }
 }
 
-/* Опционально: лёгкая анимация при наведении на весь правый блок */
-.header-right > *:hover {
-  /* Можно добавить лёгкий эффект, если хочешь */
+.header-nav {
+  display: flex;
+  gap: 1.5rem;
+  margin: 0 auto;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: var(--text-color);
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--primary-color);
+}
+
+.nav-link svg {
+  flex-shrink: 0;
 }

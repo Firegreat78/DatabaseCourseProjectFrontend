@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import AppHeader from "./EmployeeHeader";
 import { RefreshCw, Plus, AlertCircle } from "lucide-react";
 import "./ExchangeAdminPage.css";
+import AdminHeader from "./AdminHeader";
 
 const API_BASE_URL = "http://localhost:8000";
 
@@ -146,7 +147,7 @@ const ExchangeAdminPage = () => {
 
   return (
     <div className="ExchangeAdminPage-exchange-container">
-      <AppHeader />
+      <AdminHeader />
 
       <main className="ExchangeAdminPage-content">
         <div className="ExchangeAdminPage-exchange-header">

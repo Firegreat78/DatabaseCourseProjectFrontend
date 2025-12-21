@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import EmployeeHeader from "./EmployeeHeader";
-import { Search, ArrowRight, Filter, User, Mail, Calendar, CheckCircle, XCircle, Clock, Shield, Ban } from 'lucide-react';
+import AdminHeader from "./AdminHeader";
+import { Search, ArrowRight, Filter, User, Mail, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useFetchTable } from "./useFetchTable";
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from "react-router-dom";
@@ -13,7 +13,9 @@ const AdminUsersPage = () => {
 
   const { data: users, loading, error, refetch } = useFetchTable("user", token);
   const [query, setQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [showBlockedOnly, setShowBlockedOnly] = useState(false);
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'pending', 'blocked', 'verified'
 
   if (loading) return <div className="admin-content">Загрузка...</div>;
   if (error) return <div className="admin-content">Ошибка: {error}</div>;
@@ -76,10 +78,6 @@ const AdminUsersPage = () => {
     }
   };
 
-  const getBlockStatusIcon = (statusId) => {
-    return statusId === 1 ? <Shield size={16} /> : <Ban size={16} />;
-  };
-
   const getBlockStatusClass = (statusId) => {
     return statusId === 1 ? "active" : "blocked";
   };
@@ -97,44 +95,51 @@ const AdminUsersPage = () => {
     navigate(`/admin/users/${userId}`);
   };
 
-  // Статистика
-  const stats = {
-    total: users.length,
-    pending: users.filter(u => u.verification_status_id === 3).length,
-    blocked: users.filter(u => u.block_status_id === 2).length,
-    verified: users.filter(u => u.verification_status_id === 2).length
+  const handleRefresh = () => {
+    refetch && refetch();
   };
+
+  // Статистика
+  const totalUsers = users.length;
+  const pendingUsers = users.filter(u => u.verification_status_id === 3).length;
+  const blockedUsers = users.filter(u => u.block_status_id === 2).length;
+  const verifiedUsers = users.filter(u => u.verification_status_id === 2).length;
 
   return (
     <div className="admin-page">
-      <EmployeeHeader />
+      <AdminHeader />
 
       <div className="admin-content">
         <div className="page-header">
-          <h1>Управление пользователями</h1>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-value">{stats.total}</div>
-              <div className="stat-label">Всего</div>
+          <div className="header-left">
+            <h1>Управление пользователями</h1>
+            <button className="refresh-btn" onClick={handleRefresh}>
+              Обновить
+            </button>
+          </div>
+          <div className="header-stats">
+            <div className="stat-item">
+              <span className="stat-label">Всего пользователей:</span>
+              <span className="stat-value">{totalUsers}</span>
             </div>
-            <div className="stat-card pending">
-              <div className="stat-value">{stats.pending}</div>
-              <div className="stat-label">Ожидают</div>
+            <div className="stat-item">
+              <span className="stat-label">Ожидают верификации:</span>
+              <span className="stat-value pending">{pendingUsers}</span>
             </div>
-            <div className="stat-card verified">
-              <div className="stat-value">{stats.verified}</div>
-              <div className="stat-label">Верифицированы</div>
+            <div className="stat-item">
+              <span className="stat-label">Верифицированы:</span>
+              <span className="stat-value verified">{verifiedUsers}</span>
             </div>
-            <div className="stat-card blocked">
-              <div className="stat-value">{stats.blocked}</div>
-              <div className="stat-label">Заблокированы</div>
+            <div className="stat-item">
+              <span className="stat-label">Заблокированы:</span>
+              <span className="stat-value blocked">{blockedUsers}</span>
             </div>
           </div>
         </div>
 
         <div className="admin-filters">
           <div className="admin-search">
-            <Search size={20} />
+            <Search size={18} />
             <input
               type="text"
               placeholder="Поиск по ID, логину или email..."
@@ -149,7 +154,7 @@ const AdminUsersPage = () => {
               onClick={() => setActiveFilter('all')}
             >
               <User size={16} />
-              <span>Все</span>
+              <span>Все пользователи</span>
             </div>
             
             <div 
@@ -157,7 +162,7 @@ const AdminUsersPage = () => {
               onClick={() => setActiveFilter('pending')}
             >
               <Clock size={16} />
-              <span>Ожидают</span>
+              <span>Ожидают верификации</span>
             </div>
             
             <div 
@@ -165,15 +170,15 @@ const AdminUsersPage = () => {
               onClick={() => setActiveFilter('verified')}
             >
               <CheckCircle size={16} />
-              <span>Верифицированы</span>
+              <span>Верифицированные</span>
             </div>
             
             <div 
               className={`filter-toggle ${activeFilter === 'blocked' ? 'active' : ''}`}
               onClick={() => setActiveFilter('blocked')}
             >
-              <Ban size={16} />
-              <span>Заблокированы</span>
+              <XCircle size={16} />
+              <span>Заблокированные</span>
             </div>
           </div>
         </div>
@@ -183,42 +188,38 @@ const AdminUsersPage = () => {
             filteredUsers.map((u) => (
               <div
                 key={u.id}
-                className="admin-row"
+                className="admin-row user-row"
                 onClick={() => handleUserClick(u.id)}
               >
                 <div className="admin-left">
-                  <div className="user-id-container">
-                    <div className="admin-id">
-                      ID: {u.id}
-                    </div>
-                    <div className={`status-badge ${getVerificationStatusClass(u.verification_status_id)}`}>
-                      {getVerificationStatusIcon(u.verification_status_id)}
-                      <span>{getVerificationStatusLabel(u.verification_status_id)}</span>
-                    </div>
-                    <div className={`block-status ${getBlockStatusClass(u.block_status_id)}`}>
-                      {getBlockStatusIcon(u.block_status_id)}
-                      <span>{getBlockStatusLabel(u.block_status_id)}</span>
-                    </div>
-                  </div>
-                  
                   <div className="user-main-info">
+                    <div className="admin-id">ID: {u.id}</div>
                     <div className="admin-name">
-                      <User size={18} />
+                      <User size={16} />
                       <span>{u.login}</span>
                     </div>
                     <div className="user-email">
                       <Mail size={16} />
                       <span>{u.email}</span>
                     </div>
+                    <div className="user-reg-date">
+                      <Calendar size={16} />
+                      <span>Регистрация: {formatDate(u.registration_date)}</span>
+                    </div>
                   </div>
-                  
-                  <div className="user-reg-date">
-                    <Calendar size={16} />
-                    <span>Зарегистрирован: {formatDate(u.registration_date)}</span>
+                  <div className="user-meta-info">
+                    <div className={`verification-status ${getVerificationStatusClass(u.verification_status_id)}`}>
+                      {getVerificationStatusIcon(u.verification_status_id)}
+                      <span>{getVerificationStatusLabel(u.verification_status_id)}</span>
+                    </div>
+                    <div className={`block-status ${getBlockStatusClass(u.block_status_id)}`}>
+                      {getBlockStatusLabel(u.block_status_id)}
+                    </div>
                   </div>
                 </div>
-                
-                <ArrowRight size={20} className="arrow-icon" />
+                <div className="admin-right">
+                  <ArrowRight size={20} className="arrow-icon" />
+                </div>
               </div>
             ))
           ) : (

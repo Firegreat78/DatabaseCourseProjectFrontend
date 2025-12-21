@@ -22,9 +22,11 @@ import BrokerAccountPage from './components/BrokerAccountPage';
 import EmployeeProfilePage from './components/employees/EmployeeProfilePage';
 import AdminEmployeeEdit from './components/employees/AdminEmployeeEdit';
 import AdminEmployeeCreate from './components/employees/AdminEmployeeCreate';
-import VerifierUserDetail from './components/employees/VerifierUserDetail';
+import VerifierUserDetail from './components/employees/VerifierUserEdit';
 import BrokerDealDetail from './components/employees/BrokerDealDetail';
 import ExchangeAdminPage from './components/employees/ExchangeAdminPage';
+import AdminUsersPage from './components/employees/AdminUsers';
+import AdminUsersEdit from './components/employees/AdminUserDetail';
 
 // Компонент для защиты роутов
 const ProtectedRoute = ({ children }) => {
@@ -78,9 +80,11 @@ function App() {
           <Route path="/employee/profile" element={<EmployeeProfilePage />} />
           <Route path="/admin/employees/new" element={<AdminEmployeeCreate />} />
           <Route path="/admin/employees/:id" element={<AdminEmployeeEdit />} />
+          <Route path="/admin/users/:id" element={<AdminUsersEdit />} />
           <Route path="/verifier/users/:id" element={<VerifierUserDetail />} />
           <Route path="/broker/deals/:id" element={<BrokerDealDetail />} />
           <Route path="/admin/exchange" element={<ExchangeAdminPage />} />
+          <Route path="/admin/users" element={<AdminUsersPage />} />
           {/* Защищённые страницы — доступ только после логина */}
           <Route
             path="/accounts"

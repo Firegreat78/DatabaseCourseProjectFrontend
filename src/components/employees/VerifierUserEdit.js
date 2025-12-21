@@ -58,7 +58,7 @@ const VerifierUserDetail = () => {
 
     setUpdating(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/user/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/user/verify/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
