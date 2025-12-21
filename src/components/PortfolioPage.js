@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AppHeader from './AppHeader';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Lock } from 'lucide-react';
 import './PortfolioPage.css';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -18,6 +18,36 @@ const PortfolioPage = () => {
   const [isVerified, setIsVerified] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(true);
 
+  // Статус блокировки
+  const [isBanned, setIsBanned] = useState(false);
+  const [banCheckLoading, setBanCheckLoading] = useState(true);
+
+  // Проверка блокировки
+  const checkBanStatus = async () => {
+    if (!user?.token || !user?.id) {
+      setBanCheckLoading(false);
+      return;
+    }
+
+    setBanCheckLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/user_ban_status/${user.id}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+      setIsBanned(data.is_banned);
+    } catch (err) {
+      console.error('Ошибка проверки блокировки:', err);
+      setIsBanned(false);
+    } finally {
+      setBanCheckLoading(false);
+    }
+  };
+
+  // Загрузка статуса верификации
   const fetchVerificationStatus = async () => {
     if (!user?.token || !user?.id) {
       setVerificationLoading(false);
@@ -76,11 +106,13 @@ const PortfolioPage = () => {
   };
 
   useEffect(() => {
+    checkBanStatus();
     fetchVerificationStatus();
     fetchPortfolio();
   }, [user?.id]);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    await checkBanStatus();
     fetchPortfolio(true);
     fetchVerificationStatus();
   };
@@ -95,12 +127,41 @@ const PortfolioPage = () => {
     ];
   };
 
+  // Если пользователь не авторизован
   if (!user) {
     return (
       <div className="portfolio-container">
         <AppHeader />
         <div className="content">
           <p className="auth-message">Пожалуйста, войдите в аккаунт для просмотра портфеля.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Если пользователь заблокирован
+  if (isBanned) {
+    return (
+      <div className="portfolio-container">
+        <AppHeader />
+        <div className="content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <Lock size={64} color="#ef4444" />
+          <h2 style={{ margin: '20px 0', color: '#dc2626' }}>Ваш аккаунт заблокирован</h2>
+          <p style={{ fontSize: '18px', color: '#64748b' }}>
+            Доступ к портфелю ограничен. Обратитесь в поддержку.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Пока идёт проверка блокировки
+  if (banCheckLoading) {
+    return (
+      <div className="portfolio-container">
+        <AppHeader />
+        <div className="content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          Проверка статуса аккаунта...
         </div>
       </div>
     );

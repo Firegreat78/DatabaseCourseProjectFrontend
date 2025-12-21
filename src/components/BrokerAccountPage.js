@@ -13,8 +13,12 @@ import {
   Minus,
   Loader2,
   AlertCircle,
+  Lock,
+  RefreshCw,
 } from 'lucide-react';
 import './BrokerAccountPage.css';
+
+const API_BASE_URL = 'http://localhost:8000';
 
 const BrokerAccountPage = () => {
   const { id } = useParams();
@@ -29,21 +33,60 @@ const BrokerAccountPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Статус блокировки
+  const [isBanned, setIsBanned] = useState(false);
+  const [banCheckLoading, setBanCheckLoading] = useState(true);
+
+  // Проверка статуса блокировки (с возвратом результата)
+  const checkBanStatus = async () => {
+    if (!user?.id || !user?.token) {
+      setIsBanned(false);
+      setBanCheckLoading(false);
+      return false;
+    }
+
+    setBanCheckLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/user_ban_status/${user.id}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+
+      if (!response.ok) throw new Error('Не удалось проверить статус аккаунта');
+
+      const data = await response.json();
+      setIsBanned(data.is_banned);
+      return data.is_banned;
+    } catch (err) {
+      console.error('Ошибка проверки блокировки:', err);
+      setError('Не удалось проверить статус аккаунта');
+      setIsBanned(false);
+      return false;
+    } finally {
+      setBanCheckLoading(false);
+    }
+  };
+
+  // Загрузка данных счёта и операций
   const fetchAccountData = async () => {
-    if (!user) return;
+    if (!user?.token) return;
+
     try {
       setLoading(true);
       const headers = {
         Authorization: `Bearer ${user.token}`,
       };
       const [accountRes, txRes] = await Promise.all([
-        fetch(`http://localhost:8000/api/brokerage-accounts/${id}`, { headers }),
-        fetch(`http://localhost:8000/api/brokerage-accounts/${id}/operations`, { headers }),
+        fetch(`${API_BASE_URL}/api/brokerage-accounts/${id}`, { headers }),
+        fetch(`${API_BASE_URL}/api/brokerage-accounts/${id}/operations`, { headers }),
       ]);
+
       if (!accountRes.ok) throw new Error('Счёт не найден');
       if (!txRes.ok) throw new Error('Не удалось загрузить операции');
+
+      const accountData = await accountRes.json();
       const txData = await txRes.json();
-      setAccount(await accountRes.json());
+
+      setAccount(accountData);
       setTransactions(txData);
     } catch (err) {
       setError(err.message || 'Не удалось загрузить данные счёта');
@@ -52,30 +95,52 @@ const BrokerAccountPage = () => {
     }
   };
 
+  // Обновление данных
+  const handleRefresh = async () => {
+    await checkBanStatus();
+    fetchAccountData();
+  };
+
   useEffect(() => {
+    checkBanStatus();
     fetchAccountData();
   }, [id, user]);
 
-  const handleOpenModal = (type) => {
+  // Открытие модального окна с проверкой блокировки
+  const handleOpenModal = async (type) => {
+    const banned = await checkBanStatus();
+    if (banned) {
+      return; // Не открываем модалку — рендер покажет блокировку
+    }
     setModalType(type);
     setAmount('');
     setShowModal(true);
   };
 
+  // Подтверждение операции — финальная проверка блокировки
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const value = parseFloat(amount);
     if (!value || value <= 0) {
       alert('Введите корректную сумму');
       return;
     }
+
+    // Финальная проверка: вдруг заблокировали прямо сейчас
+    const banned = await checkBanStatus();
+    if (banned) {
+      setShowModal(false); // Закрываем модалку
+      return; // Ничего не отправляем — рендер покажет блокировку
+    }
+
     try {
       const headers = {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${user.token}`,
       };
       const response = await fetch(
-        `http://localhost:8000/api/brokerage-accounts/${id}/balance-change-requests`,
+        `${API_BASE_URL}/api/brokerage-accounts/${id}/balance-change-requests`,
         {
           method: 'POST',
           headers,
@@ -84,23 +149,50 @@ const BrokerAccountPage = () => {
           }),
         }
       );
+
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         throw new Error(errData.detail || 'Ошибка при изменении баланса');
       }
-      const result = await response.json();
-      setShowModal(false);
-      alert('Баланс успешно изменён');
 
-      // Чтобы избежать частичного обновления account и возможных undefined полей,
-      // просто перезагружаем все данные одной функцией — это надёжнее и проще
+      alert('Запрос на изменение баланса отправлен');
+      setShowModal(false);
       fetchAccountData();
-      // Если запрос на историю провалился — можно просто ничего не делать, баланс уже обновлён
     } catch (err) {
       alert('Не удалось изменить баланс: ' + err.message);
     }
   };
 
+  // Если пользователь заблокирован
+  if (isBanned) {
+    return (
+      <div className="broker-page">
+        <AppHeader />
+        <main className="content-center">
+          <Lock size={64} color="#ef4444" />
+          <h2 style={{ margin: '20px 0', color: '#dc2626' }}>Ваш аккаунт заблокирован</h2>
+          <p style={{ fontSize: '18px', color: '#64748b' }}>
+            Доступ к брокерскому счёту ограничен. Обратитесь в поддержку.
+          </p>
+        </main>
+      </div>
+    );
+  }
+
+  // Пока идёт проверка блокировки
+  if (banCheckLoading) {
+    return (
+      <div className="broker-page">
+        <AppHeader />
+        <main className="content-center">
+          <Loader2 size={48} className="spin" />
+          <p>Проверка статуса аккаунта...</p>
+        </main>
+      </div>
+    );
+  }
+
+  // Загрузка данных счёта
   if (loading) {
     return (
       <div className="broker-page">
@@ -112,12 +204,13 @@ const BrokerAccountPage = () => {
     );
   }
 
+  // Ошибка или счёт не найден
   if (error || !account) {
     return (
       <div className="broker-page">
         <AppHeader />
         <main className="content-center">
-          <AlertCircle size={64} />
+          <AlertCircle size={64} color="#dc2626" />
           <h2>Счёт не найден</h2>
           <p>{error}</p>
           <button onClick={() => navigate(-1)} className="btn-back">
@@ -128,20 +221,27 @@ const BrokerAccountPage = () => {
     );
   }
 
+  // Основной контент
   return (
     <div className="broker-page">
       <AppHeader />
       <main className="broker-content">
         <div className="account-card">
-          {/* Заголовок */}
           <div className="card-header">
             <button onClick={() => navigate(-1)} className="back-button">
               <ArrowLeft size={22} />
             </button>
             <h1>Брокерский счёт</h1>
+            <button
+              className="refresh-btn"
+              onClick={handleRefresh}
+              disabled={loading}
+              title="Обновить данные"
+            >
+              <RefreshCw size={20} className={loading ? "spin" : ""} />
+            </button>
           </div>
 
-          {/* Основная информация */}
           <div className="balance-section">
             <div className="account-number">
               <Wallet size={20} />
@@ -153,7 +253,6 @@ const BrokerAccountPage = () => {
             </div>
           </div>
 
-          {/* Кнопки действий */}
           <div className="action-buttons">
             <button onClick={() => handleOpenModal('deposit')} className="btn-deposit">
               <Plus size={20} />
@@ -169,7 +268,6 @@ const BrokerAccountPage = () => {
             </button>
           </div>
 
-          {/* История операций */}
           <div className="transactions-section">
             <h3>
               <History size={20} />
@@ -206,7 +304,7 @@ const BrokerAccountPage = () => {
         </div>
       </main>
 
-      {/* Модальное окно пополнения/вывода */}
+      {/* Модальное окно */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>

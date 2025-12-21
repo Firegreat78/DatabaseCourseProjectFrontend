@@ -3,62 +3,132 @@ import React, { useEffect, useState } from 'react';
 import AppHeader from './AppHeader';
 import './ProfilePage.css';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Calendar, ShieldCheck, ShieldAlert, LogOut, AlertTriangle } from 'lucide-react';
+import { User, Mail, Calendar, ShieldCheck, ShieldAlert, LogOut, AlertTriangle, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+const API_BASE_URL = 'http://localhost:8000';
 
 const ProfilePage = () => {
   const [clientData, setClientData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user, logout } = useAuth();  // <-- добавили logout из контекста
+  const [isBanned, setIsBanned] = useState(false);
+  const [banCheckLoading, setBanCheckLoading] = useState(true);
+
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchClient = async () => {
-      try {
-        const response = await fetch(`http://localhost:8000/api/user/${user?.id}`);
-        const data = await response.json();
+  // Проверка статуса блокировки
+  const checkBanStatus = async () => {
+    if (!user?.id || !user?.token) {
+      setBanCheckLoading(false);
+      return;
+    }
 
-        if (!response.ok) {
-          throw new Error(data.detail || 'Ошибка загрузки профиля');
-        }
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/user_ban_status/${user.id}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
 
-        setClientData({
-          email: data.email,
-          registrationDate: data.registration_date,
-          verificationStatusId: data.verification_status_id,
-          rubAccount: data.rub_account,
-          usdAccount: data.usd_account,
-        });
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error('Не удалось проверить статус аккаунта');
       }
-    };
 
-    fetchClient();
+      const data = await response.json();
+      setIsBanned(data.is_banned);
+    } catch (err) {
+      console.error('Ошибка проверки блокировки:', err);
+      setError('Не удалось проверить статус аккаунта');
+    } finally {
+      setBanCheckLoading(false);
+    }
+  };
+
+  // Загрузка данных профиля
+  const fetchClient = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/user/${user?.id}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Ошибка загрузки профиля');
+      }
+
+      setClientData({
+        email: data.email,
+        registrationDate: data.registration_date,
+        verificationStatusId: data.verification_status_id,
+        rubAccount: data.rub_account,
+        usdAccount: data.usd_account,
+      });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      checkBanStatus();
+      fetchClient();
+    } else {
+      setLoading(false);
+      setBanCheckLoading(false);
+    }
   }, [user?.id]);
 
   const handleLogout = () => {
-    logout();  // <-- используем готовую функцию из AuthContext (очищает всё и редиректит на /login)
+    logout();
   };
 
-  if (loading) {
-    return <div className="profile-content">Загрузка...</div>;
-  }
+  const isVerified = clientData?.verificationStatusId === 2;
 
-  if (error) {
+  // Если пользователь заблокирован — показываем только хедер и сообщение
+  if (isBanned) {
     return (
-      <div className="profile-content">
-        <AlertTriangle /> {error}
+      <div className="client-profile-page">
+        <AppHeader />
+        <main className="profile-content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <Lock size={64} color="#ef4444" />
+          <h2 style={{ margin: '20px 0', color: '#dc2626' }}>Ваш аккаунт заблокирован</h2>
+          <p style={{ fontSize: '18px', color: '#64748b' }}>
+            Доступ к личному кабинету ограничен. Обратитесь в поддержку.
+          </p>
+        </main>
       </div>
     );
   }
 
-  const isVerified = clientData?.verificationStatusId === 2;
+  // Если идёт проверка блокировки
+  if (banCheckLoading || loading) {
+    return (
+      <div className="client-profile-page">
+        <AppHeader />
+        <main className="profile-content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          Загрузка...
+        </main>
+      </div>
+    );
+  }
 
+  // Если ошибка
+  if (error) {
+    return (
+      <div className="client-profile-page">
+        <AppHeader />
+        <main className="profile-content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <AlertTriangle size={48} color="#dc2626" />
+          <p style={{ marginTop: '20px', color: '#dc2626' }}>{error}</p>
+        </main>
+      </div>
+    );
+  }
 
+  // Обычный профиль
   return (
     <div className="client-profile-page">
       <AppHeader />

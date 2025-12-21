@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AppHeader from './AppHeader';
-import { RefreshCw, X } from 'lucide-react';
+import { RefreshCw, X, Lock } from 'lucide-react';
 import './OffersPage.css';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -18,6 +18,10 @@ const OffersPage = () => {
   // Статус верификации
   const [isVerified, setIsVerified] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(true);
+
+  // Статус блокировки
+  const [isBanned, setIsBanned] = useState(false);
+  const [banCheckLoading, setBanCheckLoading] = useState(true);
 
   // ===== Modal =====
   const [modalOpen, setModalOpen] = useState(false);
@@ -71,6 +75,30 @@ const OffersPage = () => {
       setIsVerified(false);
     } finally {
       setVerificationLoading(false);
+    }
+  };
+
+  // ===== Проверка блокировки =====
+  const checkBanStatus = async () => {
+    if (!user?.token || !user?.id) {
+      setBanCheckLoading(false);
+      return;
+    }
+
+    setBanCheckLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/user_ban_status/${user.id}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setIsBanned(data.is_banned);
+    } catch (err) {
+      console.error('Ошибка проверки блокировки:', err);
+      setIsBanned(false);
+    } finally {
+      setBanCheckLoading(false);
     }
   };
 
@@ -142,6 +170,7 @@ const OffersPage = () => {
   };
 
   useEffect(() => {
+    checkBanStatus();
     fetchVerificationStatus();
     fetchOffers();
     fetchSecurities();
@@ -151,6 +180,7 @@ const OffersPage = () => {
   const handleRefresh = () => {
     fetchOffers(true);
     fetchVerificationStatus();
+    checkBanStatus();  // Добавляем повторную проверку блокировки при обновлении
   };
 
   // ===== Create offer =====
@@ -190,6 +220,7 @@ const OffersPage = () => {
     }
   };
 
+  // Если пользователь не авторизован
   if (!user) {
     return (
       <div className="offers-container">
@@ -203,6 +234,35 @@ const OffersPage = () => {
     );
   }
 
+  // Если пользователь заблокирован — только хедер и сообщение
+  if (isBanned) {
+    return (
+      <div className="offers-container">
+        <AppHeader />
+        <div className="content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <Lock size={64} color="#ef4444" />
+          <h2 style={{ margin: '20px 0', color: '#dc2626' }}>Ваш аккаунт заблокирован</h2>
+          <p style={{ fontSize: '18px', color: '#64748b' }}>
+            Доступ к предложениям ограничен. Обратитесь в поддержку.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Пока идёт проверка блокировки
+  if (banCheckLoading) {
+    return (
+      <div className="offers-container">
+        <AppHeader />
+        <div className="content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          Проверка статуса аккаунта...
+        </div>
+      </div>
+    );
+  }
+
+  // Основной контент для разблокированных пользователей
   return (
     <div className="offers-container">
       <AppHeader />

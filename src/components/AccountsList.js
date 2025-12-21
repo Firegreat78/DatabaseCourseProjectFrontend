@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import AppHeader from './AppHeader';
 import { useAuth } from '../context/AuthContext';
-import { Wallet, ArrowRight, RefreshCw, Plus } from 'lucide-react';
+import { Wallet, ArrowRight, RefreshCw, Plus, Lock } from 'lucide-react';
 import './AccountsList.css';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -24,6 +24,10 @@ const AccountsList = () => {
   const [isVerified, setIsVerified] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(true);
 
+  // Статус блокировки
+  const [isBanned, setIsBanned] = useState(false);
+  const [banCheckLoading, setBanCheckLoading] = useState(true);
+
   // --- Модальная форма ---
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [banks, setBanks] = useState([]);
@@ -33,6 +37,34 @@ const AccountsList = () => {
     bik: '',
     currency_id: ''
   });
+
+  // --- Проверка блокировки ---
+  const checkBanStatus = async () => {
+    if (!user?.token || !user?.id) {
+      setIsBanned(false);
+      setBanCheckLoading(false);
+      return false;
+    }
+
+    setBanCheckLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/user_ban_status/${user.id}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+      setIsBanned(data.is_banned);
+      return data.is_banned;
+    } catch (err) {
+      console.error('Ошибка проверки блокировки:', err);
+      setIsBanned(false);
+      return false;
+    } finally {
+      setBanCheckLoading(false);
+    }
+  };
 
   // --- Загрузка статуса верификации ---
   const fetchVerificationStatus = async () => {
@@ -114,19 +146,37 @@ const AccountsList = () => {
   }, [user, usdRate]);
 
   useEffect(() => {
+    checkBanStatus();
     fetchVerificationStatus();
     loadData();
   }, [user?.id, loadData]);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    await checkBanStatus();
     loadData(true);
     fetchVerificationStatus();
   };
 
-  // --- Создание брокерского счёта ---
+  // --- Открытие формы создания счёта с проверкой блокировки ---
+  const handleOpenCreateForm = async () => {
+    const banned = await checkBanStatus();
+    if (banned) {
+      return; // Не открываем форму — рендер покажет блокировку
+    }
+    setShowCreateForm(true);
+  };
+
+  // --- Создание брокерского счёта с финальной проверкой блокировки ---
   const handleCreateAccount = async () => {
     if (!newAccount.bank_id || !newAccount.currency_id) {
       alert('Выберите банк и валюту');
+      return;
+    }
+
+    // Финальная проверка блокировки перед отправкой
+    const banned = await checkBanStatus();
+    if (banned) {
+      setShowCreateForm(false);
       return;
     }
 
@@ -145,7 +195,10 @@ const AccountsList = () => {
         })
       });
 
-      if (!res.ok) throw new Error('Ошибка при создания счёта');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Ошибка при создании счёта');
+      }
 
       const data = await res.json();
       alert('Счёт создан, ID: ' + data.account_id);
@@ -154,7 +207,7 @@ const AccountsList = () => {
       loadData(true);
     } catch (err) {
       console.error(err);
-      alert('Не удалось создать счёт');
+      alert('Не удалось создать счёт: ' + err.message);
     }
   };
 
@@ -169,6 +222,7 @@ const AccountsList = () => {
     });
   };
 
+  // Если пользователь не авторизован
   if (!user) {
     return (
       <div className="accounts-page">
@@ -179,6 +233,34 @@ const AccountsList = () => {
           <Link to="/login" style={{ color: '#667eea', textDecoration: 'underline' }}>
             Перейти на страницу входа
           </Link>
+        </main>
+      </div>
+    );
+  }
+
+  // Если пользователь заблокирован
+  if (isBanned) {
+    return (
+      <div className="accounts-page">
+        <AppHeader />
+        <main className="accounts-content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <Lock size={64} color="#ef4444" />
+          <h2 style={{ margin: '20px 0', color: '#dc2626' }}>Ваш аккаунт заблокирован</h2>
+          <p style={{ fontSize: '18px', color: '#64748b' }}>
+            Доступ к брокерским счетам ограничен. Обратитесь в поддержку.
+          </p>
+        </main>
+      </div>
+    );
+  }
+
+  // Пока идёт проверка блокировки
+  if (banCheckLoading) {
+    return (
+      <div className="accounts-page">
+        <AppHeader />
+        <main className="accounts-content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          Проверка статуса аккаунта...
         </main>
       </div>
     );
@@ -207,7 +289,7 @@ const AccountsList = () => {
             {verificationLoading ? (
               <span>Проверка верификации...</span>
             ) : isVerified ? (
-              <button className="create-account-btn" onClick={() => setShowCreateForm(true)} disabled={loading}>
+              <button className="create-account-btn" onClick={handleOpenCreateForm} disabled={loading}>
                 <Plus size={18} style={{marginRight:'6px'}} /> Создать счёт
               </button>
             ) : (

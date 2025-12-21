@@ -20,31 +20,49 @@ const UserLogin = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/login/user`, {
+      // Шаг 1: Авторизация
+      const loginResponse = await fetch(`${API_BASE_URL}/api/login/user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ login, password }),
       });
 
-      const data = await response.json();
+      const loginData = await loginResponse.json();
 
-      if (!response.ok) {
-        throw new Error(data.detail || 'Неверный логин или пароль');
+      if (!loginResponse.ok) {
+        throw new Error(loginData.detail || 'Неверный логин или пароль');
       }
 
-      // Бэкенд возвращает: { access_token, user_id, role? }
-      const token = data.access_token;
-      const user_id = data.user_id;
+      const token = loginData.access_token;
+      const user_id = loginData.user_id;
 
       if (!token || !user_id) {
         throw new Error('Сервер не вернул необходимые данные');
       }
 
-      // Используем функцию login из контекста
+      // Шаг 2: Проверка статуса блокировки
+      const banResponse = await fetch(`${API_BASE_URL}/api/user_ban_status/${user_id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!banResponse.ok) {
+        const banErr = await banResponse.json().catch(() => ({}));
+        throw new Error(banErr.detail || 'Ошибка проверки статуса аккаунта');
+      }
+
+      const banData = await banResponse.json();
+
+      if (banData.is_banned) {
+        throw new Error('Ваш аккаунт заблокирован. Обратитесь в поддержку.');
+      }
+
+      // Шаг 3: Успешный вход — сохраняем в контекст
       authLogin({
         token,
         user_id,
-        role: data.role || 'user',
+        role: loginData.role || 'user',
       });
 
     } catch (err) {

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AppHeader from './AppHeader';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Lock } from 'lucide-react';
 import './ExchangePage.css';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -13,6 +13,35 @@ const ExchangePage = () => {
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Статус блокировки
+  const [isBanned, setIsBanned] = useState(false);
+  const [banCheckLoading, setBanCheckLoading] = useState(true);
+
+  // Проверка блокировки
+  const checkBanStatus = async () => {
+    if (!user?.token || !user?.id) {
+      setBanCheckLoading(false);
+      return;
+    }
+
+    setBanCheckLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/user_ban_status/${user.id}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+
+      if (!response.ok) throw new Error('Не удалось проверить статус аккаунта');
+
+      const data = await response.json();
+      setIsBanned(data.is_banned);
+    } catch (err) {
+      console.error('Ошибка проверки блокировки:', err);
+      setIsBanned(false);
+    } finally {
+      setBanCheckLoading(false);
+    }
+  };
 
   // Загрузка списка акций с биржи
   const fetchStocks = async () => {
@@ -30,9 +59,56 @@ const ExchangePage = () => {
     }
   };
 
+  // Обновление с проверкой блокировки
+  const handleRefresh = async () => {
+    await checkBanStatus();
+    fetchStocks();
+  };
+
   useEffect(() => {
+    checkBanStatus();
     fetchStocks();
   }, [user]);
+
+  // Если пользователь не авторизован
+  if (!user) {
+    return (
+      <div className="exchange-container">
+        <AppHeader />
+        <main className="content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <p className="auth-message">Пожалуйста, войдите в аккаунт для просмотра биржи.</p>
+        </main>
+      </div>
+    );
+  }
+
+  // Если пользователь заблокирован
+  if (isBanned) {
+    return (
+      <div className="exchange-container">
+        <AppHeader />
+        <main className="content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <Lock size={64} color="#ef4444" />
+          <h2 style={{ margin: '20px 0', color: '#dc2626' }}>Ваш аккаунт заблокирован</h2>
+          <p style={{ fontSize: '18px', color: '#64748b' }}>
+            Доступ к бирже ограничен. Обратитесь в поддержку.
+          </p>
+        </main>
+      </div>
+    );
+  }
+
+  // Пока идёт проверка блокировки
+  if (banCheckLoading) {
+    return (
+      <div className="exchange-container">
+        <AppHeader />
+        <main className="content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          Проверка статуса аккаунта...
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="exchange-container">
@@ -42,7 +118,7 @@ const ExchangePage = () => {
           <h2 className="page-title">Биржа</h2>
           <button
             className="refresh-btn"
-            onClick={fetchStocks}
+            onClick={handleRefresh}
             disabled={loading}
             title="Обновить данные"
           >
