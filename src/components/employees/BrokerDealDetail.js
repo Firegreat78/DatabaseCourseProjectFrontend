@@ -16,36 +16,25 @@ const BrokerDealDetail = () => {
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchDeal = async () => {
-  setLoading(true);
-  if (!token) {
-    setError("Требуется авторизация");
-    navigate("/login");
-    return;
-  }
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/broker/proposal/${id}`
+      );
 
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/broker/proposal/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Ошибка загрузки заявки");
       }
-    );
 
-    if (!response.ok) {
-      const errData = await response.json();
-      throw new Error(errData.detail || "Ошибка загрузки заявки");
+      const data = await response.json();
+      setDealData(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    const data = await response.json();
-    setDealData(data);
-  } catch (err) {
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     fetchDeal();
@@ -55,8 +44,6 @@ const BrokerDealDetail = () => {
     if (!token) {
       alert("Требуется авторизация");
       navigate("/login");
-      console.log("Token:", token);
-      console.log("Sending action:", action);
       return;
     }
 
