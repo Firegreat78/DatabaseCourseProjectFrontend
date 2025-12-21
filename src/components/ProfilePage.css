@@ -82,6 +82,7 @@
 .status.not-verified { color: #ef4444; }
 .icon.verified { color: #10b981; }
 .icon.not-verified { color: #ef4444; }
+.status.pending {color: #f59e0b; }
 
 .accounts-section {
   padding: 0 2rem 2rem;
