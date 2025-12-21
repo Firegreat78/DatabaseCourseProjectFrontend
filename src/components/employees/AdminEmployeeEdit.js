@@ -19,7 +19,7 @@ const AdminEmployeeEdit = () => {
   const { user } = useAuth();
   
   const availableRoles = user?.role === '1'
-    ? roleOptions.filter(r => r.value < 4)
+    ? roleOptions.filter(r => r.value < 5)
     : roleOptions.filter(r => r.value > 2 && r.value < 5);
 
   useEffect(() => {
