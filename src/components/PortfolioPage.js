@@ -14,6 +14,33 @@ const PortfolioPage = () => {
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
+  // Статус верификации
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationLoading, setVerificationLoading] = useState(true);
+
+  const fetchVerificationStatus = async () => {
+    if (!user?.token || !user?.id) {
+      setVerificationLoading(false);
+      return;
+    }
+
+    setVerificationLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/user_verification_status/${user.id}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setIsVerified(data.is_verified);
+    } catch (err) {
+      console.error('Ошибка загрузки статуса верификации:', err);
+      setIsVerified(false);
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
   const fetchPortfolio = async (isRefresh = false) => {
     if (!user?.id || !user?.token) {
       setError('Пользователь не авторизован');
@@ -26,7 +53,6 @@ const PortfolioPage = () => {
     setError('');
 
     try {
-      // Убрали ?user_id — теперь бэкенд берёт из токена
       const response = await fetch(`${API_BASE_URL}/api/portfolio/securities`, {
         headers: {
           'Authorization': `Bearer ${user.token}`,
@@ -50,10 +76,14 @@ const PortfolioPage = () => {
   };
 
   useEffect(() => {
+    fetchVerificationStatus();
     fetchPortfolio();
-  }, [user?.id]); // Исправлено: user.id вместо user.user_id
+  }, [user?.id]);
 
-  const handleRefresh = () => fetchPortfolio(true);
+  const handleRefresh = () => {
+    fetchPortfolio(true);
+    fetchVerificationStatus();
+  };
 
   // Вспомогательная функция для склонения
   const declOfNum = (number, titles) => {
@@ -86,7 +116,7 @@ const PortfolioPage = () => {
           <button
             className="refresh-btn"
             onClick={handleRefresh}
-            disabled={loading || refreshing}
+            disabled={loading || refreshing || verificationLoading}
             title="Обновить данные"
           >
             <RefreshCw
@@ -95,6 +125,17 @@ const PortfolioPage = () => {
             />
           </button>
         </div>
+
+        {/* Предупреждение о верификации — отображается всегда, если пользователь не верифицирован */}
+        {verificationLoading ? (
+          <div className="status-message loading">Проверка статуса верификации...</div>
+        ) : !isVerified ? (
+          <div className="verification-warning-banner">
+            <p>
+              <strong>Внимание:</strong> Для работы с депозитарным счётом необходимо верифицировать аккаунт.
+            </p>
+          </div>
+        ) : null}
 
         {loading && !refreshing ? (
           <div className="status-message loading">Загрузка портфеля...</div>
@@ -108,7 +149,7 @@ const PortfolioPage = () => {
         ) : (
           <div className="securities-list">
             {securities.map((asset, index) => {
-              const totalShares = Number(asset.amount); // общее количество акций
+              const totalShares = Number(asset.amount);
               const lotSize = Number(asset.lot_size);
               const lots = lotSize > 0 ? totalShares / lotSize : 0;
               const fullLots = Math.floor(lots);

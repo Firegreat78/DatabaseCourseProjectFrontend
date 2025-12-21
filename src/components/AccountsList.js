@@ -20,6 +20,10 @@ const AccountsList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Статус верификации
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationLoading, setVerificationLoading] = useState(true);
+
   // --- Модальная форма ---
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [banks, setBanks] = useState([]);
@@ -30,7 +34,28 @@ const AccountsList = () => {
     currency_id: ''
   });
 
-  // --- Загрузка данных ---
+  // --- Загрузка статуса верификации ---
+  const fetchVerificationStatus = async () => {
+    if (!user?.token || !user?.id) return;
+
+    setVerificationLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/user_verification_status/${user.id}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setIsVerified(data.is_verified);
+    } catch (err) {
+      console.error('Ошибка загрузки статуса верификации:', err);
+      setIsVerified(false);
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  // --- Загрузка основных данных ---
   const loadData = useCallback(async (isRefresh = false) => {
     if (!user) return;
     if (!isRefresh) setLoading(true);
@@ -49,7 +74,10 @@ const AccountsList = () => {
       const balanceData = await balanceRes.json();
       setTotalBalanceRUB(balanceData.total_balance_rub);
 
-      if (accountsRes.ok) setAccounts(await accountsRes.json());
+      if (accountsRes.ok) {
+        const accountsData = await accountsRes.json();
+        setAccounts(Array.isArray(accountsData) ? accountsData : []);
+      }
 
       // Курсы валют
       if (rateRes.ok) {
@@ -85,9 +113,15 @@ const AccountsList = () => {
     }
   }, [user, usdRate]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    fetchVerificationStatus();
+    loadData();
+  }, [user?.id, loadData]);
 
-  const handleRefresh = () => loadData(true);
+  const handleRefresh = () => {
+    loadData(true);
+    fetchVerificationStatus();
+  };
 
   // --- Создание брокерского счёта ---
   const handleCreateAccount = async () => {
@@ -111,7 +145,7 @@ const AccountsList = () => {
         })
       });
 
-      if (!res.ok) throw new Error('Ошибка при создании счёта');
+      if (!res.ok) throw new Error('Ошибка при создания счёта');
 
       const data = await res.json();
       alert('Счёт создан, ID: ' + data.account_id);
@@ -163,16 +197,24 @@ const AccountsList = () => {
         <div className="page-header">
           <h1>Мои счета</h1>
           <div className="header-actions">
-            <button className="refresh-btn" onClick={handleRefresh} disabled={loading}>
-              <RefreshCw size={22} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+            <button className="refresh-btn" onClick={handleRefresh} disabled={loading || verificationLoading}>
+              <RefreshCw size={22} style={{ animation: (loading || verificationLoading) ? 'spin 1s linear infinite' : 'none' }} />
             </button>
             <div className="currency-toggle">
               <button className={`currency-btn ${selectedCurrency==='₽'?'active':''}`} onClick={()=>setSelectedCurrency('₽')} disabled={loading}>₽</button>
               <button className={`currency-btn ${selectedCurrency==='$'?'active':''}`} onClick={()=>setSelectedCurrency('$')} disabled={loading}>$</button>
             </div>
-            <button className="create-account-btn" onClick={()=>setShowCreateForm(true)} disabled={loading}>
-              <Plus size={18} style={{marginRight:'6px'}} /> Создать счёт
-            </button>
+            {verificationLoading ? (
+              <span>Проверка верификации...</span>
+            ) : isVerified ? (
+              <button className="create-account-btn" onClick={() => setShowCreateForm(true)} disabled={loading}>
+                <Plus size={18} style={{marginRight:'6px'}} /> Создать счёт
+              </button>
+            ) : (
+              <span className="verification-warning">
+                Для создания счёта требуется верификация аккаунта
+              </span>
+            )}
           </div>
         </div>
 
@@ -194,39 +236,55 @@ const AccountsList = () => {
           }
         </div>
 
-        {/* Список счетов */}
-        <div className="accounts-grid">
-          {accounts.map(acc => (
-            <Link key={acc.account_id} to={`/account/${acc.account_id}`} className="account-card-link">
-              <div className="account-card">
-                <div className="card-header">
-                  <span className="account-number">Счёт №{acc.account_id}</span>
-                  <ArrowRight size={18} className="arrow-icon" />
-                </div>
-                <div className="card-details">
-                  <div className="card-balance">
-                    <span className="amount">{acc.balance.toLocaleString('ru-RU')}</span>
-                    <span className="currency">{acc.currency_symbol}</span>
+        {/* Блок с предупреждением или списком счетов */}
+        {verificationLoading ? (
+          <div className="status-message loading">Проверка статуса верификации...</div>
+        ) : !isVerified ? (
+          <div className="verification-required-block">
+            <p className="verification-title">Доступ к брокерским счетам ограничен</p>
+            <p className="verification-subtitle">
+              Для просмотра и управления брокерскими счетами необходимо верифицировать аккаунт.
+            </p>
+          </div>
+        ) : accounts.length === 0 ? (
+          <div className="empty-state">
+            <p className="empty-title">Нет брокерских счетов</p>
+            <p className="empty-subtitle">Создайте первый счёт, чтобы начать торговлю.</p>
+          </div>
+        ) : (
+          <div className="accounts-grid">
+            {accounts.map(acc => (
+              <Link key={acc.account_id} to={`/account/${acc.account_id}`} className="account-card-link">
+                <div className="account-card">
+                  <div className="card-header">
+                    <span className="account-number">Счёт №{acc.account_id}</span>
+                    <ArrowRight size={18} className="arrow-icon" />
                   </div>
-                  <div className="card-bank-info">
-                    <div className="info-row">
-                      <span className="label">Банк</span>
-                      <span className="value bank-name">{acc.bank_name}</span>
+                  <div className="card-details">
+                    <div className="card-balance">
+                      <span className="amount">{acc.balance.toLocaleString('ru-RU')}</span>
+                      <span className="currency">{acc.currency_symbol}</span>
                     </div>
-                    <div className="info-row">
-                      <span className="label">БИК</span>
-                      <span className="value">{acc.bik}</span>
-                    </div>
-                    <div className="info-row">
-                      <span className="label">Валюта</span>
-                      <span className="value">{acc.currency_symbol}</span>
+                    <div className="card-bank-info">
+                      <div className="info-row">
+                        <span className="label">Банк</span>
+                        <span className="value bank-name">{acc.bank_name}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="label">БИК</span>
+                        <span className="value">{acc.bik}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="label">Валюта</span>
+                        <span className="value">{acc.currency_symbol}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* Модальная форма */}
         {showCreateForm && (

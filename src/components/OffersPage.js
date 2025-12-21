@@ -15,6 +15,10 @@ const OffersPage = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
 
+  // Статус верификации
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationLoading, setVerificationLoading] = useState(true);
+
   // ===== Modal =====
   const [modalOpen, setModalOpen] = useState(false);
   const [securities, setSecurities] = useState([]);
@@ -43,6 +47,30 @@ const OffersPage = () => {
         return { text: 'На рассмотрении', color: 'pending' };
       default:
         return { text: 'Неизвестно', color: 'pending' };
+    }
+  };
+
+  // ===== Загрузка статуса верификации =====
+  const fetchVerificationStatus = async () => {
+    if (!user?.token || !user?.id) {
+      setVerificationLoading(false);
+      return;
+    }
+
+    setVerificationLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/user_verification_status/${user.id}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setIsVerified(data.is_verified);
+    } catch (err) {
+      console.error('Ошибка загрузки статуса верификации:', err);
+      setIsVerified(false);
+    } finally {
+      setVerificationLoading(false);
     }
   };
 
@@ -114,12 +142,16 @@ const OffersPage = () => {
   };
 
   useEffect(() => {
+    fetchVerificationStatus();
     fetchOffers();
     fetchSecurities();
     fetchAccounts();
   }, [user?.id]);
 
-  const handleRefresh = () => fetchOffers(true);
+  const handleRefresh = () => {
+    fetchOffers(true);
+    fetchVerificationStatus();
+  };
 
   // ===== Create offer =====
   const handleSubmit = async (proposalTypeId) => {
@@ -182,7 +214,7 @@ const OffersPage = () => {
             <button
               className="refresh-btn"
               onClick={handleRefresh}
-              disabled={loading || refreshing}
+              disabled={loading || refreshing || verificationLoading}
               title="Обновить"
             >
               <RefreshCw
@@ -193,13 +225,21 @@ const OffersPage = () => {
               />
             </button>
 
-            <button
-              className="add-offer-btn"
-              onClick={openModal}
-              disabled={loading || refreshing}
-            >
-              Добавить предложение
-            </button>
+            {verificationLoading ? (
+              <span>Проверка верификации...</span>
+            ) : isVerified ? (
+              <button
+                className="add-offer-btn"
+                onClick={openModal}
+                disabled={loading || refreshing}
+              >
+                Добавить предложение
+              </button>
+            ) : (
+              <span className="verification-warning">
+                Для создания предложений требуется верификация аккаунта
+              </span>
+            )}
           </div>
         </div>
 

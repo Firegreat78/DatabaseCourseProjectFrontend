@@ -3,14 +3,14 @@ import React, { useEffect, useState } from 'react';
 import AppHeader from './AppHeader';
 import './ProfilePage.css';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Calendar, ShieldCheck, ShieldAlert, Wallet, LogOut, AlertTriangle } from 'lucide-react';
+import { User, Mail, Calendar, ShieldCheck, ShieldAlert, LogOut, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const ProfilePage = () => {
   const [clientData, setClientData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();  // <-- добавили logout из контекста
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,9 +41,7 @@ const ProfilePage = () => {
   }, [user?.id]);
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('role');
-    navigate('/login', { replace: true });
+    logout();  // <-- используем готовую функцию из AuthContext (очищает всё и редиректит на /login)
   };
 
   if (loading) {
@@ -57,6 +55,8 @@ const ProfilePage = () => {
       </div>
     );
   }
+
+  const isVerified = clientData?.isVerified;
 
   return (
     <div className="client-profile-page">
@@ -88,24 +88,23 @@ const ProfilePage = () => {
             </div>
 
             <div className="info-item">
-              {clientData.isVerified ? (
-                <ShieldCheck size={20} />
-              ) : (
-                <ShieldAlert size={20} />
-              )}
+              {isVerified ? <ShieldCheck size={20} /> : <ShieldAlert size={20} />}
               <div>
                 <span className="label">Верификация аккаунта</span>
-                <span className={`value status ${clientData.isVerified ? 'verified' : 'not-verified'}`}>
-                  {clientData.isVerified = 2 ? 'Верифицирован' : 'Не верифицирован'}
+                <span className={`value status ${isVerified ? 'verified' : 'not-verified'}`}>
+                  {isVerified ? 'Верифицирован' : 'Не верифицирован'}
                 </span>
               </div>
             </div>
           </div>
 
           <div className="profile-actions">
-            {!(clientData.isVerified = 2) && (
-              <button onClick={() => navigate('/verification')} className="btn-primary">
-                Пройти верификацию
+            {!isVerified && (
+              <button 
+                onClick={() => navigate('/verification')} 
+                className="btn-primary"
+              >
+                Верифицировать аккаунт
               </button>
             )}
 
