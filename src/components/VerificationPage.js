@@ -49,10 +49,84 @@ const VerificationPage = () => {
     setFormData(prev => ({ ...prev, gender }));
   };
 
+const nameRegex = /^[А-Яа-яЁё\- ]+$/;
+const digitsOnly = /^\d+$/;
+
+const validateForm = () => {
+  // ФИО
+  if (!nameRegex.test(formData.lastName) || formData.lastName.length < 2) {
+    return 'Фамилия должна содержать только кириллицу и быть не короче 2 символов';
+  }
+
+  if (!nameRegex.test(formData.firstName) || formData.firstName.length < 2) {
+    return 'Имя должно содержать только кириллицу и быть не короче 2 символов';
+  }
+
+  if (!nameRegex.test(formData.middleName) || formData.middleName.length < 2) {
+    return 'Отчество должно содержать только кириллицу и быть не короче 2 символов';
+  }
+
+  // Серия
+  if (!digitsOnly.test(formData.series) || formData.series.length !== 4) {
+    return 'Серия паспорта должна состоять из 4 цифр';
+  }
+
+  // Номер
+  if (!digitsOnly.test(formData.number) || formData.number.length !== 6) {
+    return 'Номер паспорта должен состоять из 6 цифр';
+  }
+
+  // Пол
+  if (!['м', 'ж'].includes(formData.gender)) {
+    return 'Некорректно указан пол';
+  }
+
+  // Даты
+  const birthDate = new Date(formData.birthDate);
+  const issueDate = new Date(formData.issueDate);
+  const now = new Date();
+
+  const age = now.getFullYear() - birthDate.getFullYear();
+  if (age < 14) {
+    return 'Паспорт можно оформить только с 14 лет';
+  }
+
+  if (issueDate < birthDate) {
+    return 'Дата выдачи паспорта не может быть раньше даты рождения';
+  }
+
+  if (issueDate > now) {
+    return 'Дата выдачи паспорта не может быть в будущем';
+  }
+
+  // Текстовые поля
+  if (formData.birthPlace.length < 5) {
+    return 'Место рождения указано некорректно';
+  }
+
+  if (formData.registrationPlace.length < 5) {
+    return 'Место прописки указано некорректно';
+  }
+
+  if (formData.issuedBy.length < 5) {
+    return 'Поле "Кем выдан" заполнено некорректно';
+  }
+
+  return null;
+};
+
+
   const handleSubmit = async (e) => {
   e.preventDefault();
   setError('');
   setSuccess('');
+
+  const validationError = validateForm();
+  if (validationError) {
+    setError(validationError);
+    return;
+  }
+  
   setIsSubmitting(true);
 
   try {
