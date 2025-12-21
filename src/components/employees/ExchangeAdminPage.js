@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AppHeader from "./EmployeeHeader";
-import { RefreshCw, Plus } from "lucide-react";
-import "../ExchangePage.css";
+import { RefreshCw, Plus, AlertCircle } from "lucide-react";
+import "./ExchangeAdminPage.css";
 
 const API_BASE_URL = "http://localhost:8000";
 
@@ -9,26 +9,30 @@ const ExchangeAdminPage = () => {
   const token = localStorage.getItem("authToken");
 
   const [stocks, setStocks] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [currenciesLoading, setCurrenciesLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     ticker: "",
+    isin: "",
+    lot_size: "1.00",
     price: "",
-    currency: "RUB",
+    currency_id: "",
+    has_dividends: false,
   });
   const [formLoading, setFormLoading] = useState(false);
 
+  // Загрузка списка акций
   const fetchStocks = async () => {
     setLoading(true);
     setError("");
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/exchange/stocks`);
-      if (!response.ok) {
-        throw new Error("Ошибка загрузки данных");
-      }
+      if (!response.ok) throw new Error("Ошибка загрузки данных");
 
       const data = await response.json();
       setStocks(data);
@@ -40,13 +44,48 @@ const ExchangeAdminPage = () => {
     }
   };
 
+  // Загрузка валют
+  const fetchCurrencies = async () => {
+    if (!token) {
+      setCurrencies([]);
+      setCurrenciesLoading(false);
+      return;
+    }
+
+    setCurrenciesLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/currencies`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error(`Не удалось загрузить валюты (статус ${response.status})`);
+
+      const data = await response.json();
+      const currenciesList = Array.isArray(data) ? data : [];
+      setCurrencies(currenciesList);
+
+      if (currenciesList.length > 0) {
+        setFormData(prev => ({ ...prev, currency_id: String(currenciesList[0].id) }));
+      }
+    } catch (err) {
+      console.error(err);
+      setCurrencies([]);
+    } finally {
+      setCurrenciesLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchStocks();
+    fetchCurrencies();
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
   };
 
   const handleAddStock = async (e) => {
@@ -54,6 +93,13 @@ const ExchangeAdminPage = () => {
 
     if (!token) {
       alert("Требуется авторизация");
+      return;
+    }
+
+    const { ticker, isin, lot_size, price, currency_id, has_dividends } = formData;
+
+    if (!ticker || !isin || !price || !currency_id) {
+      alert("Заполните все обязательные поля");
       return;
     }
 
@@ -66,18 +112,29 @@ const ExchangeAdminPage = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          ticker: formData.ticker,
-          price: Number(formData.price),
-          currency: formData.currency,
+          ticker: ticker.trim(),
+          isin: isin.trim(),
+          lot_size: Number(lot_size),
+          price: Number(price),
+          currency_id: Number(currency_id),
+          has_dividends: has_dividends,
         }),
       });
 
       if (!response.ok) {
-        const errData = await response.json();
+        const errData = await response.json().catch(() => ({}));
         throw new Error(errData.detail || "Ошибка добавления акции");
       }
 
-      setFormData({ ticker: "", price: "", currency: "RUB" });
+      alert("Акция успешно добавлена!");
+      setFormData({
+        ticker: "",
+        isin: "",
+        lot_size: "1.00",
+        price: "",
+        currency_id: currencies[0]?.id?.toString() || "",
+        has_dividends: false,
+      });
       setShowForm(false);
       fetchStocks();
     } catch (err) {
@@ -88,99 +145,166 @@ const ExchangeAdminPage = () => {
   };
 
   return (
-    <div className="exchange-container">
+    <div className="ExchangeAdminPage-exchange-container">
       <AppHeader />
 
-      <main className="content">
-        <div className="exchange-header">
-          <h2 className="page-title">Биржа (управление)</h2>
+      <main className="ExchangeAdminPage-content">
+        <div className="ExchangeAdminPage-exchange-header">
+          <h2 className="ExchangeAdminPage-page-title">Биржа — Управление акциями</h2>
 
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+          <div className="ExchangeAdminPage-header-actions">
             <button
-              className="refresh-btn"
+              className="ExchangeAdminPage-refresh-btn"
               onClick={fetchStocks}
               disabled={loading}
-              title="Обновить данные"
             >
-              <RefreshCw
-                size={20}
-                style={{
-                  animation: loading ? "spin 1s linear infinite" : "none",
-                }}
-              />
+              <RefreshCw size={20} className={loading ? "ExchangeAdminPage-spin" : ""} />
+              Обновить
             </button>
 
             <button
-              className="refresh-btn"
-              onClick={() => setShowForm((prev) => !prev)}
-              title="Добавить акцию"
+              className="ExchangeAdminPage-add-btn"
+              onClick={() => setShowForm(prev => !prev)}
             >
               <Plus size={20} />
+              Добавить акцию
             </button>
           </div>
         </div>
 
-        {/* Форма добавления */}
+        {/* Форма добавления акции */}
         {showForm && (
-          <form className="stock-item" onSubmit={handleAddStock}>
-            <input
-              type="text"
-              name="ticker"
-              placeholder="Тикер (AAPL)"
-              value={formData.ticker}
-              onChange={handleChange}
-              required
-            />
+          <div className="ExchangeAdminPage-form-card">
+            <h3 className="ExchangeAdminPage-form-title">Новая акция</h3>
+            <form onSubmit={handleAddStock}>
+              <div className="ExchangeAdminPage-form-group">
+                <label>Тикер</label>
+                <input
+                  type="text"
+                  name="ticker"
+                  placeholder="Например: AAPL"
+                  value={formData.ticker}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-            <input
-              type="number"
-              name="price"
-              placeholder="Цена"
-              value={formData.price}
-              onChange={handleChange}
-              required
-            />
+              <div className="ExchangeAdminPage-form-group">
+                <label>ISIN</label>
+                <input
+                  type="text"
+                  name="isin"
+                  placeholder="Например: US0378331005"
+                  value={formData.isin}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-            <select
-              name="currency"
-              value={formData.currency}
-              onChange={handleChange}
-            >
-              <option value="RUB">RUB</option>
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-            </select>
+              <div className="ExchangeAdminPage-form-group">
+                <label>Размер лота</label>
+                <input
+                  type="number"
+                  name="lot_size"
+                  step="0.01"
+                  min="0.01"
+                  value={formData.lot_size}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-            <button type="submit" disabled={formLoading}>
-              {formLoading ? "Добавление..." : "Добавить"}
-            </button>
-          </form>
+              <div className="ExchangeAdminPage-form-group">
+                <label>Цена за лот</label>
+                <input
+                  type="number"
+                  name="price"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="Текущая цена"
+                  value={formData.price}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="ExchangeAdminPage-form-group">
+                <label>Валюта</label>
+                {currenciesLoading ? (
+                  <div className="ExchangeAdminPage-loading-small">Загрузка валют...</div>
+                ) : currencies.length === 0 ? (
+                  <div className="ExchangeAdminPage-warning">
+                    <AlertCircle size={16} />
+                    Нет доступных валют
+                  </div>
+                ) : (
+                  <select name="currency_id" value={formData.currency_id} onChange={handleChange} required>
+                    <option value="">Выберите валюту</option>
+                    {currencies.map(curr => (
+                      <option key={curr.id} value={curr.id}>
+                        {curr.code} ({curr.symbol})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div className="ExchangeAdminPage-form-group ExchangeAdminPage-checkbox-group">
+                <label className="ExchangeAdminPage-checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="has_dividends"
+                    checked={formData.has_dividends}
+                    onChange={handleChange}
+                  />
+                  <span>Выплачивает дивиденды</span>
+                </label>
+              </div>
+
+              <div className="ExchangeAdminPage-form-actions">
+                <button
+                  type="button"
+                  className="ExchangeAdminPage-btn-secondary"
+                  onClick={() => setShowForm(false)}
+                >
+                  Отмена
+                </button>
+                <button type="submit" disabled={formLoading} className="ExchangeAdminPage-btn-primary">
+                  {formLoading ? "Добавление..." : "Добавить акцию"}
+                </button>
+              </div>
+            </form>
+          </div>
         )}
 
-        {loading && <div className="loading-text">Загрузка данных...</div>}
-        {error && <div className="error-text">{error}</div>}
+        {/* Состояния загрузки и ошибок */}
+        {loading && <div className="ExchangeAdminPage-loading-text">Загрузка данных биржи...</div>}
+        {error && <div className="ExchangeAdminPage-error-text">{error}</div>}
 
-        <div className="stocks-list">
-          {stocks.map((stock) => (
-            <div key={stock.id} className="stock-item">
-              <span className="ticker">{stock.ticker}</span>
-
-              <div className="price-change">
-                <span className="price">
-                  {stock.price} {stock.currency}
-                </span>
-
-                <span
-                  className={`change ${
-                    stock.change >= 0 ? "positive" : "negative"
-                  }`}
-                >
-                  {stock.change >= 0 ? "+" : ""}
-                  {stock.change}%
-                </span>
-              </div>
+        {/* Список акций */}
+        <div className="ExchangeAdminPage-stocks-list">
+          {stocks.length === 0 && !loading ? (
+            <div className="ExchangeAdminPage-empty-state">
+              <p>На бирже пока нет акций</p>
             </div>
-          ))}
+          ) : (
+            stocks.map(stock => (
+              <div key={stock.id} className="ExchangeAdminPage-stock-card">
+                <div className="ExchangeAdminPage-stock-info">
+                  <h3 className="ExchangeAdminPage-ticker">{stock.ticker}</h3>
+                  <p className="ExchangeAdminPage-isin">ISIN: {stock.isin || "—"}</p>
+                </div>
+                <div className="ExchangeAdminPage-price-info">
+                  <span className="ExchangeAdminPage-current-price">
+                    {stock.price.toLocaleString('ru-RU')} {stock.currency}
+                  </span>
+                  <span className={`ExchangeAdminPage-change ${stock.change >= 0 ? "ExchangeAdminPage-positive" : "ExchangeAdminPage-negative"}`}>
+                    {stock.change >= 0 ? "+" : ""}{stock.change}%
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </main>
     </div>
