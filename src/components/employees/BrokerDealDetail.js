@@ -41,36 +41,43 @@ const BrokerDealDetail = () => {
   }, [id]);
 
   const handleAction = async (action) => {
-    if (!token) {
-      alert("Требуется авторизация");
-      navigate("/login");
-      return;
-    }
+  if (!token) {
+    alert("Требуется авторизация");
+    navigate("/login");
+    return;
+  }
 
-    setActionLoading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/proposal/${id}`, {
+  setActionLoading(true);
+  try {
+    const verify = action === "approve";
+    const response = await fetch(
+      `${API_BASE_URL}/api/proposal/${id}/process`,
+      {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ action }),
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.detail || "Ошибка обработки заявки");
+        body: JSON.stringify({ verify }),
       }
+    );
 
-      alert("Заявка обработана");
-      navigate("/broker/main");
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setActionLoading(false);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      // Проверяем, есть ли сообщение об ошибке в ответе
+      throw new Error(data.detail || data.message || `Ошибка ${response.status}`);
     }
-  };
+
+    alert(data.message || "Заявка успешно обработана");
+    navigate("/broker/main");
+  } catch (err) {
+    console.error("Ошибка обработки заявки:", err);
+    alert(`Ошибка: ${err.message}`);
+  } finally {
+    setActionLoading(false);
+  }
+};
 
   if (loading) return <div className="admin-content">Загрузка...</div>;
   if (error) return <div className="admin-content">Ошибка: {error}</div>;
