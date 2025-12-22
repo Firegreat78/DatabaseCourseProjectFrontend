@@ -1,6 +1,5 @@
-// src/UserLogin.js
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './UserLogin.css';
 
@@ -11,8 +10,9 @@ const UserLogin = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const { login: authLogin } = useAuth(); // функция login из контекста
+  const { login: authLogin } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +20,6 @@ const UserLogin = () => {
     setIsLoading(true);
 
     try {
-      // Шаг 1: Авторизация
       const loginResponse = await fetch(`${API_BASE_URL}/api/login/user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,11 +39,8 @@ const UserLogin = () => {
         throw new Error('Сервер не вернул необходимые данные');
       }
 
-      // Шаг 2: Проверка статуса блокировки
       const banResponse = await fetch(`${API_BASE_URL}/api/user_ban_status/${user_id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!banResponse.ok) {
@@ -58,39 +54,36 @@ const UserLogin = () => {
         throw new Error('Ваш аккаунт заблокирован. Обратитесь в поддержку.');
       }
 
-      // Шаг 3: Успешный вход — сохраняем в контекст
       authLogin({
         token,
         user_id,
         role: loginData.role || 'user',
       });
+      
+      // Перенаправление после успешного входа
+      navigate('/user/main');
 
     } catch (err) {
       setError(err.message || 'Ошибка входа');
-      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="login-page">
-      <header className="header">
-        <div className="logo">
-          <span className="dollar-sign">$</span>
-          <span className="logo-text">МИД</span>
-        </div>
-      </header>
+    <div className="user-login-page">
       <main className="main-content">
         <div className="login-container">
           <h1>Вход</h1>
+          
           {error && <div className="error-message">{error}</div>}
+          
           <form onSubmit={handleSubmit}>
             <div className="input-group">
               <input
                 type="text"
                 value={login}
-                onChange={(e) => setLogin(e.target.value.trim())}
+                onChange={(e) => setLogin(e.target.value)}
                 placeholder=" "
                 required
                 disabled={isLoading}
@@ -98,6 +91,7 @@ const UserLogin = () => {
               />
               <label>Логин</label>
             </div>
+            
             <div className="input-group">
               <input
                 type="password"
@@ -110,18 +104,21 @@ const UserLogin = () => {
               />
               <label>Пароль</label>
             </div>
+            
             <button type="submit" className="login-button" disabled={isLoading}>
               {isLoading ? 'ВХОД...' : 'ВОЙТИ'}
             </button>
           </form>
+          
           <div className="registration-link">
             Не зарегистрированы? <Link to="/register">Регистрация</Link>
           </div>
+          
+          <div className="footer-link">
+            <Link to="/employee-login">Вход для сотрудников</Link>
+          </div>
         </div>
       </main>
-      <footer className="footer">
-        <Link to="/employee-login">Вход для сотрудников</Link>
-      </footer>
     </div>
   );
 };

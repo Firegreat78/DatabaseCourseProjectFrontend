@@ -1,7 +1,8 @@
-// src/UserRegistration.js
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './UserRegistration.css';
+
+const API_BASE_URL = 'http://localhost:8000';
 
 const UserRegistration = () => {
   const [login, setLogin] = useState('');
@@ -10,7 +11,6 @@ const UserRegistration = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -18,7 +18,6 @@ const UserRegistration = () => {
     setError('');
     setLoading(true);
 
-    // Клиентская валидация
     if (password !== confirmPassword) {
       setError('Пароли не совпадают!');
       setLoading(false);
@@ -32,11 +31,9 @@ const UserRegistration = () => {
     }
 
     try {
-      const response = await fetch('/api/register/user', {
+      const response = await fetch(`${API_BASE_URL}/api/register/user`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           login: login.trim(),
           email: email.trim(),
@@ -47,31 +44,21 @@ const UserRegistration = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        // FastAPI возвращает detail в случае ошибки
         throw new Error(data.detail || 'Ошибка регистрации');
       }
 
-      // Успешная регистрация
       alert('Регистрация прошла успешно! Теперь вы можете войти.');
-      navigate('/login'); // Перенаправляем на страницу входа
+      navigate('/login');
 
     } catch (err) {
       setError(err.message || 'Произошла ошибка при регистрации');
-      console.error('Registration error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="registration-page">
-      <header className="header">
-        <div className="logo">
-          <span className="dollar-sign">$</span>
-          <span className="logo-text">МИД</span>
-        </div>
-      </header>
-
+    <div className="user-registration-page">
       <main className="main-content">
         <div className="registration-container">
           <h1>Регистрация</h1>
@@ -79,7 +66,7 @@ const UserRegistration = () => {
           {error && <div className="error-message">{error}</div>}
 
           <form onSubmit={handleSubmit}>
-            <div className="input-group">
+            <div className="registration-input-group">
               <input
                 type="text"
                 value={login}
@@ -91,7 +78,7 @@ const UserRegistration = () => {
               <label>Логин</label>
             </div>
 
-            <div className="input-group">
+            <div className="registration-input-group">
               <input
                 type="email"
                 value={email}
@@ -103,7 +90,7 @@ const UserRegistration = () => {
               <label>Email</label>
             </div>
 
-            <div className="input-group">
+            <div className="registration-input-group">
               <input
                 type="password"
                 value={password}
@@ -116,7 +103,7 @@ const UserRegistration = () => {
               <label>Пароль</label>
             </div>
 
-            <div className="input-group">
+            <div className="registration-input-group">
               <input
                 type="password"
                 value={confirmPassword}
@@ -128,11 +115,7 @@ const UserRegistration = () => {
               <label>Подтвердите пароль</label>
             </div>
 
-            <button
-              type="submit"
-              className="register-button"
-              disabled={loading}
-            >
+            <button type="submit" className="register-button" disabled={loading}>
               {loading ? 'Регистрация...' : 'ЗАРЕГИСТРИРОВАТЬСЯ'}
             </button>
           </form>
@@ -140,12 +123,12 @@ const UserRegistration = () => {
           <div className="login-link">
             Уже зарегистрированы? <Link to="/login">Вход</Link>
           </div>
+          
+          <div className="footer-link">
+            <Link to="/employee-login">Вход для сотрудников</Link>
+          </div>
         </div>
       </main>
-
-      <footer className="footer">
-        <Link to="/employee-login">Вход для сотрудников</Link>
-      </footer>
     </div>
   );
 };

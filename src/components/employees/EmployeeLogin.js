@@ -1,4 +1,4 @@
-// src/pages/EmployeeLogin.jsx (или где у тебя лежит)
+// src/pages/EmployeeLogin.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -60,31 +60,42 @@ const EmployeeLogin = () => {
     }
   };
 
-  // остальной JSX без изменений
   return (
     <div className="employee-login-page">
       <main className="main-content">
         <div className="login-container">
           <h1>Вход для сотрудников</h1>
-          {error && <div className="error-message">{error}</div>}
+          
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit}>
             <input
+              type="text"
               value={loginValue}
               onChange={(e) => setLoginValue(e.target.value)}
               placeholder="Логин"
               required
+              disabled={isLoading}
             />
+            
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Пароль"
               required
+              disabled={isLoading}
             />
-            <button disabled={isLoading}>
+            
+            <button type="submit" disabled={isLoading}>
               {isLoading ? 'ВХОД...' : 'ВОЙТИ'}
             </button>
           </form>
+          
           <div className="client-link">
             Вход для клиентов? <Link to="/login">Вход</Link>
           </div>
