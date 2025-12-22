@@ -111,7 +111,7 @@ const BrokerDealDetail = () => {
                 {amount?.toLocaleString("ru-RU", {
                   minimumFractionDigits: 2,
                 })}{" "}
-                ₽
+                
               </div>
 
               <div className="admin-name">

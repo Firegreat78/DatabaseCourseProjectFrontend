@@ -148,7 +148,7 @@ const BrokerMainPage = () => {
                     <div className="admin-id">ID заявки: {p.id}</div>
                     <div className="admin-name">Счёт № {account}</div>
                     <div className="admin-action">
-                      {security?.name ?? "—"} {proposal_type?.type ?? "—"} • {formatAmount(amount)} ₽
+                      {security?.name ?? "—"} {proposal_type?.type ?? "—"} • {formatAmount(amount)}
                     </div>
                     <div
                       className="admin-status"
