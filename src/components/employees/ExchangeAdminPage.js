@@ -597,18 +597,6 @@ const ExchangeAdminPage = () => {
                 )}
               </div>
 
-              <div className="ExchangeAdminPage-form-group checkbox-group">
-                <label>
-                  <input
-                    type="checkbox"
-                    name="has_dividends"
-                    checked={formData.has_dividends}
-                    onChange={handleChange}
-                  />
-                  Выплачивает дивиденды
-                </label>
-              </div>
-
               <div className="ExchangeAdminPage-form-actions">
                 <button
                   type="button"
