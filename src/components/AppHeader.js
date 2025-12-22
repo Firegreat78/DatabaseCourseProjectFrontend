@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   Wallet,
   TrendingUp,
-  Package,
+  Package, // Иконка для "Предложения" и "Депозитарный счёт"
   ArrowLeftRight,
   User,
   LogOut
@@ -64,6 +64,15 @@ const AppHeader = () => {
         >
           <ArrowLeftRight size={20} />
           <span>Биржа</span>
+        </NavLink>
+
+        {/* Новая кнопка "Депозитарный счёт" */}
+        <NavLink
+          to="/depositary_account"
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Package size={20} /> {/* <-- Новая иконка */}
+          <span>Депозитарный счёт</span>
         </NavLink>
       </nav>
 
