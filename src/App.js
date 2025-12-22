@@ -58,8 +58,10 @@ const PublicRoute = ({ children }) => {
   if (loading) return <div>Загрузка...</div>;
 
   // Если уже залогинен — сразу отправляем на счета
-  
-  return user ? <Navigate to="/accounts" replace /> : children;
+  if (user){
+  if (user.role == "user"){
+  return <Navigate to="/accounts" replace />}}
+  return children;
   //return user
 };
 

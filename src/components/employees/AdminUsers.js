@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AdminHeader from "./AdminHeader";
-import { Search, ArrowRight, Filter, User, Mail, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Search, ArrowRight, Filter, User, Mail, Calendar, CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
 import { useFetchTable } from "./useFetchTable";
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from "react-router-dom";
@@ -95,15 +95,6 @@ const AdminUsersPage = () => {
     navigate(`/admin/users/${userId}`);
   };
 
-  const handleRefresh = () => {
-    refetch && refetch();
-  };
-
-  // Статистика
-  const totalUsers = users.length;
-  const pendingUsers = users.filter(u => u.verification_status_id === 3).length;
-  const blockedUsers = users.filter(u => u.block_status_id === 2).length;
-  const verifiedUsers = users.filter(u => u.verification_status_id === 2).length;
 
   return (
     <div className="admin-page">
@@ -113,27 +104,6 @@ const AdminUsersPage = () => {
         <div className="page-header">
           <div className="header-left">
             <h1>Управление пользователями</h1>
-            <button className="refresh-btn" onClick={handleRefresh}>
-              Обновить
-            </button>
-          </div>
-          <div className="header-stats">
-            <div className="stat-item">
-              <span className="stat-label">Всего пользователей:</span>
-              <span className="stat-value">{totalUsers}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Ожидают верификации:</span>
-              <span className="stat-value pending">{pendingUsers}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Верифицированы:</span>
-              <span className="stat-value verified">{verifiedUsers}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Заблокированы:</span>
-              <span className="stat-value blocked">{blockedUsers}</span>
-            </div>
           </div>
         </div>
 

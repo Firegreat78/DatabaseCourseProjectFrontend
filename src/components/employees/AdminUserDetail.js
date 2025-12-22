@@ -1,3 +1,4 @@
+// src/components/admin/AdminUserEdit.js
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './AdminUserEdit.css';
@@ -24,15 +25,18 @@ const AdminUserEdit = () => {
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [serverErrors, setServerErrors] = useState({});
   const [success, setSuccess] = useState(false);
   const { user } = useAuth();
+  const [touched, setTouched] = useState({});
   
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         setLoading(true);
-        setError(null);
+        setErrors({});
+        setServerErrors({});
         
         const response = await fetch(`${API_BASE_URL}/api/user/${id}`, {
           headers: { 
@@ -64,7 +68,7 @@ const AdminUserEdit = () => {
         });
       } catch (err) {
         console.error('Ошибка загрузки пользователя:', err);
-        setError(`Не удалось загрузить данные пользователя: ${err.message}`);
+        setErrors({ general: `Не удалось загрузить данные пользователя: ${err.message}` });
       } finally {
         setLoading(false);
       }
@@ -78,23 +82,150 @@ const AdminUserEdit = () => {
       ...prev, 
       [field]: value 
     }));
+    
+    // Отмечаем поле как "тронутое"
+    setTouched(prev => ({ ...prev, [field]: true }));
+    
+    // Очищаем ошибки для этого поля
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+    
+    if (serverErrors[field]) {
+      setServerErrors(prev => {
+        const newServerErrors = { ...prev };
+        delete newServerErrors[field];
+        return newServerErrors;
+      });
+    }
+  };
+
+  const validateField = (fieldName) => {
+    if (!touched[fieldName]) return;
+
+    const newErrors = { ...errors };
+    let hasError = false;
+
+    switch (fieldName) {
+      case 'login':
+        // Логин может быть пустым (оставляем старый)
+        // Проверяем только если не пустой и меньше 3 символов
+        if (form.login.trim() !== '' && form.login.length < 3) {
+          newErrors.login = 'Логин должен содержать минимум 3 символа';
+          hasError = true;
+        } else {
+          delete newErrors.login;
+        }
+        break;
+        
+      case 'email':
+        // Email может быть пустым (оставляем старый)
+        // Проверяем только если не пустой и невалидный
+        if (form.email.trim() !== '' && !/\S+@\S+\.\S+/.test(form.email)) {
+          newErrors.email = 'Введите корректный email';
+          hasError = true;
+        } else {
+          delete newErrors.email;
+        }
+        break;
+        
+      case 'password':
+        // Проверяем пароль только если он указан
+        if (form.password && form.password.length > 0 && form.password.length < 6) {
+          newErrors.password = 'Пароль должен содержать минимум 6 символов';
+          hasError = true;
+        } else {
+          delete newErrors.password;
+        }
+        break;
+        
+      default:
+        break;
+    }
+
+    if (hasError || (errors[fieldName] && !hasError)) {
+      setErrors(newErrors);
+    }
+  };
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    validateField(field);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    // Проверка логина (только если не пустой)
+    if (form.login.trim() !== '' && form.login.length < 3) {
+      newErrors.login = 'Логин должен содержать минимум 3 символа';
+      isValid = false;
+    }
+
+    // Проверка email (только если не пустой)
+    if (form.email.trim() !== '' && !/\S+@\S+\.\S+/.test(form.email)) {
+      newErrors.email = 'Введите корректный email';
+      isValid = false;
+    }
+
+    // Проверка пароля (если указан)
+    if (form.password && form.password.length > 0 && form.password.length < 6) {
+      newErrors.password = 'Пароль должен содержать минимум 6 символов';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    
+    // Отмечаем как тронутые только если поля не пустые
+    setTouched({
+      login: form.login.trim() !== '',
+      email: form.email.trim() !== '',
+      password: !!form.password
+    });
+    
+    return isValid;
+  };
+
+  const getFieldError = (fieldName) => {
+    return serverErrors[fieldName] || errors[fieldName];
+  };
+
+  const isFormValid = () => {
+    // Форма валидна, если нет ошибок валидации
+    return Object.keys(errors).length === 0;
   };
 
   const handleSave = async () => {
+    if (!validateForm()) return;
+    
     setSaving(true);
-    setError(null);
+    setErrors({});
+    setServerErrors({});
     setSuccess(false);
     
     try {
       // Подготовка данных для отправки
       const updateData = {
-        login: form.login,
-        email: form.email,
         verification_status_id: parseInt(form.verification_status_id),
         block_status_id: parseInt(form.block_status_id),
       };
       
-      // Добавляем пароль только если он был изменен
+      // Добавляем логин только если он не пустой
+      if (form.login.trim() !== '') {
+        updateData.login = form.login;
+      }
+      
+      // Добавляем email только если он не пустой
+      if (form.email.trim() !== '') {
+        updateData.email = form.email;
+      }
+      
+      // Добавляем пароль только если он был указан
       if (form.password && form.password.trim() !== '') {
         updateData.password = form.password;
       }
@@ -102,11 +233,21 @@ const AdminUserEdit = () => {
       // Проверка на изменения
       const hasChanges = Object.keys(updateData).some(key => {
         if (key === 'password') return true; // Пароль всегда считается изменением если указан
-        return form.originalData[key] !== updateData[key];
+        // Для логина и email проверяем только если они переданы (не пустые)
+        if (key === 'login' && updateData.login) {
+          return form.originalData[key] !== updateData[key];
+        }
+        if (key === 'email' && updateData.email) {
+          return form.originalData[key] !== updateData[key];
+        }
+        if (key === 'verification_status_id' || key === 'block_status_id') {
+          return form.originalData[key] !== updateData[key];
+        }
+        return false;
       });
       
       if (!hasChanges) {
-        setError('Нет изменений для сохранения');
+        setErrors({ general: 'Нет изменений для сохранения' });
         setSaving(false);
         return;
       }
@@ -123,13 +264,36 @@ const AdminUserEdit = () => {
       const responseData = await response.json();
       
       if (!response.ok) {
-        throw new Error(responseData.message || `Ошибка ${response.status}: ${response.statusText}`);
+        // Обработка ошибок с сервера
+        if (responseData.detail === "Логин уже занят") {
+          setServerErrors(prev => ({ ...prev, login: "Этот логин уже занят" }));
+          setTouched(prev => ({ ...prev, login: true }));
+        } else if (responseData.detail === "Email уже зарегистрирован") {
+          setServerErrors(prev => ({ ...prev, email: "Этот email уже зарегистрирован" }));
+          setTouched(prev => ({ ...prev, email: true }));
+        } else if (responseData.detail && typeof responseData.detail === 'string') {
+          setErrors({ general: responseData.detail });
+        } else {
+          setErrors({ general: responseData.message || `Ошибка ${response.status}: ${response.statusText}` });
+        }
+        return;
       }
       
       // Обновляем оригинальные данные после успешного сохранения
+      // Для логина и email используем значения из ответа сервера
       setForm(prev => ({
         ...prev,
-        originalData: { ...prev.originalData, ...updateData },
+        login: responseData.login || prev.login,
+        email: responseData.email || prev.email,
+        verification_status_id: responseData.verification_status_id,
+        block_status_id: responseData.block_status_id,
+        originalData: { 
+          ...prev.originalData, 
+          login: responseData.login || prev.originalData.login,
+          email: responseData.email || prev.originalData.email,
+          verification_status_id: responseData.verification_status_id,
+          block_status_id: responseData.block_status_id
+        },
         password: '' // Сбрасываем поле пароля после сохранения
       }));
       
@@ -138,7 +302,7 @@ const AdminUserEdit = () => {
       
     } catch (err) {
       console.error('Ошибка при обновлении пользователя:', err);
-      setError(err.message || 'Не удалось обновить данные пользователя');
+      setErrors({ general: err.message || 'Не удалось обновить данные пользователя' });
     } finally {
       setSaving(false);
     }
@@ -159,13 +323,13 @@ const AdminUserEdit = () => {
     );
   }
 
-  if (error && !form) {
+  if (errors.general && !form) {
     return (
       <div className="admin-user-edit">
         <div className="error-container">
           <AlertCircle size={48} />
           <h2>Ошибка загрузки</h2>
-          <p>{error}</p>
+          <p>{errors.general}</p>
           <button onClick={handleCancel} className="cancel-btn">
             <ArrowLeft size={16} />
             Вернуться к списку
@@ -184,10 +348,10 @@ const AdminUserEdit = () => {
         <h1>Редактирование пользователя</h1>
       </div>
 
-      {error && (
+      {errors.general && (
         <div className="error-message">
           <AlertCircle size={18} />
-          <span>{error}</span>
+          <span>{errors.general}</span>
         </div>
       )}
 
@@ -212,24 +376,42 @@ const AdminUserEdit = () => {
           </div>
 
           <div className="form-group">
-            <label>Логин *</label>
+            <label>Логин</label>
             <input
               value={form.login}
               onChange={(e) => handleChange('login', e.target.value)}
-              placeholder="Введите логин"
+              onBlur={() => handleBlur('login')}
+              className={getFieldError('login') && touched.login ? 'input-error' : ''}
+              placeholder={`Текущий`}
             />
-            <div className="form-hint">Уникальное имя пользователя</div>
+            {getFieldError('login') && touched.login && (
+              <span className="field-error">{getFieldError('login')}</span>
+            )}
+            <div className="form-hint">
+              {form.login.trim() === '' 
+                ? `Оставьте пустым, чтобы сохранить текущий логин` 
+                : 'Введите новый логин (минимум 3 символа)'}
+            </div>
           </div>
 
           <div className="form-group">
-            <label>Email *</label>
+            <label>Email</label>
             <input
               type="email"
               value={form.email}
               onChange={(e) => handleChange('email', e.target.value)}
-              placeholder="Введите email"
+              onBlur={() => handleBlur('email')}
+              className={getFieldError('email') && touched.email ? 'input-error' : ''}
+              placeholder={`Текущий: ${form.originalData.email}`}
             />
-            <div className="form-hint">Электронная почта пользователя</div>
+            {getFieldError('email') && touched.email && (
+              <span className="field-error">{getFieldError('email')}</span>
+            )}
+            <div className="form-hint">
+              {form.email.trim() === '' 
+                ? `Оставьте пустым, чтобы сохранить текущий email: ${form.originalData.email}` 
+                : 'Введите новый email'}
+            </div>
           </div>
 
           <div className="form-group">
@@ -251,8 +433,13 @@ const AdminUserEdit = () => {
               type="password"
               value={form.password}
               onChange={(e) => handleChange('password', e.target.value)}
-              placeholder="Введите новый пароль"
+              onBlur={() => handleBlur('password')}
+              className={getFieldError('password') && touched.password ? 'input-error' : ''}
+              placeholder="Введите новый пароль (минимум 6 символов)"
             />
+            {getFieldError('password') && touched.password && (
+              <span className="field-error">{getFieldError('password')}</span>
+            )}
             <div className="form-hint">Оставьте пустым, чтобы не менять пароль</div>
           </div>
 
@@ -313,8 +500,8 @@ const AdminUserEdit = () => {
         </button>
         <button 
           onClick={handleSave} 
-          disabled={saving}
-          className="save-btn"
+          disabled={!isFormValid() || saving}
+          className={`save-btn ${(!isFormValid() || saving) ? 'button-disabled' : ''}`}
         >
           {saving ? (
             <>

@@ -19,12 +19,18 @@ const ExchangeAdminPage = () => {
   const [formData, setFormData] = useState({
     ticker: "",
     isin: "",
-    lot_size: "1.00",
+    lot_size: "1",
     price: "",
     currency_id: "",
     has_dividends: false,
   });
   const [formLoading, setFormLoading] = useState(false);
+
+  // Состояния для валидации
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [serverErrors, setServerErrors] = useState({});
 
   // Загрузка списка акций
   const fetchStocks = async () => {
@@ -87,62 +93,335 @@ const ExchangeAdminPage = () => {
       ...prev,
       [name]: type === "checkbox" ? checked : value
     }));
+    
+    // Отмечаем поле как "тронутое"
+    setTouched(prev => ({ ...prev, [name]: true }));
+    
+    // Очищаем ошибки для этого поля
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+    
+    // Очищаем серверные ошибки при изменении поля
+    if (serverErrors[name]) {
+      setServerErrors(prev => {
+        const newServerErrors = { ...prev };
+        delete newServerErrors[name];
+        return newServerErrors;
+      });
+    }
+  };
+
+  // Валидация поля при потере фокуса
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    validateField(name);
+  };
+
+  // Валидация отдельного поля
+  const validateField = (fieldName) => {
+    if (!touched[fieldName] && !formSubmitted) return;
+
+    const newErrors = { ...errors };
+    let hasError = false;
+
+    switch (fieldName) {
+      case 'ticker':
+        if (!formData.ticker.trim()) {
+          newErrors.ticker = 'Тикер обязателен';
+          hasError = true;
+        } else {
+          // Проверка на уникальность тикера (защита от undefined)
+          const tickerExists = stocks.some(stock => 
+            stock && stock.ticker && 
+            stock.ticker.toLowerCase() === formData.ticker.trim().toLowerCase()
+          );
+          if (tickerExists) {
+            newErrors.ticker = 'Тикер уже существует';
+            hasError = true;
+          } else {
+            delete newErrors.ticker;
+          }
+        }
+        break;
+        
+      case 'isin':
+        if (!formData.isin.trim()) {
+          newErrors.isin = 'ISIN обязателен';
+          hasError = true;
+        } else {
+          // Проверка на уникальность ISIN (защита от undefined)
+          const isinExists = stocks.some(stock => 
+            stock && stock.isin && 
+            stock.isin === formData.isin.trim()
+          );
+          if (isinExists) {
+            newErrors.isin = 'ISIN уже существует';
+            hasError = true;
+          } else {
+            delete newErrors.isin;
+          }
+        }
+        break;
+        
+      case 'lot_size':
+        if (!formData.lot_size.trim()) {
+          newErrors.lot_size = 'Размер лота обязателен';
+          hasError = true;
+        } else {
+          const lotSize = parseFloat(formData.lot_size);
+          if (isNaN(lotSize)) {
+            newErrors.lot_size = 'Размер лота должен быть числом';
+            hasError = true;
+          } else if (lotSize <= 0) {
+            newErrors.lot_size = 'Размер лота должен быть больше 0';
+            hasError = true;
+          } else if (!Number.isInteger(lotSize)) {
+            newErrors.lot_size = 'Размер лота должен быть целым числом';
+            hasError = true;
+          } else {
+            delete newErrors.lot_size;
+          }
+        }
+        break;
+        
+      case 'price':
+        if (!formData.price.trim()) {
+          newErrors.price = 'Цена обязательна';
+          hasError = true;
+        } else {
+          const price = parseFloat(formData.price);
+          if (isNaN(price)) {
+            newErrors.price = 'Цена должна быть числом';
+            hasError = true;
+          } else if (price <= 0) {
+            newErrors.price = 'Цена должна быть положительной';
+            hasError = true;
+          } else {
+            delete newErrors.price;
+          }
+        }
+        break;
+        
+      case 'currency_id':
+        if (!formData.currency_id) {
+          newErrors.currency_id = 'Валюта обязательна';
+          hasError = true;
+        } else {
+          delete newErrors.currency_id;
+        }
+        break;
+        
+      default:
+        break;
+    }
+
+    if (hasError || (errors[fieldName] && !hasError)) {
+      setErrors(newErrors);
+    }
+  };
+
+  // Полная валидация формы перед отправкой
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    // Проверка тикера
+    if (!formData.ticker.trim()) {
+      newErrors.ticker = 'Тикер обязателен';
+      isValid = false;
+    } else {
+      // Проверка на уникальность тикера (защита от undefined)
+      const tickerExists = stocks.some(stock => 
+        stock && stock.ticker && 
+        stock.ticker.toLowerCase() === formData.ticker.trim().toLowerCase()
+      );
+      if (tickerExists) {
+        newErrors.ticker = 'Тикер уже существует';
+        isValid = false;
+      }
+    }
+
+    // Проверка ISIN
+    if (!formData.isin.trim()) {
+      newErrors.isin = 'ISIN обязателен';
+      isValid = false;
+    } else {
+      // Проверка на уникальность ISIN (защита от undefined)
+      const isinExists = stocks.some(stock => 
+        stock && stock.isin && 
+        stock.isin.toLowerCase() === formData.isin.trim().toLowerCase()
+      );
+      if (isinExists) {
+        newErrors.isin = 'ISIN уже существует';
+        isValid = false;
+      }
+    }
+
+    // Проверка размера лота
+    if (!formData.lot_size.trim()) {
+      newErrors.lot_size = 'Размер лота обязателен';
+      isValid = false;
+    } else {
+      const lotSize = parseFloat(formData.lot_size);
+      if (isNaN(lotSize)) {
+        newErrors.lot_size = 'Размер лота должен быть числом';
+        isValid = false;
+      } else if (lotSize <= 0) {
+        newErrors.lot_size = 'Размер лота должен быть больше 0';
+        isValid = false;
+      } else if (!Number.isInteger(lotSize)) {
+        newErrors.lot_size = 'Размер лота должен быть целым числом';
+        isValid = false;
+      }
+    }
+
+    // Проверка цены
+    if (!formData.price.trim()) {
+      newErrors.price = 'Цена обязательна';
+      isValid = false;
+    } else {
+      const price = parseFloat(formData.price);
+      if (isNaN(price)) {
+        newErrors.price = 'Цена должна быть числом';
+        isValid = false;
+      } else if (price <= 0) {
+        newErrors.price = 'Цена должна быть положительной';
+        isValid = false;
+      }
+    }
+
+    // Проверка валюты
+    if (!formData.currency_id) {
+      newErrors.currency_id = 'Валюта обязательна';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    setTouched({
+      ticker: true,
+      isin: true,
+      lot_size: true,
+      price: true,
+      currency_id: true
+    });
+    setFormSubmitted(true);
+    
+    return isValid;
+  };
+
+  // Функция для объединения ошибок валидации и серверных ошибок
+  const getFieldError = (fieldName) => {
+    return serverErrors[fieldName] || errors[fieldName];
   };
 
   const handleAddStock = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!token) {
-      alert("Требуется авторизация");
-      return;
-    }
+  if (!token) {
+    alert("Требуется авторизация");
+    return;
+  }
 
-    const { ticker, isin, lot_size, price, currency_id, has_dividends } = formData;
+  if (!validateForm()) return;
 
-    if (!ticker || !isin || !price || !currency_id) {
-      alert("Заполните все обязательные поля");
-      return;
-    }
+  setFormLoading(true);
+  setServerErrors({});
 
-    setFormLoading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/exchange/stocks`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ticker: ticker.trim(),
-          isin: isin.trim(),
-          lot_size: Number(lot_size),
-          price: Number(price),
-          currency_id: Number(currency_id),
-          has_dividends: has_dividends,
-        }),
-      });
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/exchange/stocks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        ticker: formData.ticker.trim(),
+        isin: formData.isin.trim().toUpperCase(),
+        lot_size: Number(formData.lot_size),
+        price: Number(formData.price),
+        currency_id: Number(formData.currency_id),
+        has_dividends: formData.has_dividends,
+      }),
+    });
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.detail || "Ошибка добавления акции");
+    const data = await response.json();
+
+    if (!response.ok) {
+      if (typeof data.detail === "string") {
+        if (data.detail.includes("ISIN")) {
+          setServerErrors({ isin: data.detail });
+        } else if (data.detail.includes("тикер")) {
+          setServerErrors({ ticker: data.detail });
+        } else {
+          alert(data.detail);
+        }
+      } else {
+        alert("Ошибка добавления акции");
       }
-
-      alert("Акция успешно добавлена!");
-      setFormData({
-        ticker: "",
-        isin: "",
-        lot_size: "1.00",
-        price: "",
-        currency_id: currencies[0]?.id?.toString() || "",
-        has_dividends: false,
-      });
-      setShowForm(false);
-      fetchStocks();
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setFormLoading(false);
+      return;
     }
+
+    // success
+    setShowForm(false);
+    setFormData({
+      ticker: "",
+      isin: "",
+      lot_size: "1",
+      price: "",
+      currency_id: currencies[0]?.id?.toString() || "",
+      has_dividends: false,
+    });
+
+    setErrors({});
+    setServerErrors({});
+    setTouched({});
+    setFormSubmitted(false);
+
+    await fetchStocks();
+    alert("Акция успешно добавлена!");
+
+  } catch (err) {
+    console.error(err);
+    alert("Ошибка соединения с сервером");
+  } finally {
+    setFormLoading(false);
+  }
+};
+
+
+  // Проверка заполнения обязательных полей для активации кнопки
+  const isFormValid = () => {
+    return (
+      formData.ticker.trim() &&
+      formData.isin.trim() &&
+      formData.lot_size.trim() &&
+      formData.price.trim() &&
+      formData.currency_id &&
+      Object.keys(errors).length === 0
+    );
+  };
+
+  // Функция для сброса формы при закрытии
+  const handleCancelForm = () => {
+    setShowForm(false);
+    setFormData({
+      ticker: "",
+      isin: "",
+      lot_size: "1",
+      price: "",
+      currency_id: currencies[0]?.id?.toString() || "",
+      has_dividends: false,
+    });
+    setErrors({});
+    setServerErrors({});
+    setTouched({});
+    setFormSubmitted(false);
   };
 
   return (
@@ -179,44 +458,56 @@ const ExchangeAdminPage = () => {
             <h3 className="ExchangeAdminPage-form-title">Новая акция</h3>
             <form onSubmit={handleAddStock}>
               <div className="ExchangeAdminPage-form-group">
-                <label>Тикер</label>
+                <label>Тикер *</label>
                 <input
                   type="text"
                   name="ticker"
                   placeholder="Например: AAPL"
                   value={formData.ticker}
                   onChange={handleChange}
-                  required
+                  onBlur={handleBlur}
+                  className={getFieldError('ticker') && (touched.ticker || formSubmitted) ? 'input-error' : ''}
                 />
+                {getFieldError('ticker') && (touched.ticker || formSubmitted) && (
+                  <span className="error-message">{getFieldError('ticker')}</span>
+                )}
               </div>
 
               <div className="ExchangeAdminPage-form-group">
-                <label>ISIN</label>
+                <label>ISIN *</label>
                 <input
                   type="text"
                   name="isin"
                   placeholder="Например: US0378331005"
                   value={formData.isin}
                   onChange={handleChange}
-                  required
+                  onBlur={handleBlur}
+                  className={getFieldError('isin') && (touched.isin || formSubmitted) ? 'input-error' : ''}
                 />
+                {getFieldError('isin') && (touched.isin || formSubmitted) && (
+                  <span className="error-message">{getFieldError('isin')}</span>
+                )}
               </div>
 
               <div className="ExchangeAdminPage-form-group">
-                <label>Размер лота</label>
+                <label>Размер лота * (должен быть целым числом {} 0)</label>
                 <input
                   type="number"
                   name="lot_size"
-                  step="0.01"
-                  min="0.01"
+                  step="1"
+                  min="1"
                   value={formData.lot_size}
                   onChange={handleChange}
-                  required
+                  onBlur={handleBlur}
+                  className={getFieldError('lot_size') && (touched.lot_size || formSubmitted) ? 'input-error' : ''}
                 />
+                {getFieldError('lot_size') && (touched.lot_size || formSubmitted) && (
+                  <span className="error-message">{getFieldError('lot_size')}</span>
+                )}
               </div>
 
               <div className="ExchangeAdminPage-form-group">
-                <label>Цена за лот</label>
+                <label>Цена за лот *</label>
                 <input
                   type="number"
                   name="price"
@@ -225,12 +516,16 @@ const ExchangeAdminPage = () => {
                   placeholder="Текущая цена"
                   value={formData.price}
                   onChange={handleChange}
-                  required
+                  onBlur={handleBlur}
+                  className={getFieldError('price') && (touched.price || formSubmitted) ? 'input-error' : ''}
                 />
+                {getFieldError('price') && (touched.price || formSubmitted) && (
+                  <span className="error-message">{getFieldError('price')}</span>
+                )}
               </div>
 
               <div className="ExchangeAdminPage-form-group">
-                <label>Валюта</label>
+                <label>Валюта *</label>
                 {currenciesLoading ? (
                   <div className="ExchangeAdminPage-loading-small">Загрузка валют...</div>
                 ) : currencies.length === 0 ? (
@@ -239,26 +534,37 @@ const ExchangeAdminPage = () => {
                     Нет доступных валют
                   </div>
                 ) : (
-                  <select name="currency_id" value={formData.currency_id} onChange={handleChange} required>
-                    <option value="">Выберите валюту</option>
-                    {currencies.map(curr => (
-                      <option key={curr.id} value={curr.id}>
-                        {curr.code} ({curr.symbol})
-                      </option>
-                    ))}
-                  </select>
+                  <>
+                    <select 
+                      name="currency_id" 
+                      value={formData.currency_id} 
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      className={getFieldError('currency_id') && (touched.currency_id || formSubmitted) ? 'input-error' : ''}
+                    >
+                      <option value="">Выберите валюту</option>
+                      {currencies.map(curr => (
+                        <option key={curr.id} value={curr.id}>
+                          {curr.code} ({curr.symbol})
+                        </option>
+                      ))}
+                    </select>
+                    {getFieldError('currency_id') && (touched.currency_id || formSubmitted) && (
+                      <span className="error-message">{getFieldError('currency_id')}</span>
+                    )}
+                  </>
                 )}
               </div>
 
-              <div className="ExchangeAdminPage-form-group ExchangeAdminPage-checkbox-group">
-                <label className="ExchangeAdminPage-checkbox-label">
+              <div className="ExchangeAdminPage-form-group checkbox-group">
+                <label>
                   <input
                     type="checkbox"
                     name="has_dividends"
                     checked={formData.has_dividends}
                     onChange={handleChange}
                   />
-                  <span>Выплачивает дивиденды</span>
+                  Выплачивает дивиденды
                 </label>
               </div>
 
@@ -266,14 +572,19 @@ const ExchangeAdminPage = () => {
                 <button
                   type="button"
                   className="ExchangeAdminPage-btn-secondary"
-                  onClick={() => setShowForm(false)}
+                  onClick={handleCancelForm}
                 >
                   Отмена
                 </button>
-                <button type="submit" disabled={formLoading} className="ExchangeAdminPage-btn-primary">
+                <button 
+                  type="submit" 
+                  disabled={formLoading || !isFormValid()} 
+                  className={`ExchangeAdminPage-btn-primary ${(!isFormValid() || formLoading) ? 'button-disabled' : ''}`}
+                >
                   {formLoading ? "Добавление..." : "Добавить акцию"}
                 </button>
               </div>
+              <p className="required-note">* Обязательные поля</p>
             </form>
           </div>
         )}
@@ -292,15 +603,15 @@ const ExchangeAdminPage = () => {
             stocks.map(stock => (
               <div key={stock.id} className="ExchangeAdminPage-stock-card">
                 <div className="ExchangeAdminPage-stock-info">
-                  <h3 className="ExchangeAdminPage-ticker">{stock.ticker}</h3>
-                  <p className="ExchangeAdminPage-isin">ISIN: {stock.isin || "—"}</p>
+                  <h3 className="ExchangeAdminPage-ticker">{stock.ticker || 'N/A'}</h3>
+                  <span className="ExchangeAdminPage-isin">{stock.isin || ''}</span>
                 </div>
                 <div className="ExchangeAdminPage-price-info">
                   <span className="ExchangeAdminPage-current-price">
-                    {stock.price.toLocaleString('ru-RU')} {stock.currency}
+                    {stock.price?.toLocaleString('ru-RU') || '0'} {stock.currency || ''}
                   </span>
                   <span className={`ExchangeAdminPage-change ${stock.change >= 0 ? "ExchangeAdminPage-positive" : "ExchangeAdminPage-negative"}`}>
-                    {stock.change >= 0 ? "+" : ""}{stock.change}%
+                    {stock.change >= 0 ? "+" : ""}{stock.change || 0}%
                   </span>
                 </div>
               </div>

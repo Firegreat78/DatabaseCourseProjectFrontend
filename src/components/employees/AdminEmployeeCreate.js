@@ -21,8 +21,10 @@ const AdminEmployeeCreate = () => {
   const [isSubmitting, setIsSubmitting] = useState(false); // Блокировка кнопки при отправке
   const [touched, setTouched] = useState({}); // Отслеживание "тронутых" полей
   const [formSubmitted, setFormSubmitted] = useState(false); // Флаг первой отправки формы
+  const [serverErrors, setServerErrors] = useState({}); // Для ошибок с сервера
 
   useEffect(() => {
+    
     const fetchStatuses = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/employment_status`, {
@@ -40,17 +42,27 @@ const AdminEmployeeCreate = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
     setFormData(prev => ({ ...prev, [name]: value }));
     
     // Отмечаем поле как "тронутое"
     setTouched(prev => ({ ...prev, [name]: true }));
     
-    // Очищаем ошибку для этого поля если она есть
+    // Очищаем ошибки для этого поля
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;
+      });
+    }
+    
+    // Очищаем серверные ошибки при изменении поля
+    if (serverErrors[name]) {
+      setServerErrors(prev => {
+        const newServerErrors = { ...prev };
+        delete newServerErrors[name];
+        return newServerErrors;
       });
     }
   };
@@ -135,7 +147,7 @@ const AdminEmployeeCreate = () => {
       isValid = false;
     }
 
-    // Проверка номера договора (теперь без ограничения на цифры)
+    // Проверка номера договора
     if (!formData.contract_number.trim()) {
       newErrors.contract_number = 'Номер договора обязателен';
       isValid = false;
@@ -156,6 +168,7 @@ const AdminEmployeeCreate = () => {
     if (!validateForm()) return; // Прерываем отправку при ошибках валидации
     
     setIsSubmitting(true); // Блокируем кнопку
+    setServerErrors({}); // Сбрасываем серверные ошибки
     
     try {
       const response = await fetch(`${API_BASE_URL}/api/staff/new`, {
@@ -172,8 +185,24 @@ const AdminEmployeeCreate = () => {
       if (!response.ok) {
         // Обработка ошибок с сервера
         if (responseData.detail === "Логин уже занят") {
-          setErrors(prev => ({ ...prev, login: "Этот логин уже занят" }));
+          setServerErrors(prev => ({ ...prev, login: "Этот логин уже занят" }));
           setTouched(prev => ({ ...prev, login: true }));
+        } else if (responseData.detail === "Номер договора уже существует") {
+          setServerErrors(prev => ({ ...prev, contract_number: "Этот номер договора уже используется" }));
+          setTouched(prev => ({ ...prev, contract_number: true }));
+        } else if (responseData.detail && typeof responseData.detail === 'string') {
+          // Общая ошибка
+          alert(`Ошибка: ${responseData.detail}`);
+        } else if (responseData.detail) {
+          // Обработка ошибок валидации Pydantic
+          const newServerErrors = {};
+          Object.keys(responseData.detail).forEach(key => {
+            const fieldName = key;
+            const errorMessage = responseData.detail[key].msg || responseData.detail[key];
+            newServerErrors[fieldName] = errorMessage;
+            setTouched(prev => ({ ...prev, [fieldName]: true }));
+          });
+          setServerErrors(newServerErrors);
         } else {
           throw new Error(responseData.detail || 'Ошибка при создании');
         }
@@ -188,6 +217,11 @@ const AdminEmployeeCreate = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Функция для объединения ошибок валидации и серверных ошибок
+  const getFieldError = (fieldName) => {
+    return serverErrors[fieldName] || errors[fieldName];
   };
 
   // Проверка заполнения обязательных полей для активации кнопки
@@ -211,10 +245,10 @@ const AdminEmployeeCreate = () => {
           value={formData.login}
           onChange={handleChange}
           onBlur={handleBlur}
-          className={errors.login && touched.login ? 'input-error' : ''}
+          className={getFieldError('login') && touched.login ? 'input-error' : ''}
           placeholder="Введите логин (минимум 3 символа)"
         />
-        {errors.login && touched.login && <span className="error-message">{errors.login}</span>}
+        {getFieldError('login') && touched.login && <span className="error-message">{getFieldError('login')}</span>}
       </div>
 
       <div className="form-group">
@@ -225,10 +259,10 @@ const AdminEmployeeCreate = () => {
           value={formData.password}
           onChange={handleChange}
           onBlur={handleBlur}
-          className={errors.password && touched.password ? 'input-error' : ''}
+          className={getFieldError('password') && touched.password ? 'input-error' : ''}
           placeholder="Введите пароль (минимум 6 символов)"
         />
-        {errors.password && touched.password && <span className="error-message">{errors.password}</span>}
+        {getFieldError('password') && touched.password && <span className="error-message">{getFieldError('password')}</span>}
       </div>
 
       <div className="form-group">
@@ -238,10 +272,12 @@ const AdminEmployeeCreate = () => {
           value={formData.contract_number}
           onChange={handleChange}
           onBlur={handleBlur}
-          className={errors.contract_number && touched.contract_number ? 'input-error' : ''}
+          className={getFieldError('contract_number') && touched.contract_number ? 'input-error' : ''}
           placeholder="Введите номер договора"
         />
-        {errors.contract_number && touched.contract_number && <span className="error-message">{errors.contract_number}</span>}
+        {getFieldError('contract_number') && touched.contract_number && (
+          <span className="error-message">{getFieldError('contract_number')}</span>
+        )}
       </div>
 
       <div className="form-group select-with-arrow">
@@ -253,7 +289,6 @@ const AdminEmployeeCreate = () => {
         >
           {user.role === '1' && (
             <>
-              <option value="1">Мегаадмин</option>
               <option value="2">Админ</option>
             </>
           )}
