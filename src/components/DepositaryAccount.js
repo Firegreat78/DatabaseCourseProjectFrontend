@@ -1,6 +1,7 @@
 // src/components/DepositaryAccount.js
 import React, { useEffect, useState } from 'react';
 import AppHeader from './AppHeader';
+import DepositaryBalanceChart from './DepositaryBalanceChart';
 import './DepositaryAccount.css'; // Убедитесь, что стили подключены
 import { useAuth } from '../context/AuthContext';
 import {
@@ -271,6 +272,12 @@ const DepositaryAccount = () => {
           ) : (
             <p>Баланс пуст</p>
           )}
+          {/* Диаграмма баланса депозитарного счёта */}
+{balance.length > 0 && (
+  <div style={{ marginTop: '40px' }}>
+    <DepositaryBalanceChart />
+  </div>
+)}
 
           {/* Отображение истории операций */}
           <h2 style={{ marginTop: '30px' }}>История операций</h2>

@@ -1,1 +1,3 @@
 lucide-react
+recharts
+react-router-dom
