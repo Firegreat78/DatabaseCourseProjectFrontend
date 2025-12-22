@@ -3,11 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AppHeader from './AppHeader';
 import { RefreshCw, X, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import './OffersPage.css';
 
 const API_BASE_URL = 'http://localhost:8000';
 
 const OffersPage = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [offers, setOffers] = useState([]);
@@ -312,8 +314,13 @@ const OffersPage = () => {
       <div className="content">
         <div className="page-header">
           <h1>Мои предложения</h1>
-
           <div className="page-header-actions">
+            <button
+    className="depositary-report-btn"
+    onClick={() => navigate('/depositary_account')}
+  >
+    Просмотреть отчёт по депозитарному счёту
+  </button>
             <button
               className="refresh-btn"
               onClick={handleRefresh}

@@ -361,3 +361,18 @@
   font-weight: 500;
   color: #111827;
 }
+
+.depositary-report-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background-color: #2563eb;
+  color: #fff;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.depositary-report-btn:hover {
+  background-color: #1d4ed8;
+}
