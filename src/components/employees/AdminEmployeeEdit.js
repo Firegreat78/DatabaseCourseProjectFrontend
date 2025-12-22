@@ -16,6 +16,7 @@ const AdminEmployeeEdit = () => {
   const { id } = useParams();
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   
   const availableRoles = user?.role === '1'
@@ -26,26 +27,38 @@ const AdminEmployeeEdit = () => {
     const fetchStaffData = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/staff/${id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}` 
+          },
         });
+        
+        if (!response.ok) {
+          throw new Error(`Ошибка ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
         setForm({
           id: data.id,
           login: data.login,
           password: '',
           contractNumber: data.contract_number,
-          role: data.rights_level,
+          role: data.rights_level, // Может быть строкой, но мы преобразуем в число для селекта
           employmentStatus: data.employment_status_id,
         });
       } catch (err) {
         console.error('Ошибка загрузки сотрудника:', err);
+        alert('Не удалось загрузить данные сотрудника');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchStaffData();
   }, [id]);
 
-  if (!form) return null;
+  if (loading) return <div className="loading">Загрузка...</div>;
+  if (!form) return <div>Не удалось загрузить данные сотрудника</div>;
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -54,21 +67,75 @@ const AdminEmployeeEdit = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Подготавливаем данные для отправки
+      const requestData = {};
+      
+      // Добавляем логин, если он изменился
+      if (form.login !== undefined && form.login !== '') {
+        requestData.login = form.login;
+      }
+      
+      // Добавляем пароль, если он не пустой
+      if (form.password && form.password.trim() !== '') {
+        requestData.password = form.password;
+      }
+      
+      // Добавляем номер договора
+      if (form.contractNumber !== undefined) {
+        requestData.contract_number = form.contractNumber;
+      }
+      
+      // Добавляем уровень прав - отправляем как есть (может быть строкой или числом)
+      if (form.role !== undefined) {
+        // Преобразуем в строку, чтобы не было проблем с БД
+        requestData.rights_level = String(form.role);
+      }
+      
+      // Добавляем статус трудоустройства
+      if (form.employmentStatus !== undefined) {
+        requestData.employment_status_id = parseInt(form.employmentStatus);
+      }
+
+      console.log('Отправляемые данные:', requestData);
+
       const response = await fetch(`${API_BASE_URL}/api/staff/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(requestData),
       });
 
-      if (!response.ok) throw new Error('Ошибка при обновлении');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Ошибка ${response.status}: ${response.statusText}`);
+      }
 
-      alert('Сотрудник успешно обновлён');
+      const result = await response.json();
+      alert(result.message || 'Сотрудник успешно обновлён');
+      
+      // Обновляем форму с сервера, чтобы получить актуальные данные
+      const updatedResponse = await fetch(`${API_BASE_URL}/api/staff/${id}`, {
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}` 
+        },
+      });
+      if (updatedResponse.ok) {
+        const updatedData = await updatedResponse.json();
+        setForm({
+          id: updatedData.id,
+          login: updatedData.login,
+          password: '', // Сбрасываем поле пароля
+          contractNumber: updatedData.contract_number,
+          role: updatedData.rights_level,
+          employmentStatus: updatedData.employment_status_id,
+        });
+      }
+      
     } catch (err) {
-      console.error(err);
-      alert('Не удалось обновить сотрудника');
+      console.error('Ошибка обновления сотрудника:', err);
+      alert(err.message || 'Не удалось обновить сотрудника');
     } finally {
       setSaving(false);
     }
@@ -86,7 +153,7 @@ const AdminEmployeeEdit = () => {
       <div className="form-group">
         <label>Логин</label>
         <input
-          value={form.login}
+          value={form.login || ''}
           onChange={(e) => handleChange('login', e.target.value)}
         />
       </div>
@@ -104,7 +171,7 @@ const AdminEmployeeEdit = () => {
       <div className="form-group">
         <label>Номер договора</label>
         <input
-          value={form.contractNumber}
+          value={form.contractNumber || ''}
           onChange={(e) => handleChange('contractNumber', e.target.value)}
         />
       </div>
@@ -112,9 +179,10 @@ const AdminEmployeeEdit = () => {
       <div className="form-group select-with-arrow">
         <label>Статус трудоустройства</label>
         <select
-          value={form.employmentStatus}
+          value={form.employmentStatus || ''}
           onChange={(e) => handleChange('employmentStatus', e.target.value)}
         >
+          <option value="">Выберите статус</option>
           <option value="1">Активен</option>
           <option value="2">Уволен</option>
           <option value="3">Отпуск</option>
@@ -124,9 +192,10 @@ const AdminEmployeeEdit = () => {
       <div className="form-group select-with-arrow">
         <label>Уровень прав</label>
         <select
-          value={form.role}
-          onChange={(e) => handleChange('role', Number(e.target.value))}
+          value={form.role || ''}
+          onChange={(e) => handleChange('role', e.target.value)}
         >
+          <option value="">Выберите роль</option>
           {availableRoles.map((r) => (
             <option key={r.value} value={r.value}>
               {r.label}
@@ -135,7 +204,10 @@ const AdminEmployeeEdit = () => {
         </select>
       </div>
 
-      <button onClick={handleSave} disabled={saving}>
+      <button 
+        onClick={handleSave} 
+        disabled={saving || !form.login || !form.contractNumber}
+      >
         {saving ? 'Сохранение...' : 'Сохранить изменения'}
       </button>
     </div>
