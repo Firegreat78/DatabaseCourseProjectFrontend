@@ -1,74 +1,63 @@
-/* ExchangeAdminPage.css - Улучшенный современный дизайн */
-
-/* Основной контейнер */
-.ExchangeAdminPage-exchange-container {
-  display: flex;
-  flex-direction: column;
+.admin-page {
   min-height: 100vh;
-  background-color: #f4f6f9;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding-bottom: 4rem;
 }
 
-/* Контент */
-.ExchangeAdminPage-content {
-  flex: 1;
-  padding: 24px;
-  max-width: 1200px;
+.admin-content {
+  max-width: 900px;
   margin: 0 auto;
-  width: 100%;
+  padding: 2rem 1.5rem;
 }
 
-/* Заголовок страницы */
-.ExchangeAdminPage-exchange-header {
+.page-header {
+  margin-bottom: 1.6rem;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e2e8f0;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.ExchangeAdminPage-page-title {
-  font-size: 28px;
-  font-weight: 600;
+.page-header h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
   color: #1e293b;
   margin: 0;
 }
 
-/* Кнопки в хедере */
-.ExchangeAdminPage-header-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.ExchangeAdminPage-refresh-btn,
-.ExchangeAdminPage-add-btn {
+.header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  cursor: pointer;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.2rem;
+  background: white;
   border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: all 0.2s;
 }
 
-.ExchangeAdminPage-refresh-btn {
-  background-color: #e2e8f0;
-  color: #475569;
+.refresh-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
 }
 
-.ExchangeAdminPage-refresh-btn:hover:not(:disabled) {
-  background-color: #cbd5e1;
-}
-
-.ExchangeAdminPage-refresh-btn:disabled {
+.refresh-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.ExchangeAdminPage-spin {
+.spin {
   animation: spin 1s linear infinite;
 }
 
@@ -77,217 +66,317 @@
   to { transform: rotate(360deg); }
 }
 
-.ExchangeAdminPage-add-btn {
-  background-color: #3b82f6;
-  color: white;
+.header-stats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
-.ExchangeAdminPage-add-btn:hover {
-  background-color: #2563eb;
+.stat-item {
+  text-align: center;
 }
 
-/* Карточка формы */
-.ExchangeAdminPage-form-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 24px;
-  margin-bottom: 32px;
+.stat-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.ExchangeAdminPage-form-title {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0 0 24px 0;
+.stat-value {
+  font-size: 2.2rem;
+  font-weight: 800;
   color: #1e293b;
 }
 
-/* Группа полей формы */
-.ExchangeAdminPage-form-group {
-  margin-bottom: 20px;
+/* Кнопка добавления */
+.add-stock-section {
+  margin-bottom: 1.5rem;
 }
 
-.ExchangeAdminPage-form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #374151;
-  font-size: 14px;
-}
-
-.ExchangeAdminPage-form-group input,
-.ExchangeAdminPage-form-group select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 0.2s ease;
-}
-
-.ExchangeAdminPage-form-group input:focus,
-.ExchangeAdminPage-form-group select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* Чекбокс */
-.ExchangeAdminPage-checkbox-group {
-  margin-bottom: 28px;
-}
-
-.ExchangeAdminPage-checkbox-label {
+.add-stock-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.6rem;
+  padding: 0.9rem 1.4rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 15px;
+  box-shadow: 0 8px 24px rgba(59,130,246,0.3);
+  transition: all 0.3s;
+}
+
+.add-stock-btn:hover {
+  background: #2563eb;
+  transform: translateY(-3px);
+}
+
+/* Форма */
+.form-card {
+  background: white;
+  border-radius: 20px;
+  padding: 1.8rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.form-card h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
   color: #374151;
 }
 
-.ExchangeAdminPage-checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: #3b82f6;
+.form-group input,
+.form-group select {
+  padding: 0.8rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 1rem;
 }
 
-/* Кнопки формы */
-.ExchangeAdminPage-form-actions {
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+}
+
+.checkbox-group {
+  align-items: center;
+}
+
+.checkbox-label {
   display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 8px;
-}
-
-.ExchangeAdminPage-btn-secondary {
-  padding: 10px 20px;
-  background-color: #e2e8f0;
-  color: #475569;
-  border: none;
-  border-radius: 8px;
+  align-items: center;
+  gap: 0.6rem;
   cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
+  font-weight: normal;
 }
 
-.ExchangeAdminPage-btn-secondary:hover {
-  background-color: #cbd5e1;
+.form-actions {
+  margin-top: 1.5rem;
+  text-align: right;
 }
 
-.ExchangeAdminPage-btn-primary {
-  padding: 10px 24px;
-  background-color: #10b981;
+.btn-primary {
+  padding: 0.8rem 1.6rem;
+  background: #10b981;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
-.ExchangeAdminPage-btn-primary:hover:not(:disabled) {
-  background-color: #059669;
+.btn-primary:hover {
+  background: #059669;
 }
 
-.ExchangeAdminPage-btn-primary:disabled {
-  background-color: #6b7280;
+.btn-primary:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
-/* Сообщения */
-.ExchangeAdminPage-loading-text,
-.ExchangeAdminPage-error-text,
-.ExchangeAdminPage-loading-small {
-  text-align: center;
-  padding: 20px;
-  font-size: 16px;
-}
-
-.ExchangeAdminPage-loading-text,
-.ExchangeAdminPage-loading-small {
-  color: #3b82f6;
-}
-
-.ExchangeAdminPage-error-text {
-  color: #ef4444;
-  background-color: #fee2e2;
-  border-radius: 8px;
-}
-
-.ExchangeAdminPage-warning {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #dc2626;
-  background-color: #fee2e2;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-/* Пустое состояние */
-.ExchangeAdminPage-empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #64748b;
-  font-size: 18px;
-}
-
 /* Список акций */
-.ExchangeAdminPage-stocks-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 3rem;
 }
 
-.ExchangeAdminPage-stock-card {
+.stock-row {
   background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.ExchangeAdminPage-stock-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
-}
-
-.ExchangeAdminPage-stock-info h3.ExchangeAdminPage-ticker {
-  margin: 0 0 8px 0;
-  font-size: 22px;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.ExchangeAdminPage-isin {
-  margin: 0 0 16px 0;
-  font-size: 14px;
-  color: #64748b;
-}
-
-.ExchangeAdminPage-price-info {
+  border-radius: 20px;
+  padding: 1.6rem 1.8rem;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
 }
 
-.ExchangeAdminPage-current-price {
-  font-size: 24px;
+.stock-row:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.15);
+}
+
+.stock-main .ticker {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.stock-main .isin {
+  color: #64748b;
+  margin-top: 0.3rem;
+}
+
+.stock-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.lot-size {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.dividends-badge {
+  background: #d4edda;
+  color: #155724;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.price-section {
+  text-align: right;
+}
+
+.current-price {
+  font-size: 1.4rem;
   font-weight: 700;
   color: #1e293b;
 }
 
-.ExchangeAdminPage-change {
-  font-size: 18px;
+.change {
+  font-size: 1.1rem;
   font-weight: 600;
+  margin-top: 0.4rem;
+  display: block;
 }
 
-.ExchangeAdminPage-positive {
+.change.positive {
   color: #10b981;
 }
 
-.ExchangeAdminPage-negative {
+.change.negative {
   color: #ef4444;
+}
+
+/* Отчёт */
+.report-section {
+  margin-top: 3rem;
+}
+
+.report-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+}
+
+.chart-card,
+.table-card {
+  background: white;
+  border-radius: 20px;
+  padding: 1.8rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.chart-card h3,
+.table-card h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+table th {
+  text-align: left;
+  padding: 1rem;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.loading-text,
+.error-text,
+.no-results,
+.loading-small,
+.warning {
+  text-align: center;
+  padding: 1.5rem;
+  color: #64748b;
+  background: white;
+  border-radius: 16px;
+  margin: 1rem 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.error-text {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
+.warning {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #d97706;
+  background: #fffbeb;
+}
+
+/* Адаптив */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stock-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .price-section {
+    align-self: flex-end;
+    margin-top: 1rem;
+  }
 }
