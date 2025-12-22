@@ -46,30 +46,35 @@ const ProfilePage = () => {
 
   // Загрузка данных профиля
   const fetchClient = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/user/${user?.id}`, {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || 'Ошибка загрузки профиля');
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/user/${user?.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
       }
+    );
 
-      setClientData({
-        email: data.email,
-        registrationDate: data.registration_date,
-        verificationStatusId: data.verification_status_id,
-        rubAccount: data.rub_account,
-        usdAccount: data.usd_account,
-      });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || 'Ошибка загрузки профиля');
     }
-  };
+
+    setClientData({
+      email: data.email,
+      registrationDate: data.registration_date,
+      verificationStatusId: data.verification_status_id,
+      rubAccount: data.rub_account ?? null,
+      usdAccount: data.usd_account ?? null,
+    });
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     if (user?.id) {

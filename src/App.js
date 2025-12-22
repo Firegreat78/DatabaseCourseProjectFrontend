@@ -18,6 +18,7 @@ import BrokerMainPage from './components/employees/BrokerMain';
 import AdminMainPage from './components/employees/AdminMain';
 import ProfilePage from './components/ProfilePage';
 import VerificationPage from './components/VerificationPage';
+import DepositaryAccount from './components/DepositaryAccount';
 import BrokerAccountPage from './components/BrokerAccountPage';
 import EmployeeProfilePage from './components/employees/EmployeeProfilePage';
 import AdminEmployeeEdit from './components/employees/AdminEmployeeEdit';
@@ -90,6 +91,14 @@ function App() {
             path="/accounts"
             element={<ProtectedRoute><AccountsList /></ProtectedRoute>}
           />
+          <Route
+            path="/depositary_account"
+            element={
+    <ProtectedRoute>
+      <DepositaryAccount />
+    </ProtectedRoute>
+  }
+/>
           <Route
             path="/portfolio"
             element={<ProtectedRoute><PortfolioPage /></ProtectedRoute>}
