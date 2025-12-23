@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import AdminHeader from "./AdminHeader";
+import { useNavigate } from "react-router-dom";
 import { RefreshCw, Plus, AlertCircle } from "lucide-react";
 import "./ExchangeAdminPage.css";
 import {
@@ -17,6 +18,8 @@ const API_BASE_URL = "http://localhost:8000";
 
 const ExchangeAdminPage = () => {
   const token = localStorage.getItem("authToken");
+  const navigate = useNavigate();
+
 
   const [stocks, setStocks] = useState([]);
   const [currencies, setCurrencies] = useState([]);
@@ -484,14 +487,21 @@ const ExchangeAdminPage = () => {
 
         {/* Кнопка добавления акции */}
         <div className="add-stock-section">
-          <button
-            className="add-stock-btn"
-            onClick={() => setShowForm(!showForm)}
-          >
-            <Plus size={20} />
-            {showForm ? "Отмена" : "Добавить акцию"}
-          </button>
-        </div>
+  <button
+    className="add-stock-btn"
+    onClick={() => setShowForm(!showForm)}
+  >
+    <Plus size={20} />
+    {showForm ? "Отмена" : "Добавить акцию"}
+  </button>
+
+  <button
+    className="edit-currencies-btn"
+    onClick={() => navigate("/admin/modify_currency")}
+  >
+    Редактировать валюты
+  </button>
+</div>
 
         {/* Форма добавления */}
         {showForm && (
@@ -531,7 +541,7 @@ const ExchangeAdminPage = () => {
               </div>
 
               <div className="ExchangeAdminPage-form-group">
-                <label>Размер лота * (должен быть целым числом {} 0)</label>
+                <label>Размер лота * (должен быть целым числом)</label>
                 <input
                   type="number"
                   name="lot_size"

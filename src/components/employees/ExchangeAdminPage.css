@@ -399,3 +399,20 @@ table td {
     margin-top: 1rem;
   }
 }
+
+.edit-currencies-btn {
+  margin-left: 12px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #3b82f6;
+  background-color: white;
+  color: #3b82f6;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-currencies-btn:hover {
+  background-color: #3b82f6;
+  color: white;
+}

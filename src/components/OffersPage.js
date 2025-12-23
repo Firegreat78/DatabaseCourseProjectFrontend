@@ -228,6 +228,32 @@ const OffersPage = () => {
     checkBanStatus();  // Добавляем повторную проверку блокировки при обновлении
   };
 
+  // ===== Валидация ввода количества =====
+  const handleQuantityChange = (e) => {
+    const value = e.target.value;
+    
+    // Разрешаем: пустую строку, или только цифры, начинающиеся не с нуля
+    if (value === '') {
+      setQuantity('');
+      return;
+    }
+    
+    // Проверяем, что значение содержит только цифры
+    if (!/^\d+$/.test(value)) {
+      return; // Игнорируем ввод, если это не только цифры
+    }
+    
+    // Убираем ведущие нули и преобразуем в число
+    const numValue = parseInt(value, 10);
+    
+    // Проверяем, что число положительное
+    if (numValue > 0) {
+      setQuantity(String(numValue));
+    } else if (value === '0') {
+      setQuantity(''); // Скрываем нулевое значение
+    }
+  };
+
   // ===== Create offer =====
   const handleSubmit = async (proposalTypeId) => {
     const qty = Number(quantity);
@@ -459,13 +485,29 @@ const OffersPage = () => {
               </div>
 
               <div className="modal-row">
-                <label>Количество</label>
+                <label>Количество лотов</label>
                 <input
                   type="number"
                   min="1"
                   step="1"
                   value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
+                  onChange={handleQuantityChange}
+                  onKeyDown={(e) => {
+                    // Блокируем ввод нецифровых символов (кроме Backspace, Delete, Tab, стрелок)
+                    if (
+                      !/[\d]/.test(e.key) &&
+                      !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)
+                    ) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // При потере фокуса, если значение меньше 1, очищаем поле
+                    if (parseInt(e.target.value) < 1) {
+                      setQuantity('');
+                    }
+                  }}
+                  placeholder="Введите целое положительное число"
                 />
               </div>
 
@@ -473,14 +515,14 @@ const OffersPage = () => {
                 <button
                   className="buy-btn"
                   onClick={() => handleSubmit(1)}
-                  disabled={!selectedSecurity || !selectedAccount || !quantity}
+                  disabled={!selectedSecurity || !selectedAccount || !quantity || parseInt(quantity) < 1}
                 >
                   Купить
                 </button>
                 <button
                   className="sell-btn"
                   onClick={() => handleSubmit(2)}
-                  disabled={!selectedSecurity || !selectedAccount || !quantity}
+                  disabled={!selectedSecurity || !selectedAccount || !quantity || parseInt(quantity) < 1}
                 >
                   Продать
                 </button>
