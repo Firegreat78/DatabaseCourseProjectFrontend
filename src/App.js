@@ -28,6 +28,7 @@ import BrokerDealDetail from './components/employees/BrokerDealDetail';
 import ExchangeAdminPage from './components/employees/ExchangeAdminPage';
 import AdminUsersPage from './components/employees/AdminUsers';
 import AdminUsersEdit from './components/employees/AdminUserDetail';
+import AdminDictionariesPage from './components/employees/AdminDictionariesPage';
 
 // Компонент для защиты роутов
 const ProtectedRoute = ({ children }) => {
@@ -88,6 +89,7 @@ function App() {
           <Route path="/broker/deals/:id" element={<BrokerDealDetail />} />
           <Route path="/admin/exchange" element={<ExchangeAdminPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
+          <Route path="/admin/dictionaries" element={<AdminDictionariesPage />} />
           {/* Защищённые страницы — доступ только после логина */}
           <Route
             path="/accounts"

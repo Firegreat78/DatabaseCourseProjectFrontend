@@ -8,7 +8,8 @@ import {
   Users,
   ArrowLeftRight,
   User,
-  LogOut
+  LogOut,
+  Book // Добавляем иконку для словарей
 } from 'lucide-react';
 import './../AppHeader.css';
 
@@ -63,6 +64,15 @@ const AdminHeader = () => {
         >
           <ArrowLeftRight size={20} />
           <span>Биржа</span>
+        </NavLink>
+
+        {/* НОВАЯ КНОПКА ДЛЯ СЛОВАРЕЙ */}
+        <NavLink
+          to="/admin/dictionaries"
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Book size={20} />
+          <span>Словари</span>
         </NavLink>
       </nav>
 
