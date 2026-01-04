@@ -7,15 +7,13 @@ import { Wallet, ArrowRight, RefreshCw, Plus, Lock } from 'lucide-react';
 import './AccountsList.css';
 
 const API_BASE_URL = 'http://localhost:8000';
-const FALLBACK_RATE = 92.5;
 
 const AccountsList = () => {
   const { user } = useAuth();
 
-  const [selectedCurrency, setSelectedCurrency] = useState('₽');
-  const [totalBalanceRUB, setTotalBalanceRUB] = useState(null);
-  const [usdRate, setUsdRate] = useState(null);
-  const [isUsingFallback, setIsUsingFallback] = useState(false);
+    const [totalBalance, setTotalBalance] = useState(null);  // теперь баланс в выбранной валюте
+  const [selectedCurrencyId, setSelectedCurrencyId] = useState(1);  // по умолчанию рубль (ID=1)
+  const [selectedCurrencySymbol, setSelectedCurrencySymbol] = useState('₽');
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -94,31 +92,31 @@ const AccountsList = () => {
     setError('');
 
     try {
-      const [balanceRes, rateRes, accountsRes, banksRes, currenciesRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/user/balance`, { headers: { Authorization: `Bearer ${user.token}` } }),
-        fetch(`${API_BASE_URL}/api/currency/usd-rate`, { headers: { Authorization: `Bearer ${user.token}` } }),
+      const [accountsRes, banksRes, currenciesRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/brokerage-accounts`, { headers: { Authorization: `Bearer ${user.token}` } }),
         fetch(`${API_BASE_URL}/api/bank`, { headers: { Authorization: `Bearer ${user.token}` } }),
         fetch(`${API_BASE_URL}/api/currency`, { headers: { Authorization: `Bearer ${user.token}` } }),
       ]);
 
-      if (!balanceRes.ok) throw new Error('Не удалось загрузить баланс');
-      const balanceData = await balanceRes.json();
-      setTotalBalanceRUB(balanceData.total_balance_rub);
+      // Загружаем баланс в выбранной валюте
+      const balanceResSelected = await fetch(
+        `${API_BASE_URL}/api/user/balance/${selectedCurrencyId}`,
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+
+      let balanceInSelected = 0;
+      if (balanceResSelected.ok) {
+        const balanceData = await balanceResSelected.json();
+        balanceInSelected = balanceData.total_balance_rub || 0;  // эндпоинт всё равно возвращает total_balance_rub
+      } else {
+        console.error('Ошибка загрузки баланса в выбранной валюте');
+      }
+
+      setTotalBalance(balanceInSelected);
 
       if (accountsRes.ok) {
         const accountsData = await accountsRes.json();
         setAccounts(Array.isArray(accountsData) ? accountsData : []);
-      }
-
-      // Курсы валют
-      if (rateRes.ok) {
-        const rateData = await rateRes.json();
-        setUsdRate(rateData.rate_to_rub);
-        setIsUsingFallback(false);
-      } else if (usdRate === null) {
-        setUsdRate(FALLBACK_RATE);
-        setIsUsingFallback(true);
       }
 
       // Банки
@@ -127,23 +125,28 @@ const AccountsList = () => {
         setBanks(Array.isArray(banksData) ? banksData : []);
       }
 
-      // Валюты
+      // Валюты — только активные (не архивированные)
       if (currenciesRes.ok) {
         const currenciesData = await currenciesRes.json();
-        setCurrencies(Array.isArray(currenciesData) ? currenciesData : []);
+        const activeCurrencies = Array.isArray(currenciesData)
+          ? currenciesData.filter(c => !c.is_archived)
+          : [];
+        setCurrencies(activeCurrencies);
+
+        // Если рубль есть — выбираем его по умолчанию
+        const rubCurrency = activeCurrencies.find(c => c.id === 1);
+        if (rubCurrency) {
+          setSelectedCurrencySymbol(rubCurrency.symbol);
+        }
       }
 
     } catch (err) {
       console.error(err);
       setError('Не удалось загрузить данные');
-      if (usdRate === null) {
-        setUsdRate(FALLBACK_RATE);
-        setIsUsingFallback(true);
-      }
     } finally {
       setLoading(false);
     }
-  }, [user, usdRate]);
+  }, [user]);
 
   useEffect(() => {
     checkBanStatus();
@@ -155,6 +158,37 @@ const AccountsList = () => {
     await checkBanStatus();
     loadData(true);
     fetchVerificationStatus();
+  };
+
+  // --- Смена валюты отображения баланса ---
+  const handleCurrencyChange = async (e) => {
+    const newCurrencyId = parseInt(e.target.value);
+    const currency = currencies.find(c => c.id === newCurrencyId);
+    if (!currency) return;
+
+    setSelectedCurrencyId(newCurrencyId);
+    setSelectedCurrencySymbol(currency.symbol);
+
+    // Загружаем баланс в новой валюте
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/api/user/balance/${newCurrencyId}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setTotalBalance(data.total_balance_rub || 0);
+      } else {
+        setError('Не удалось загрузить баланс в выбранной валюте');
+        setTotalBalance(null);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Ошибка связи с сервером');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // --- Открытие формы создания счёта с проверкой блокировки ---
@@ -266,11 +300,7 @@ const AccountsList = () => {
     );
   }
 
-  const currentRate = usdRate || FALLBACK_RATE;
-  const totalBalanceUSD = totalBalanceRUB !== null
-    ? Math.round(100 * totalBalanceRUB / currentRate) / 100
-    : null;
-  const displayBalance = selectedCurrency === '₽' ? totalBalanceRUB : totalBalanceUSD;
+  const displayBalance = totalBalance;
 
   return (
     <div className="accounts-page">
@@ -278,26 +308,37 @@ const AccountsList = () => {
       <main className="accounts-content">
         <div className="page-header">
           <h1>Мои счета</h1>
-          <div className="header-actions">
-            <button className="refresh-btn" onClick={handleRefresh} disabled={loading || verificationLoading}>
-              <RefreshCw size={22} style={{ animation: (loading || verificationLoading) ? 'spin 1s linear infinite' : 'none' }} />
-            </button>
-            <div className="currency-toggle">
-              <button className={`currency-btn ${selectedCurrency==='₽'?'active':''}`} onClick={()=>setSelectedCurrency('₽')} disabled={loading}>₽</button>
-              <button className={`currency-btn ${selectedCurrency==='$'?'active':''}`} onClick={()=>setSelectedCurrency('$')} disabled={loading}>$</button>
-            </div>
-            {verificationLoading ? (
-              <span>Проверка верификации...</span>
-            ) : isVerified ? (
-              <button className="create-account-btn" onClick={handleOpenCreateForm} disabled={loading}>
-                <Plus size={18} style={{marginRight:'6px'}} /> Создать счёт
+                      <div className="header-actions">
+              <button className="refresh-btn" onClick={handleRefresh} disabled={loading || verificationLoading}>
+                <RefreshCw size={22} style={{ animation: (loading || verificationLoading) ? 'spin 1s linear infinite' : 'none' }} />
               </button>
-            ) : (
-              <span className="verification-warning">
-                Для создания счёта требуется верификация аккаунта
-              </span>
-            )}
-          </div>
+
+              {/* Выпадающий список валют */}
+              <select 
+                className="currency-select"
+                value={selectedCurrencyId} 
+                onChange={handleCurrencyChange}
+                disabled={loading}
+              >
+                {currencies.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.symbol} — {c.name || c.code}
+                  </option>
+                ))}
+              </select>
+
+              {verificationLoading ? (
+                <span>Проверка верификации...</span>
+              ) : isVerified ? (
+                <button className="create-account-btn" onClick={handleOpenCreateForm} disabled={loading}>
+                  <Plus size={18} style={{marginRight:'6px'}} /> Создать счёт
+                </button>
+              ) : (
+                <span className="verification-warning">
+                  Для создания счёта требуется верификация аккаунта
+                </span>
+              )}
+            </div>
         </div>
 
         {/* Общий баланс */}
@@ -311,7 +352,7 @@ const AccountsList = () => {
             displayBalance !== null ?
               <div className="balance-amount">
                 <span className="amount">{displayBalance.toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:2})}</span>
-                <span className="currency">{selectedCurrency}</span>
+                                <span className="currency">{selectedCurrencySymbol}</span>
               </div>
               :
               <div className="error-text">Баланс недоступен</div>

@@ -39,6 +39,7 @@ const UserLogin = () => {
         throw new Error('Сервер не вернул необходимые данные');
       }
 
+      // Проверка бана
       const banResponse = await fetch(`${API_BASE_URL}/api/user_ban_status/${user_id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -54,10 +55,11 @@ const UserLogin = () => {
         throw new Error('Ваш аккаунт заблокирован. Обратитесь в поддержку.');
       }
 
+      // Новый формат для AuthContext.login — передаём user_id и role: 'user'
       authLogin({
         token,
         user_id,
-        role: loginData.role || 'user',
+        role: 'user',  // явно указываем, что это клиент
       });
       
       // Перенаправление после успешного входа

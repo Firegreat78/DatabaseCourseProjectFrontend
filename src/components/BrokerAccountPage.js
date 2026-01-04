@@ -101,6 +101,49 @@ const BrokerAccountPage = () => {
     fetchAccountData();
   };
 
+  // --- Удаление счёта ---
+  const handleDeleteRequest = async () => {
+    const banned = await checkBanStatus();
+    if (banned) {
+      return; // Ничего не делаем — рендер покажет блокировку
+    }
+
+    const confirmed = window.confirm(
+      'Вы уверены, что хотите полностью удалить этот брокерский счёт?\n\n' +
+      'Все данные и история операций будут безвозвратно удалены.\n' +
+      'Это действие нельзя отменить.'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    // Финальная проверка блокировки перед отправкой
+    const bannedAgain = await checkBanStatus();
+    if (bannedAgain) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/brokerage-accounts/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Не удалось удалить счёт');
+      }
+
+      alert('Брокерский счёт успешно удалён');
+      navigate('/accounts'); // Переход обратно в список счетов
+    } catch (err) {
+      alert('Ошибка при удалении счёта: ' + err.message);
+    }
+  };
+
   useEffect(() => {
     checkBanStatus();
     fetchAccountData();
@@ -110,7 +153,7 @@ const BrokerAccountPage = () => {
   const handleOpenModal = async (type) => {
     const banned = await checkBanStatus();
     if (banned) {
-      return; // Не открываем модалку — рендер покажет блокировку
+      return;
     }
     setModalType(type);
     setAmount('');
@@ -127,11 +170,10 @@ const BrokerAccountPage = () => {
       return;
     }
 
-    // Финальная проверка: вдруг заблокировали прямо сейчас
     const banned = await checkBanStatus();
     if (banned) {
-      setShowModal(false); // Закрываем модалку
-      return; // Ничего не отправляем — рендер покажет блокировку
+      setShowModal(false);
+      return;
     }
 
     try {
@@ -232,14 +274,25 @@ const BrokerAccountPage = () => {
               <ArrowLeft size={22} />
             </button>
             <h1>Брокерский счёт</h1>
-            <button
-              className="refresh-btn"
-              onClick={handleRefresh}
-              disabled={loading}
-              title="Обновить данные"
-            >
-              <RefreshCw size={20} className={loading ? "spin" : ""} />
-            </button>
+            <div className="header-actions">
+              <button
+                className="refresh-btn"
+                onClick={handleRefresh}
+                disabled={loading}
+                title="Обновить данные"
+              >
+                <RefreshCw size={20} className={loading ? "spin" : ""} />
+              </button>
+              <button
+                className="delete-btn"
+                onClick={handleDeleteRequest}
+                title="Удалить счёт"
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 4H12M4 7H16M14.5 7L14.065 13.672C14.035 14.111 13.64 14.5 13.2 14.5H6.8C6.36 14.5 5.965 14.111 5.935 13.672L5.5 7H14.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div className="balance-section">

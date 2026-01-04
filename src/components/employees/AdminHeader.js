@@ -41,7 +41,7 @@ const AdminHeader = () => {
       </NavLink>
 
       {/* Основная навигация для админа */}
-      <nav className="nav">
+            <nav className="nav">
         <NavLink
           to="/admin/main"
           className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
@@ -66,13 +66,30 @@ const AdminHeader = () => {
           <span>Биржа</span>
         </NavLink>
 
-        {/* НОВАЯ КНОПКА ДЛЯ СЛОВАРЕЙ */}
         <NavLink
           to="/admin/dictionaries"
           className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
         >
           <Book size={20} />
           <span>Словари</span>
+        </NavLink>
+
+        {/* НОВАЯ ВКЛАДКА: Банки */}
+        <NavLink
+          to="/admin/modify_banks"
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Building2 size={20} />
+          <span>Банки</span>
+        </NavLink>
+
+        {/* НОВАЯ ВКЛАДКА: Валюты */}
+        <NavLink
+          to="/admin/modify_currency"
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Wallet size={20} />
+          <span>Валюты</span>
         </NavLink>
       </nav>
 

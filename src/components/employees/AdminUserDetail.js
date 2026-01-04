@@ -7,13 +7,7 @@ import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:8000';
 
-// Опции для статусов
-const verificationStatusOptions = [
-  { value: 1, label: 'Не верифицирован' },
-  { value: 2, label: 'Верифицирован' },
-  { value: 3, label: 'Ожидает верификации' },
-];
-
+// Опции для статуса блокировки
 const blockStatusOptions = [
   { value: 1, label: 'Активен' },
   { value: 2, label: 'Заблокирован' },
@@ -63,6 +57,7 @@ const AdminUserEdit = () => {
           password: '', // Пароль оставляем пустым по умолчанию
           verification_status_id: data.verification_status_id || 1,
           block_status_id: data.block_status_id || 1,
+          reset_verification: false, // Чекбокс по умолчанию выключен
           registration_date: formattedDate,
           originalData: data // Сохраняем оригинальные данные для сравнения
         });
@@ -211,7 +206,6 @@ const AdminUserEdit = () => {
     try {
       // Подготовка данных для отправки
       const updateData = {
-        verification_status_id: parseInt(form.verification_status_id),
         block_status_id: parseInt(form.block_status_id),
       };
       
@@ -230,26 +224,34 @@ const AdminUserEdit = () => {
         updateData.password = form.password;
       }
       
-      // Проверка на изменения
+      // Если включён чекбокс — сбрасываем статус верификации на 1
+      if (form.reset_verification) {
+        updateData.verification_status_id = 1;
+      }
+      
+            // Проверка на изменения
       const hasChanges = Object.keys(updateData).some(key => {
-        if (key === 'password') return true; // Пароль всегда считается изменением если указан
-        // Для логина и email проверяем только если они переданы (не пустые)
+        if (key === 'password') return true;
         if (key === 'login' && updateData.login) {
           return form.originalData[key] !== updateData[key];
         }
         if (key === 'email' && updateData.email) {
           return form.originalData[key] !== updateData[key];
         }
-        if (key === 'verification_status_id' || key === 'block_status_id') {
+        if (key === 'block_status_id') {
           return form.originalData[key] !== updateData[key];
+        }
+        if (key === 'verification_status_id') {
+          return true;
         }
         return false;
       });
       
       if (!hasChanges) {
         setErrors({ general: 'Нет изменений для сохранения' });
+        setTimeout(() => setErrors({}), 2500);
         setSaving(false);
-        return;
+        return; // Запрос на сервер не уходит
       }
       
       const response = await fetch(`${API_BASE_URL}/api/user/${id}`, {
@@ -280,18 +282,18 @@ const AdminUserEdit = () => {
       }
       
       // Обновляем оригинальные данные после успешного сохранения
-      // Для логина и email используем значения из ответа сервера
       setForm(prev => ({
         ...prev,
-        login: responseData.login || prev.login,
+        login: '',
         email: responseData.email || prev.email,
-        verification_status_id: responseData.verification_status_id,
+        verification_status_id: responseData.verification_status_id || (form.reset_verification ? 1 : prev.verification_status_id),
         block_status_id: responseData.block_status_id,
+        reset_verification: false, // Сбрасываем чекбокс после сохранения
         originalData: { 
           ...prev.originalData, 
           login: responseData.login || prev.originalData.login,
           email: responseData.email || prev.originalData.email,
-          verification_status_id: responseData.verification_status_id,
+          verification_status_id: responseData.verification_status_id || (form.reset_verification ? 1 : prev.originalData.verification_status_id),
           block_status_id: responseData.block_status_id
         },
         password: '' // Сбрасываем поле пароля после сохранения
@@ -443,28 +445,41 @@ const AdminUserEdit = () => {
             <div className="form-hint">Оставьте пустым, чтобы не менять пароль</div>
           </div>
 
-          <div className="form-group">
-            <label>Статус верификации</label>
-            <div className="select-wrapper">
-              <select
-                value={form.verification_status_id}
-                onChange={(e) => handleChange('verification_status_id', e.target.value)}
-                className={form.verification_status_id === 3 ? 'pending-status' : ''}
-              >
-                {verificationStatusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <div className="select-arrow">▼</div>
+                    {/* Чекбокс сброса верификации показываем только если статус не "Не верифицирован" (id !== 1) */}
+          {form.verification_status_id !== 1 && (
+            <div className="form-group">
+              <label>Сброс статуса верификации</label>
+              <div className="checkbox-wrapper">
+                <input
+                  type="checkbox"
+                  id="resetVerification"
+                  checked={form.reset_verification || false}
+                  onChange={(e) => handleChange('reset_verification', e.target.checked)}
+                />
+                <label htmlFor="resetVerification" className="checkbox-label">
+                  Сбросить статус верификации до "Не верифицирован"
+                </label>
+              </div>
+              <div className="form-hint">
+                {form.verification_status_id === 2 && "Текущий статус: Верифицирован"}
+                {form.verification_status_id === 3 && "Текущий статус: Ожидает верификации"}
+                {form.reset_verification && " → После сохранения статус будет сброшен на «Не верифицирован»"}
+              </div>
             </div>
-            <div className="form-hint">
-              {form.verification_status_id === 1 && "Пользователь не прошел верификацию"}
-              {form.verification_status_id === 2 && "Пользователь успешно верифицирован"}
-              {form.verification_status_id === 3 && "Ожидает проверки верификатором"}
+          )}
+
+          {/* Если статус уже "Не верифицирован" — просто показываем информацию */}
+          {form.verification_status_id === 1 && (
+            <div className="form-group">
+              <label>Статус верификации</label>
+              <div className="info-display">
+                Текущий статус: Не верифицирован
+              </div>
+              <div className="form-hint">
+                Сброс статуса недоступен, так как пользователь уже имеет статус "Не верифицирован".
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="form-group">
             <label>Статус блокировки</label>
@@ -500,7 +515,7 @@ const AdminUserEdit = () => {
         </button>
         <button 
           onClick={handleSave} 
-          disabled={!isFormValid() || saving}
+          disabled={saving}
           className={`save-btn ${(!isFormValid() || saving) ? 'button-disabled' : ''}`}
         >
           {saving ? (

@@ -31,9 +31,8 @@ import AdminUsersEdit from './components/employees/AdminUserDetail';
 import AdminDictionariesPage from './components/employees/AdminDictionariesPage';
 import ModifyCurrencyPage from './components/employees/ModifyCurrencyPage';
 
-
-// Компонент для защиты роутов
-const ProtectedRoute = ({ children }) => {
+// Компонент для защиты клиентских роутов (обычные пользователи)
+const ProtectedClientRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -51,21 +50,58 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  return user ? children : <Navigate to="/login" replace />;
+  if (!user || user.type !== 'client') {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+// Компонент для защиты роутов сотрудников
+const ProtectedEmployeeRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontSize: '18px',
+        color: '#666'
+      }}>
+        Загрузка...
+      </div>
+    );
+  }
+
+  if (!user || user.type !== 'staff') {
+    return <Navigate to="/employee-login" replace />;
+  }
+
+  return children;
 };
 
 // Компонент для публичных роутов (чтобы после логина не показывать логин снова)
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return <div>Загрузка...</div>;
+  if (loading) {
+    return <div style={{ padding: '20px', textAlign: 'center' }}>Загрузка...</div>;
+  }
 
-  // Если уже залогинен — сразу отправляем на счета
-  if (user){
-  if (user.role == "user"){
-  return <Navigate to="/accounts" replace />}}
+  if (user) {
+    if (user.type === 'client') {
+      return <Navigate to="/accounts" replace />;
+    }
+    // Если сотрудник уже залогинен и зашёл на клиентский логин — отправляем на employee-login (на всякий случай)
+    if (user.type === 'staff') {
+      return <Navigate to="/admin/main" replace />; // или другой дефолтный роут сотрудника
+    }
+  }
+
   return children;
-  //return user
 };
 
 function App() {
@@ -77,74 +113,37 @@ function App() {
           <Route path="/" element={<PublicRoute><UserLogin /></PublicRoute>} />
           <Route path="/login" element={<PublicRoute><UserLogin /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><UserRegistration /></PublicRoute>} />
-          <Route path="/employee-login" element={<EmployeeLogin />} /> {/* Можно тоже защитить отдельно */}
-          
-          {/* Пока не защищенные страницы */}
-          <Route path="/verifier/main" element={<VerifierMainPage />} />
-          <Route path="/broker/main" element={<BrokerMainPage />} />
-          <Route path="/admin/main" element={<AdminMainPage />} />
-          <Route path="/employee/profile" element={<EmployeeProfilePage />} />
-          <Route path="/admin/employees/new" element={<AdminEmployeeCreate />} />
-          <Route path="/admin/employees/:id" element={<AdminEmployeeEdit />} />
-          <Route path="/admin/users/:id" element={<AdminUsersEdit />} />
-          <Route path="/verifier/users/:id" element={<VerifierUserDetail />} />
-          <Route path="/broker/deals/:id" element={<BrokerDealDetail />} />
-          <Route path="/admin/exchange" element={<ExchangeAdminPage />} />
-          <Route path="/admin/users" element={<AdminUsersPage />} />
-          <Route path="/admin/dictionaries" element={<AdminDictionariesPage />} />
-          <Route
-  path="/admin/modify_currency"
-  element={
-    <ProtectedRoute>
-      <ModifyCurrencyPage />
-    </ProtectedRoute>
-  }
-/>
-          {/* Защищённые страницы — доступ только после логина */}
-          <Route
-            path="/accounts"
-            element={<ProtectedRoute><AccountsList /></ProtectedRoute>}
-          />
-          <Route
-            path="/depositary_account"
-            element={
-    <ProtectedRoute>
-      <DepositaryAccount />
-    </ProtectedRoute>
-  }
-/>
-          <Route
-            path="/portfolio"
-            element={<ProtectedRoute><PortfolioPage /></ProtectedRoute>}
-          />
-          <Route
-            path="/offers"
-            element={<ProtectedRoute><OffersPage /></ProtectedRoute>}
-          />
-          <Route
-            path="/exchange"
-            element={<ProtectedRoute><ExchangePage /></ProtectedRoute>}
-          />
-          <Route
-            path="/profile"
-            element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
-          />
-          <Route
-            path="/verification"
-            element={<ProtectedRoute><VerificationPage /></ProtectedRoute>}
-          />
+          <Route path="/employee-login" element={<EmployeeLogin />} />
 
-          {/* Детали брокерского счёта */}
-          <Route
-            path="/account/:id"
-            element={<ProtectedRoute><BrokerAccountPage /></ProtectedRoute>}
-          />
-          
-          {/* Редирект на главную для неизвестных путей */<Route path="*" element={<Navigate to="/login" replace />} />}
-          
+          {/* Защищённые страницы клиентов */}
+          <Route path="/accounts" element={<ProtectedClientRoute><AccountsList /></ProtectedClientRoute>} />
+          <Route path="/depositary_account" element={<ProtectedClientRoute><DepositaryAccount /></ProtectedClientRoute>} />
+          <Route path="/portfolio" element={<ProtectedClientRoute><PortfolioPage /></ProtectedClientRoute>} />
+          <Route path="/offers" element={<ProtectedClientRoute><OffersPage /></ProtectedClientRoute>} />
+          <Route path="/exchange" element={<ProtectedClientRoute><ExchangePage /></ProtectedClientRoute>} />
+          <Route path="/profile" element={<ProtectedClientRoute><ProfilePage /></ProtectedClientRoute>} />
+          <Route path="/verification" element={<ProtectedClientRoute><VerificationPage /></ProtectedClientRoute>} />
+          <Route path="/account/:id" element={<ProtectedClientRoute><BrokerAccountPage /></ProtectedClientRoute>} />
+
+          {/* Защищённые страницы сотрудников */}
+          <Route path="/verifier/main" element={<ProtectedEmployeeRoute><VerifierMainPage /></ProtectedEmployeeRoute>} />
+          <Route path="/broker/main" element={<ProtectedEmployeeRoute><BrokerMainPage /></ProtectedEmployeeRoute>} />
+          <Route path="/admin/main" element={<ProtectedEmployeeRoute><AdminMainPage /></ProtectedEmployeeRoute>} />
+          <Route path="/employee/profile" element={<ProtectedEmployeeRoute><EmployeeProfilePage /></ProtectedEmployeeRoute>} />
+          <Route path="/admin/employees/new" element={<ProtectedEmployeeRoute><AdminEmployeeCreate /></ProtectedEmployeeRoute>} />
+          <Route path="/admin/employees/:id" element={<ProtectedEmployeeRoute><AdminEmployeeEdit /></ProtectedEmployeeRoute>} />
+          <Route path="/admin/users/:id" element={<ProtectedEmployeeRoute><AdminUsersEdit /></ProtectedEmployeeRoute>} />
+          <Route path="/verifier/users/:id" element={<ProtectedEmployeeRoute><VerifierUserDetail /></ProtectedEmployeeRoute>} />
+          <Route path="/broker/deals/:id" element={<ProtectedEmployeeRoute><BrokerDealDetail /></ProtectedEmployeeRoute>} />
+          <Route path="/admin/exchange" element={<ProtectedEmployeeRoute><ExchangeAdminPage /></ProtectedEmployeeRoute>} />
+          <Route path="/admin/users" element={<ProtectedEmployeeRoute><AdminUsersPage /></ProtectedEmployeeRoute>} />
+          <Route path="/admin/dictionaries" element={<ProtectedEmployeeRoute><AdminDictionariesPage /></ProtectedEmployeeRoute>} />
+          <Route path="/admin/modify_currency" element={<ProtectedEmployeeRoute><ModifyCurrencyPage /></ProtectedEmployeeRoute>} />
+
+          {/* Редирект на соответствующий логин для неизвестных путей */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </AuthProvider>
-
     </Router>
   );
 }

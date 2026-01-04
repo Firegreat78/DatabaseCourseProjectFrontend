@@ -12,21 +12,15 @@ import {
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import './AdminDictionariesPage.css';
 
 const API_BASE_URL = 'http://localhost:8000';
 
-// Список доступных словарей
+// Оставляем только два словаря: банки и валюты
 const DICTIONARIES = [
-  { id: 'employment_status', name: 'Статусы трудоустройства', keyField: 'id', displayField: 'status' },
-  { id: 'verification_status', name: 'Статусы верификации', keyField: 'id', displayField: 'status' },
-  { id: 'user_restriction_status', name: 'Статусы блокировки', keyField: 'id', displayField: 'status' },
-  { id: 'proposal_status', name: 'Статусы предложений', keyField: 'id', displayField: 'status' },
-  { id: 'proposal_type', name: 'Типы предложений', keyField: 'id', displayField: 'type' },
-  { id: 'depository_account_operation_type', name: 'Типы операций депозитарного счета', keyField: 'id', displayField: 'type' },
-  { id: 'brokerage_account_operation_type', name: 'Типы операций брокерского счета', keyField: 'id', displayField: 'type_name' },
-  { id: 'currency', name: 'Валюты', keyField: 'id', displayField: 'code' },
   { id: 'bank', name: 'Банки', keyField: 'id', displayField: 'name' },
+  { id: 'currency', name: 'Валюты', keyField: 'id', displayField: 'code' },
 ];
 
 const AdminDictionariesPage = () => {
@@ -42,19 +36,28 @@ const AdminDictionariesPage = () => {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   
-  // Получаем токен авторизации
-  const token = localStorage.getItem('authToken');
+  const navigate = useNavigate();
 
-  // Проверка аутентификации
+  // Получаем данные пользователя из localStorage (как в обновлённом AuthContext)
+  const token = localStorage.getItem('authToken');
+  const userType = localStorage.getItem('userType');
+  const staffId = localStorage.getItem('staffId');
+
+  // Проверка доступа: только мегаадмин (staff_id === 1)
   useEffect(() => {
-    if (!token) {
-      setError('Требуется авторизация. Пожалуйста, войдите снова.');
+    if (!token || userType !== 'staff' || staffId !== '1') {
+      setError('Доступ запрещён: только мегаадминистратор может просматривать эту страницу.');
+      // Через секунду перенаправляем на главную админа
+      const timer = setTimeout(() => {
+        navigate('/admin/main');
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-  }, [token]);
+  }, [token, userType, staffId, navigate]);
 
   // Загрузить данные выбранного словаря
   useEffect(() => {
-    if (!selectedDictionary) {
+    if (!selectedDictionary || !token) {
       setDictionaryData([]);
       return;
     }
@@ -151,7 +154,7 @@ const AdminDictionariesPage = () => {
         return;
       }
       
-      // Для словарей, где есть displayField, проверяем его заполнение
+      // Проверка обязательного поля
       if (currentDict.displayField && !newItem[currentDict.displayField]?.toString().trim()) {
         setError(`Поле "${currentDict.displayField}" обязательно для заполнения`);
         return;
@@ -181,7 +184,6 @@ const AdminDictionariesPage = () => {
         throw new Error(errorText);
       }
       
-      // Обновляем список
       setDictionaryData([...dictionaryData, data]);
       setNewItem({});
       setShowAddForm(false);
@@ -197,7 +199,6 @@ const AdminDictionariesPage = () => {
   // Начало редактирования записи
   const startEdit = (item) => {
     setEditingId(item.id);
-    // Преобразуем даты для полей ввода
     const formattedItem = { ...item };
     Object.keys(formattedItem).forEach(key => {
       if (isDateField(key) && formattedItem[key]) {
@@ -228,7 +229,6 @@ const AdminDictionariesPage = () => {
         throw new Error(errorText);
       }
       
-      // Обновляем данные в состоянии
       setDictionaryData(dictionaryData.map(item => 
         item.id === editingId ? { ...item, ...editForm } : item
       ));
@@ -264,7 +264,6 @@ const AdminDictionariesPage = () => {
         throw new Error(errData.detail || 'Ошибка удаления записи');
       }
       
-      // Убираем удаленный элемент из состояния
       setDictionaryData(dictionaryData.filter(item => item.id !== id));
       setSuccess('Запись успешно удалена');
       setTimeout(() => setSuccess(''), 3000);
@@ -275,12 +274,10 @@ const AdminDictionariesPage = () => {
     }
   };
 
-  // Получить поля (ключи) из первого элемента, если есть данные
+  // Получить поля из первого элемента
   const fields = dictionaryData.length > 0 ? Object.keys(dictionaryData[0]) : [];
-  // Исключаем поля id из формы добавления (оно обычно автоинкрементное)
   const addFields = fields.filter(field => field !== 'id');
   
-  // Найти текущий словарь для получения информации о полях
   const currentDict = DICTIONARIES.find(d => d.id === selectedDictionary);
 
   // Обновить данные
@@ -309,6 +306,26 @@ const AdminDictionariesPage = () => {
       setLoading(false);
     }
   };
+
+  // Если нет доступа — показываем сообщение
+  if (!token || userType !== 'staff' || staffId !== '1') {
+    return (
+      <div className="admin-page">
+        <AdminHeader />
+        <main className="admin-content">
+          <div className="page-header">
+            <h1><Book size={24} /> Управление словарями базы данных</h1>
+          </div>
+          <div className="error-message" style={{ margin: '40px auto', maxWidth: '600px' }}>
+            <AlertCircle size={32} />
+            <h3>Доступ запрещён</h3>
+            <p>Только мегаадминистратор может просматривать эту страницу.</p>
+            <p>Вы будете перенаправлены на главную страницу...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page">
@@ -347,7 +364,7 @@ const AdminDictionariesPage = () => {
             )}
           </div>
 
-          {/* Сообщения об ошибках и успехе */}
+          {/* Сообщения */}
           {error && (
             <div className="error-message">
               <AlertCircle size={18} />
@@ -363,7 +380,7 @@ const AdminDictionariesPage = () => {
 
           {loading && <div className="loading">Загрузка данных...</div>}
 
-          {/* Если словарь выбран, отображаем его данные */}
+          {/* Основной контент */}
           {selectedDictionary && !loading && (
             <>
               <div className="dictionary-header">
@@ -384,7 +401,7 @@ const AdminDictionariesPage = () => {
                 </button>
               </div>
 
-              {/* Форма добавления новой записи */}
+              {/* Форма добавления */}
               {showAddForm && (
                 <div className="add-item-form">
                   <h3>Новая запись</h3>
@@ -437,7 +454,7 @@ const AdminDictionariesPage = () => {
                 </div>
               )}
 
-              {/* Таблица данных */}
+              {/* Таблица */}
               <div className="dictionary-data">
                 {dictionaryData.length > 0 ? (
                   <div className="table-wrapper">

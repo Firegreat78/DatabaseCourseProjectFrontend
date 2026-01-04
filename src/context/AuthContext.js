@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // { id, role, token, isStaff }
+  const [user, setUser] = useState(null); // { id, role, type ("staff"|"client"), staff_id, user_id, token }
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -13,53 +13,78 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     const userId = localStorage.getItem('userId');
-    const role = localStorage.getItem('role');        // может быть строка или число в виде строки
-    const isStaff = localStorage.getItem('isStaff') === 'true';
+    const role = localStorage.getItem('role');
+    const userType = localStorage.getItem('userType'); // "staff" или "client"
+    const staffId = localStorage.getItem('staffId');
 
     if (token && userId) {
       setUser({
-        id: userId,
-        role: role,              // оставляем как есть (строка)
+        id: Number(userId),
+        role: userType === 'staff' ? Number(role) : role, // для staff — число, для клиента — "user"
+        type: userType,
+        staff_id: staffId ? Number(staffId) : null,
+        user_id: userType === 'client' ? Number(userId) : null,
         token,
-        isStaff,                 // флаг, сотрудник или обычный пользователь
       });
     }
     setLoading(false);
   }, []);
 
   const login = (userData) => {
-    const { token, user_id, role = 'user', isStaff = false } = userData;
+    const { token, role, staff_id, user_id } = userData; // backend кладёт в токен sub (логин), role, staff_id или user_id
+
+    let userType, idToSave, roleToSave;
+
+    if (staff_id !== undefined) {
+      userType = 'staff';
+      idToSave = staff_id;
+      roleToSave = Number(role); // роль сотрудника всегда число
+    } else if (user_id !== undefined && role === 'user') {
+      userType = 'client';
+      idToSave = user_id;
+      roleToSave = 'user';
+    } else {
+      throw new Error('Некорректные данные авторизации');
+    }
 
     // Сохраняем в localStorage
     localStorage.setItem('authToken', token);
-    localStorage.setItem('userId', user_id);
-    localStorage.setItem('role', role);                    // роль как строка (для клиентов) или число как строка (для staff)
-    localStorage.setItem('isStaff', isStaff ? 'true' : 'false');
+    localStorage.setItem('userId', String(idToSave));           // общий id
+    localStorage.setItem('role', String(roleToSave));
+    localStorage.setItem('userType', userType);
+    if (userType === 'staff') {
+      localStorage.setItem('staffId', String(staff_id));
+    }
 
     // Сохраняем в состояние
     setUser({
-      id: user_id,
-      role: role,          // оставляем как пришло
+      id: idToSave,
+      role: roleToSave,
+      type: userType,
+      staff_id: userType === 'staff' ? staff_id : null,
+      user_id: userType === 'client' ? user_id : null,
       token,
-      isStaff,
     });
   };
-
-  const employee_logout = () =>{
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('role');
-    setUser(null);
-    navigate('/employee-login');
-  }
 
   const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userId');
     localStorage.removeItem('role');
-    localStorage.removeItem('isStaff');
+    localStorage.removeItem('userType');
+    localStorage.removeItem('staffId');
     setUser(null);
     navigate('/login');
+  };
+
+  const employee_logout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('role');
+    localStorage.removeItem('userType');
+    localStorage.removeItem('staffId');
+    setUser(null);
+    navigate('/employee-login');
   };
 
   return (

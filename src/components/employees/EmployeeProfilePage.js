@@ -27,7 +27,15 @@ const EmployeeProfilePage = () => {
   useEffect(() => {
     const fetchEmployee = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/staff/${user?.id}`);
+        const response = await fetch(
+  `http://localhost:8000/api/staff/${user?.id}`,
+  {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+    }
+  }
+);
+
         const data = await response.json();
 
         if (!response.ok) {

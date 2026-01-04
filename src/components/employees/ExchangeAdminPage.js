@@ -494,13 +494,6 @@ const ExchangeAdminPage = () => {
     <Plus size={20} />
     {showForm ? "Отмена" : "Добавить акцию"}
   </button>
-
-  <button
-    className="edit-currencies-btn"
-    onClick={() => navigate("/admin/modify_currency")}
-  >
-    Редактировать валюты
-  </button>
 </div>
 
         {/* Форма добавления */}

@@ -34,24 +34,27 @@ const EmployeeLogin = () => {
         throw new Error(data.detail || 'Ошибка входа');
       }
 
+      // Новый формат для AuthContext.login — передаём staff_id и role
       login({
         token: data.access_token,
-        user_id: data.user_id,
-        role: data.role,        
-        isStaff: true,
+        staff_id: data.user_id,   // на бэкенде для сотрудников это staff_id
+        role: data.role,          // число (1-5)
       });
 
-      // редирект по роли
-      const role = Number(data.role);
-      if (role == null) {throw new Error(data.detail || 'Ошибка входа');} 
-      else if (role === 1 || role === 2) {
+      // Редирект по роли
+      const roleNum = Number(data.role);
+      if (isNaN(roleNum)) {
+        throw new Error('Неизвестная роль');
+      }
+
+      if (roleNum === 1 || roleNum === 2) {
         navigate('/admin/main');
-      } else if (role === 3) {
+      } else if (roleNum === 3) {
         navigate('/broker/main');
-      } else if (role === 4) {
+      } else if (roleNum === 4) {
         navigate('/verifier/main');
       } else {
-        throw new Error(data.detail || 'Ошибка входа');
+        throw new Error('Недостаточно прав для входа');
       }
     } catch (err) {
       setError(err.message || 'Ошибка при входе');

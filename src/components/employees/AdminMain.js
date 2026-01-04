@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ArrowRight, Shield, Plus, TrendingUp } from 'lucide-react';
+import { Search, ArrowRight, Shield, Plus } from 'lucide-react';
 import AdminHeader from './AdminHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +14,7 @@ const AdminMainPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || user.type !== 'staff') return;
 
     const fetchStaff = async () => {
       try {
@@ -23,19 +23,15 @@ const AdminMainPage = () => {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
         });
-        const data = await response.json();
 
-        let filtered = data;
-        if (user.role !== '1') {
-          filtered = data.filter(
-            item =>
-              item.rights_level !== '1' &&
-              item.rights_level !== '2' &&
-              item.rights_level !== '5'
-          );
+        if (!response.ok) {
+          throw new Error('Ошибка загрузки списка сотрудников');
         }
 
-        setAdminItems(filtered);
+        const data = await response.json();
+
+        // Сохраняем полный список без предварительной фильтрации
+        setAdminItems(data);
       } catch (err) {
         console.error('Ошибка загрузки сотрудников:', err);
       }
@@ -44,12 +40,29 @@ const AdminMainPage = () => {
     fetchStaff();
   }, [user]);
 
-  const filteredItems = adminItems.filter(
-    (item) =>
+  const filteredItems = adminItems.filter((item) => {
+    // Поиск по ID, логину, договору
+    const matchesSearch =
+      String(item.id).includes(query) ||
       item.login.toLowerCase().includes(query.toLowerCase()) ||
-      item.contract_number.toLowerCase().includes(query.toLowerCase()) ||
-      String(item.id).includes(query)
-  );
+      item.contract_number.toLowerCase().includes(query.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    // Логика видимости
+    if (user.staff_id === 1) {
+      // Мегаадмин видит всех, кроме системного аккаунта (id=2)
+      return item.id !== 2;
+    } else {
+      // Обычный админ НЕ видит:
+      // - мегаадмина (1), других админов (2), систему (5)
+      // - самого себя
+      return (
+        ![1, 2, 5].includes(item.rights_level_id) &&
+        item.id !== user.staff_id
+      );
+    }
+  });
 
   return (
     <div className="admin-page">
@@ -70,7 +83,7 @@ const AdminMainPage = () => {
           />
         </div>
 
-        {/* КНОПКИ ДЕЙСТВИЙ */}
+        {/* Кнопка добавления сотрудника */}
         <div
           className="admin-row add-row"
           onClick={() => navigate('/admin/employees/new')}
@@ -79,27 +92,33 @@ const AdminMainPage = () => {
           <span>Добавить сотрудника</span>
         </div>
 
-        {/* СПИСОК СОТРУДНИКОВ */}
+        {/* Список сотрудников */}
         <div className="admin-list">
-          {filteredItems.map((item) => (
-            <div
-              key={item.id}
-              className="admin-row"
-              onClick={() => navigate(`/admin/employees/${item.id}`)}
-            >
-              <div className="admin-left">
-                <div className="admin-id">
-                  <Shield size={18} />
-                  <span>ID {item.id}</span>
+          {filteredItems.length > 0 ? (
+            filteredItems.map((item) => (
+              <div
+                key={item.id}
+                className="admin-row"
+                onClick={() => navigate(`/admin/employees/${item.id}`)}
+              >
+                <div className="admin-left">
+                  <div className="admin-id">
+                    <Shield size={18} />
+                    <span>ID {item.id}</span>
+                  </div>
+
+                  <div className="admin-name">{item.login}</div>
+                  <div className="admin-action">{item.contract_number}</div>
                 </div>
 
-                <div className="admin-name">{item.login}</div>
-                <div className="admin-action">{item.contract_number}</div>
+                <ArrowRight size={20} className="arrow-icon" />
               </div>
-
-              <ArrowRight size={20} className="arrow-icon" />
+            ))
+          ) : (
+            <div className="admin-row no-results">
+              <span>Нет сотрудников, соответствующих фильтру</span>
             </div>
-          ))}
+          )}
         </div>
       </main>
     </div>

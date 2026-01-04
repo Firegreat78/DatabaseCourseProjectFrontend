@@ -3,14 +3,6 @@ import { useParams } from 'react-router-dom';
 import './AdminEmployeeEdit.css';
 import { useAuth } from '../../context/AuthContext';
 
-const roleOptions = [
-  { value: 1, label: 'Мегаадминистратор' },
-  { value: 2, label: 'Администратор' },
-  { value: 3, label: 'Брокер' },
-  { value: 4, label: 'Верификатор' },
-  { value: 5, label: 'Система'}
-];
-
 const API_BASE_URL = 'http://localhost:8000';
 
 const AdminEmployeeEdit = () => {
@@ -25,10 +17,46 @@ const AdminEmployeeEdit = () => {
   const [touched, setTouched] = useState({});
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [serverErrors, setServerErrors] = useState({});
+  const [rightsLevels, setRightsLevels] = useState([]);
+  const [employmentStatuses, setEmploymentStatuses] = useState([]);
+  const [, setDictLoading] = useState(true);
   
-  const availableRoles = user?.role === '1'
-    ? roleOptions.filter(r => r.value < 5)
-    : roleOptions.filter(r => r.value > 2 && r.value < 5);
+  const isMegaAdmin = form?.id === 1; // Сотрудник с id 1 — мегаадминистратор, его роль нельзя менять
+
+  const extractErrorMessage = async (response) => {
+  let errorData = {};
+  try {
+    errorData = await response.json();
+  } catch {
+    return `Ошибка ${response.status}`;
+  }
+
+  if (!errorData.detail) {
+    return `Ошибка ${response.status}`;
+  }
+
+  // detail — строка
+  if (typeof errorData.detail === 'string') {
+    return errorData.detail;
+  }
+
+  // detail — массив (Pydantic)
+  if (Array.isArray(errorData.detail)) {
+    return errorData.detail
+      .map(err => err.msg)
+      .join(', ');
+  }
+
+  // detail — объект
+  if (typeof errorData.detail === 'object') {
+    return Object.values(errorData.detail)
+      .map(err => err.msg || err)
+      .join(', ');
+  }
+
+  return 'Неизвестная ошибка';
+};
+
 
   useEffect(() => {
     const fetchStaffData = async () => {
@@ -41,7 +69,8 @@ const AdminEmployeeEdit = () => {
         });
         
         if (!response.ok) {
-          throw new Error(`Ошибка ${response.status}: ${response.statusText}`);
+          const message = await extractErrorMessage(response);
+          throw new Error(message);
         }
         
         const data = await response.json();
@@ -54,8 +83,8 @@ const AdminEmployeeEdit = () => {
           employmentStatus: data.employment_status_id,
         });
       } catch (err) {
-        console.error('Ошибка загрузки сотрудника:', err);
-        alert('Не удалось загрузить данные сотрудника');
+        console.error('Ошибка загрузки сотрудника:', err.message);
+        alert(err.message);
       } finally {
         setLoading(false);
       }
@@ -63,6 +92,42 @@ const AdminEmployeeEdit = () => {
 
     fetchStaffData();
   }, [id]);
+
+  useEffect(() => {
+    const fetchDictionaries = async () => {
+      try {
+        const [rightsRes, statusRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/rights_levels`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+          }),
+          fetch(`${API_BASE_URL}/api/employment_statuses`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+          })
+        ]);
+
+        if (!rightsRes.ok) throw new Error('Ошибка загрузки уровней прав');
+        if (!statusRes.ok) throw new Error('Ошибка загрузки статусов');
+
+        const rightsData = await rightsRes.json();
+        const statusData = await statusRes.json();
+
+        console.log('Уровни прав:', rightsData);
+        console.log('Статусы трудоустройства:', statusData);
+
+        setRightsLevels(Array.isArray(rightsData) ? rightsData : []);
+        setEmploymentStatuses(Array.isArray(statusData) ? statusData : []);
+      } catch (err) {
+        console.error('Ошибка загрузки справочников:', err);
+        alert('Не удалось загрузить справочники');
+      } finally {
+        setDictLoading(false);
+      }
+    };
+
+    fetchDictionaries();
+  }, []);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -242,9 +307,10 @@ const AdminEmployeeEdit = () => {
         requestData.contract_number = form.contractNumber;
       }
       
-      // Добавляем уровень прав - отправляем как есть (может быть строкой или числом)
-      if (form.role !== undefined) {
-        // Преобразуем в строку, чтобы не было проблем с БД
+      // Добавляем уровень прав
+      if (isMegaAdmin) {
+        requestData.rights_level = "1";
+      } else if (form.role !== undefined) {
         requestData.rights_level = String(form.role);
       }
       
@@ -265,34 +331,9 @@ const AdminEmployeeEdit = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        
-        // Обработка ошибок с сервера
-        if (errorData.detail === "Логин уже занят") {
-          setServerErrors(prev => ({ ...prev, login: "Этот логин уже занят" }));
-          setTouched(prev => ({ ...prev, login: true }));
-          throw new Error("Логин уже занят");
-        } else if (errorData.detail === "Номер договора уже существует") {
-          setServerErrors(prev => ({ ...prev, contractNumber: "Этот номер договора уже используется" }));
-          setTouched(prev => ({ ...prev, contractNumber: true }));
-          throw new Error("Номер договора уже существует");
-        } else if (errorData.detail && typeof errorData.detail === 'string') {
-          throw new Error(errorData.detail);
-        } else if (errorData.detail) {
-          // Обработка ошибок валидации Pydantic
-          const newServerErrors = {};
-          Object.keys(errorData.detail).forEach(key => {
-            const fieldName = key;
-            const errorMessage = errorData.detail[key].msg || errorData.detail[key];
-            newServerErrors[fieldName] = errorMessage;
-            setTouched(prev => ({ ...prev, [fieldName]: true }));
-          });
-          setServerErrors(newServerErrors);
-          throw new Error("Ошибки валидации данных");
-        } else {
-          throw new Error(errorData.detail || `Ошибка ${response.status}: ${response.statusText}`);
-        }
-      }
+  const message = await extractErrorMessage(response);
+  throw new Error(message);
+}
 
       const result = await response.json();
       alert(result.message || 'Сотрудник успешно обновлён');
@@ -320,11 +361,10 @@ const AdminEmployeeEdit = () => {
       }
       
     } catch (err) {
-      console.error('Ошибка обновления сотрудника:', err);
-      if (!serverErrors.login && !serverErrors.contractNumber) {
-        alert(err.message || 'Не удалось обновить сотрудника');
-      }
-    } finally {
+  console.error('Ошибка обновления сотрудника:', err);
+  alert(err.message); // ← теперь detail всегда здесь
+}
+ finally {
       setSaving(false);
     }
   };
@@ -403,34 +443,55 @@ const AdminEmployeeEdit = () => {
           className={getFieldError('employmentStatus') && (touched.employmentStatus || formSubmitted) ? 'input-error' : ''}
         >
           <option value="">Выберите статус</option>
-          <option value="1">Активен</option>
-          <option value="2">Уволен</option>
-          <option value="3">Отпуск</option>
+          {employmentStatuses
+            .filter((status) => !isMegaAdmin || status.id !== 2)
+            .map((status) => (
+              <option key={status.id} value={status.id}>
+                {status.status}
+              </option>
+            ))}
         </select>
         {getFieldError('employmentStatus') && (touched.employmentStatus || formSubmitted) && (
           <span className="error-message">{getFieldError('employmentStatus')}</span>
         )}
       </div>
 
-      <div className="form-group select-with-arrow">
-        <label>Уровень прав *</label>
-        <select
-          value={form.role || ''}
-          onChange={(e) => handleChange('role', e.target.value)}
-          onBlur={() => handleBlur('role')}
-          className={getFieldError('role') && (touched.role || formSubmitted) ? 'input-error' : ''}
-        >
-          <option value="">Выберите роль</option>
-          {availableRoles.map((r) => (
-            <option key={r.value} value={r.value}>
-              {r.label}
-            </option>
-          ))}
-        </select>
-        {getFieldError('role') && (touched.role || formSubmitted) && (
-          <span className="error-message">{getFieldError('role')}</span>
-        )}
-      </div>
+      {!isMegaAdmin ? (
+        <div className="form-group select-with-arrow">
+          <label>Уровень прав *</label>
+          <select
+            value={form.role || ''}
+            onChange={(e) => handleChange('role', e.target.value)}
+            onBlur={() => handleBlur('role')}
+            className={getFieldError('role') && (touched.role || formSubmitted) ? 'input-error' : ''}
+          >
+            <option value="">Выберите роль</option>
+            {rightsLevels
+              .filter((level) => {
+                const roleNum = Number(user?.role);
+                if (roleNum === 1) {
+                  return level.id !== 1; // мегаадмин видит все кроме "Мегаадмин"
+                }
+                return level.id === 3 || level.id === 4; // админ видит только брокер и верификатор
+              })
+              .map((level) => (
+                <option key={level.id} value={level.id}>
+                  {level.rights_level}
+                </option>
+              ))}
+          </select>
+          {getFieldError('role') && (touched.role || formSubmitted) && (
+            <span className="error-message">{getFieldError('role')}</span>
+          )}
+        </div>
+      ) : (
+        <div className="form-group">
+          <label>Уровень прав</label>
+          <input value="Мегаадминистратор" disabled />
+          {/* Скрытое поле, чтобы форма знала значение */}
+          <input type="hidden" value={form.role || ''} />
+        </div>
+      )}
 
       <button 
         onClick={handleSave} 
