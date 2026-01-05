@@ -31,25 +31,15 @@ const ModifyCurrencyPage = () => {
       }
       const data = await res.json();
 
-      // Для каждой валюты загружаем курс
-      const currenciesWithRate = await Promise.all(
-        data.map(async (curr) => {
-          try {
-            const rateRes = await fetch(`${API_BASE_URL}/api/rate_to_ruble/${curr.id}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            if (rateRes.ok) {
-              const rateData = await rateRes.json();
-              return { ...curr, current_rate: rateData.rate_to_rub };
-            }
-          } catch {
-            // Если курса нет — оставляем null
-          }
-          return { ...curr, current_rate: null };
-        })
-      );
+      // Добавляем поля для локального редактирования
+      const enriched = data.map(curr => ({
+        ...curr,
+        edited_code: curr.code,
+        edited_symbol: curr.symbol,
+        edited_rate: curr.rate_to_ruble !== null ? parseFloat(curr.rate_to_ruble).toFixed(4) : ""
+      }));
 
-      setCurrencies(currenciesWithRate);
+      setCurrencies(enriched);
     } catch (e) {
       setError(e.message || "Не удалось загрузить валюты");
     } finally {
@@ -83,7 +73,7 @@ const ModifyCurrencyPage = () => {
         body: JSON.stringify({
           code: newCurrency.code.toUpperCase(),
           symbol: newCurrency.symbol,
-          rate_to_ruble: rate // если указан — отправляем, иначе сервер установит по умолчанию
+          rate_to_ruble: rate
         })
       });
 
@@ -108,20 +98,34 @@ const ModifyCurrencyPage = () => {
     }
   };
 
-  const handleUpdateCurrency = async (id, field, value) => {
+  const handleApplyChanges = async (id) => {
+    const currency = currencies.find((c) => c.id === id);
+    if (!currency) return;
+
     setSavingId(id);
+
     try {
-      let body = {};
-      if (field === "code") body.code = value.toUpperCase();
-      if (field === "symbol") body.symbol = value;
-      if (field === "rate") {
-        const numValue = parseFloat(value.replace(",", "."));
+      const body = {};
+
+      if (currency.edited_code !== currency.code) {
+        body.code = currency.edited_code.toUpperCase();
+      }
+      if (currency.edited_symbol !== currency.symbol) {
+        body.symbol = currency.edited_symbol;
+      }
+      if (currency.edited_rate !== "" && currency.edited_rate !== parseFloat(currency.rate_to_ruble).toFixed(4)) {
+        const numValue = parseFloat(currency.edited_rate.replace(",", "."));
         if (isNaN(numValue) || numValue <= 0) {
           alert("Курс должен быть положительным числом");
-          fetchCurrencies();
+          setSavingId(null);
           return;
         }
         body.rate_to_ruble = numValue;
+      }
+
+      if (Object.keys(body).length === 0) {
+        setSavingId(null);
+        return;
       }
 
       const res = await fetch(`${API_BASE_URL}/api/currencies/${id}`, {
@@ -135,18 +139,53 @@ const ModifyCurrencyPage = () => {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        alert(errData.detail || "Ошибка обновления валюты");
+        alert(errData.detail || "Ошибка сохранения изменений");
         fetchCurrencies();
         return;
       }
 
       fetchCurrencies();
     } catch {
-      alert("Ошибка обновления валюты");
+      alert("Ошибка сохранения изменений");
       fetchCurrencies();
     } finally {
       setSavingId(null);
     }
+  };
+
+    const handleArchiveCurrency = async (id) => {
+    setSavingId(id); // Используем тот же индикатор сохранения
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/archive_currency/${id}`, {
+        method: "POST", // или PUT — в зависимости от вашего эндпоинта
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.detail || "Ошибка при архивации валюты");
+        return;
+      }
+
+      fetchCurrencies();
+      alert("Валюта успешно архивирована");
+    } catch (error) {
+      console.error("Ошибка архивации:", error);
+      alert("Ошибка соединения с сервером");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const hasChanges = (curr) => {
+    return (
+      curr.edited_code !== curr.code ||
+      curr.edited_symbol !== curr.symbol ||
+      curr.edited_rate !== (curr.rate_to_ruble !== null ? parseFloat(curr.rate_to_ruble).toFixed(4) : "")
+    );
   };
 
   return (
@@ -198,73 +237,93 @@ const ModifyCurrencyPage = () => {
               <th>Символ</th>
               <th>Курс к RUB</th>
               <th>Архивная</th>
+              <th>Действия</th>
             </tr>
           </thead>
           <tbody>
             {currencies.length === 0 && !loading && (
               <tr>
-                <td colSpan="5" className="no-data">
+                <td colSpan="6" className="no-data">
                   Нет валют в списке
                 </td>
               </tr>
             )}
             {currencies.map((curr) => (
-              <tr key={curr.id} className={curr.is_archived ? "archived-row" : ""}>
+              <tr key={curr.id} className={curr.archived ? "archived-row" : ""}>
                 <td>{curr.id}</td>
                 <td>
                   <input
-                    value={curr.code}
+                    value={curr.edited_code ?? curr.code}
                     maxLength={3}
-                    onBlur={(e) =>
-                      handleUpdateCurrency(curr.id, "code", e.target.value)
-                    }
                     onChange={(e) =>
                       setCurrencies((prev) =>
                         prev.map((c) =>
-                          c.id === curr.id ? { ...c, code: e.target.value.toUpperCase() } : c
+                          c.id === curr.id
+                            ? { ...c, edited_code: e.target.value.toUpperCase() }
+                            : c
                         )
                       )
                     }
-                    disabled={curr.is_archived}
+                    disabled={curr.archived || curr.id === 1}
                   />
                 </td>
                 <td>
                   <input
-                    value={curr.symbol}
-                    onBlur={(e) =>
-                      handleUpdateCurrency(curr.id, "symbol", e.target.value)
-                    }
+                    value={curr.edited_symbol ?? curr.symbol}
                     onChange={(e) =>
                       setCurrencies((prev) =>
                         prev.map((c) =>
-                          c.id === curr.id ? { ...c, symbol: e.target.value } : c
+                          c.id === curr.id ? { ...c, edited_symbol: e.target.value } : c
                         )
                       )
                     }
-                    disabled={curr.is_archived}
+                    disabled={curr.archived || curr.id === 1}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={curr.current_rate ?? ""}
-                    placeholder={curr.current_rate == null ? "Не установлен" : ""}
-                    onBlur={(e) =>
-                      handleUpdateCurrency(curr.id, "rate", e.target.value)
-                    }
+                    value={curr.edited_rate ?? (curr.rate_to_ruble !== null ? parseFloat(curr.rate_to_ruble).toFixed(4) : "")}
+                    placeholder={curr.rate_to_ruble == null ? "Не установлен" : ""}
                     onChange={(e) =>
                       setCurrencies((prev) =>
                         prev.map((c) =>
-                          c.id === curr.id ? { ...c, current_rate: e.target.value } : c
+                          c.id === curr.id ? { ...c, edited_rate: e.target.value } : c
                         )
                       )
                     }
-                    disabled={curr.is_archived}
-                    className={savingId === curr.id ? "saving-input" : ""}
+                    disabled={curr.archived || curr.id === 1}
                   />
                 </td>
                 <td className="archived-cell">
-                  {curr.is_archived ? "Да" : "Нет"}
+                  {curr.archived ? "Да" : "Нет"}
+                </td>
+                  <td className="actions-cell">
+                  {/* Кнопка "Применить изменения" */}
+                  {hasChanges(curr) && !curr.archived && curr.id !== 1 && (
+                    <button
+                      onClick={() => handleApplyChanges(curr.id)}
+                      className="apply-btn"
+                      disabled={savingId === curr.id}
+                    >
+                      {savingId === curr.id ? "Сохранение..." : "Применить изменения"}
+                    </button>
+                  )}
+
+                  {/* Кнопка "Архивировать" — только для неархивных валют, кроме id=1 */}
+                  {!curr.archived && curr.id !== 1 && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm("Вы уверены, что хотите архивировать валюту? Это действие невозможно отменить.")) {
+                          handleArchiveCurrency(curr.id);
+                        }
+                      }}
+                      className="archive-btn"
+                      disabled={savingId === curr.id}
+                    >
+                      Архивировать
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
