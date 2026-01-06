@@ -19,8 +19,13 @@ const BrokerDealDetail = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/broker/proposal/${id}`
-      );
+  `${API_BASE_URL}/api/broker/proposal/${id}`,
+  {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`
+    }
+  }
+);
 
       if (!response.ok) {
         const errData = await response.json();
