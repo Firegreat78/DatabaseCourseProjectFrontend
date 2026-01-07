@@ -28,8 +28,8 @@ import BrokerDealDetail from './components/employees/BrokerDealDetail';
 import ExchangeAdminPage from './components/employees/ExchangeAdminPage';
 import AdminUsersPage from './components/employees/AdminUsers';
 import AdminUsersEdit from './components/employees/AdminUserDetail';
-import AdminDictionariesPage from './components/employees/AdminDictionariesPage';
 import ModifyCurrencyPage from './components/employees/ModifyCurrencyPage';
+import ModifyBankPage from './components/employees/ModifyBankPage';
 
 // Компонент для защиты клиентских роутов (обычные пользователи)
 const ProtectedClientRoute = ({ children }) => {
@@ -137,8 +137,8 @@ function App() {
           <Route path="/broker/deals/:id" element={<ProtectedEmployeeRoute><BrokerDealDetail /></ProtectedEmployeeRoute>} />
           <Route path="/admin/exchange" element={<ProtectedEmployeeRoute><ExchangeAdminPage /></ProtectedEmployeeRoute>} />
           <Route path="/admin/users" element={<ProtectedEmployeeRoute><AdminUsersPage /></ProtectedEmployeeRoute>} />
-          <Route path="/admin/dictionaries" element={<ProtectedEmployeeRoute><AdminDictionariesPage /></ProtectedEmployeeRoute>} />
           <Route path="/admin/modify_currency" element={<ProtectedEmployeeRoute><ModifyCurrencyPage /></ProtectedEmployeeRoute>} />
+          <Route path="/admin/modify_banks" element={<ProtectedEmployeeRoute><ModifyBankPage /></ProtectedEmployeeRoute>} />
 
           {/* Редирект на соответствующий логин для неизвестных путей */}
           <Route path="*" element={<Navigate to="/login" replace />} />

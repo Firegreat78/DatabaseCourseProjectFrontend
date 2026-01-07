@@ -1,0 +1,172 @@
+/* Общая структура страницы */
+.admin-page {
+  min-height: 100vh;
+  background-color: #f5f7fb;
+}
+
+.admin-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Заголовок */
+.admin-content h1 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #1f2937;
+}
+
+/* Карточка добавления банка */
+.bank-add-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 32px;
+}
+
+.bank-add-card input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+.bank-add-card input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.bank-add-card button {
+  grid-column: 1 / -1;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background-color: #3b82f6;
+  color: white;
+  font-weight: 500;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.bank-add-card button:hover {
+  background-color: #2563eb;
+}
+
+/* Таблица банков */
+.bank-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.bank-table thead {
+  background-color: #f3f4f6;
+}
+
+.bank-table th {
+  padding: 16px 14px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.bank-table td {
+  padding: 12px 14px;
+  border-top: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+
+.bank-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Инпуты внутри таблицы */
+.bank-table input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  background-color: transparent;
+}
+
+.bank-table input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: #f0f7ff;
+}
+
+.bank-table input[type="date"] {
+  padding: 7px 10px;
+}
+
+/* Кнопки действий */
+.apply-btn {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+.apply-btn:hover {
+  background-color: #059669;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.apply-btn:disabled,
+.delete-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Сообщения об ошибках и загрузке */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.error-text {
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #fee2e2;
+  color: #991b1b;
+  font-size: 14px;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 16px;
+}

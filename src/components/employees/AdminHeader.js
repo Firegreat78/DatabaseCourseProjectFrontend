@@ -66,14 +66,6 @@ const AdminHeader = () => {
           <span>Биржа</span>
         </NavLink>
 
-        <NavLink
-          to="/admin/dictionaries"
-          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-        >
-          <Book size={20} />
-          <span>Словари</span>
-        </NavLink>
-
         {/* НОВАЯ ВКЛАДКА: Банки */}
         <NavLink
           to="/admin/modify_banks"
