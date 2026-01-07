@@ -405,7 +405,7 @@ const OffersPage = () => {
                       {statusInfo.text}
                     </span>
                     <span className="offer-ticker">
-                      {offer.security_name}
+                      {offer.security_name} ({offer.security_isin})
                     </span>
                   </div>
 

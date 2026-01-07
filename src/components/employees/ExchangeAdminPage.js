@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import AdminHeader from "./AdminHeader";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw, Plus, AlertCircle } from "lucide-react";
-import "./ExchangeAdminPage.css";
 import {
   BarChart,
   Bar,
@@ -14,12 +13,13 @@ import {
   ResponsiveContainer
 } from "recharts";
 
+import "./ExchangeAdminPage.css";
+
 const API_BASE_URL = "http://localhost:8000";
 
 const ExchangeAdminPage = () => {
   const token = localStorage.getItem("authToken");
   const navigate = useNavigate();
-
 
   const [stocks, setStocks] = useState([]);
   const [currencies, setCurrencies] = useState([]);
@@ -38,7 +38,6 @@ const ExchangeAdminPage = () => {
     lot_size: "1",
     price: "",
     currency_id: "",
-    has_dividends: false,
   });
   const [formLoading, setFormLoading] = useState(false);
 
@@ -53,10 +52,23 @@ const ExchangeAdminPage = () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`${API_BASE_URL}/api/exchange/stocks`);
+      const response = await fetch(`${API_BASE_URL}/api/exchange/stocks`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (!response.ok) throw new Error("Ошибка загрузки данных");
       const data = await response.json();
-      setStocks(data);
+
+      // Добавляем поля для локального редактирования
+      const enriched = data.map(stock => ({
+        ...stock,
+        edited_ticker: stock.ticker,
+        edited_isin: stock.isin,
+        edited_lot_size: stock.lot_size,
+        edited_price: stock.price?.toFixed(2) || "",
+        edited_currency_id: stock.currency_id
+      }));
+
+      setStocks(enriched);
     } catch (err) {
       console.error(err);
       setError("Не удалось загрузить данные биржи");
@@ -131,10 +143,8 @@ const ExchangeAdminPage = () => {
       [name]: type === "checkbox" ? checked : value
     }));
     
-    // Отмечаем поле как "тронутое"
     setTouched(prev => ({ ...prev, [name]: true }));
     
-    // Очищаем ошибки для этого поля
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -143,7 +153,6 @@ const ExchangeAdminPage = () => {
       });
     }
     
-    // Очищаем серверные ошибки при изменении поля
     if (serverErrors[name]) {
       setServerErrors(prev => {
         const newServerErrors = { ...prev };
@@ -153,14 +162,12 @@ const ExchangeAdminPage = () => {
     }
   };
 
-  // Валидация поля при потере фокуса
   const handleBlur = (e) => {
     const { name } = e.target;
     setTouched(prev => ({ ...prev, [name]: true }));
     validateField(name);
   };
 
-  // Валидация отдельного поля
   const validateField = (fieldName) => {
     if (!touched[fieldName] && !formSubmitted) return;
 
@@ -170,16 +177,15 @@ const ExchangeAdminPage = () => {
     switch (fieldName) {
       case 'ticker':
         if (!formData.ticker.trim()) {
-          newErrors.ticker = 'Тикер обязателен';
+          newErrors.ticker = 'Название ценной бумаги обязательно';
           hasError = true;
         } else {
-          // Проверка на уникальность тикера (защита от undefined)
           const tickerExists = stocks.some(stock => 
             stock && stock.ticker && 
             stock.ticker.toLowerCase() === formData.ticker.trim().toLowerCase()
           );
           if (tickerExists) {
-            newErrors.ticker = 'Тикер уже существует';
+            newErrors.ticker = 'Название ценной бумаги уже существует';
             hasError = true;
           } else {
             delete newErrors.ticker;
@@ -192,7 +198,6 @@ const ExchangeAdminPage = () => {
           newErrors.isin = 'ISIN обязателен';
           hasError = true;
         } else {
-          // Проверка на уникальность ISIN (защита от undefined)
           const isinExists = stocks.some(stock => 
             stock && stock.isin && 
             stock.isin === formData.isin.trim()
@@ -263,33 +268,28 @@ const ExchangeAdminPage = () => {
     }
   };
 
-  // Полная валидация формы перед отправкой
   const validateForm = () => {
     const newErrors = {};
     let isValid = true;
 
-    // Проверка тикера
     if (!formData.ticker.trim()) {
-      newErrors.ticker = 'Тикер обязателен';
+      newErrors.ticker = 'Название ценной бумаги обязателен';
       isValid = false;
     } else {
-      // Проверка на уникальность тикера (защита от undefined)
       const tickerExists = stocks.some(stock => 
         stock && stock.ticker && 
         stock.ticker.toLowerCase() === formData.ticker.trim().toLowerCase()
       );
       if (tickerExists) {
-        newErrors.ticker = 'Тикер уже существует';
+        newErrors.ticker = 'Название ценной бумаги уже существует';
         isValid = false;
       }
     }
 
-    // Проверка ISIN
     if (!formData.isin.trim()) {
       newErrors.isin = 'ISIN обязателен';
       isValid = false;
     } else {
-      // Проверка на уникальность ISIN (защита от undefined)
       const isinExists = stocks.some(stock => 
         stock && stock.isin && 
         stock.isin.toLowerCase() === formData.isin.trim().toLowerCase()
@@ -300,7 +300,6 @@ const ExchangeAdminPage = () => {
       }
     }
 
-    // Проверка размера лота
     if (!formData.lot_size.trim()) {
       newErrors.lot_size = 'Размер лота обязателен';
       isValid = false;
@@ -318,7 +317,6 @@ const ExchangeAdminPage = () => {
       }
     }
 
-    // Проверка цены
     if (!formData.price.trim()) {
       newErrors.price = 'Цена обязательна';
       isValid = false;
@@ -333,7 +331,6 @@ const ExchangeAdminPage = () => {
       }
     }
 
-    // Проверка валюты
     if (!formData.currency_id) {
       newErrors.currency_id = 'Валюта обязательна';
       isValid = false;
@@ -352,87 +349,81 @@ const ExchangeAdminPage = () => {
     return isValid;
   };
 
-  // Функция для объединения ошибок валидации и серверных ошибок
   const getFieldError = (fieldName) => {
     return serverErrors[fieldName] || errors[fieldName];
   };
 
   const handleAddStock = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!token) {
-    alert("Требуется авторизация");
-    return;
-  }
-
-  if (!validateForm()) return;
-
-  setFormLoading(true);
-  setServerErrors({});
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/exchange/stocks`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        ticker: formData.ticker.trim(),
-        isin: formData.isin.trim().toUpperCase(),
-        lot_size: Number(formData.lot_size),
-        price: Number(formData.price),
-        currency_id: Number(formData.currency_id),
-        has_dividends: formData.has_dividends,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      if (typeof data.detail === "string") {
-        if (data.detail.includes("ISIN")) {
-          setServerErrors({ isin: data.detail });
-        } else if (data.detail.includes("тикер")) {
-          setServerErrors({ ticker: data.detail });
-        } else {
-          alert(data.detail);
-        }
-      } else {
-        alert("Ошибка добавления акции");
-      }
+    if (!token) {
+      alert("Требуется авторизация");
       return;
     }
 
-    // success
-    setShowForm(false);
-    setFormData({
-      ticker: "",
-      isin: "",
-      lot_size: "1",
-      price: "",
-      currency_id: currencies[0]?.id?.toString() || "",
-      has_dividends: false,
-    });
+    if (!validateForm()) return;
 
-    setErrors({});
+    setFormLoading(true);
     setServerErrors({});
-    setTouched({});
-    setFormSubmitted(false);
 
-    await fetchStocks();
-    alert("Акция успешно добавлена!");
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/exchange/stocks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ticker: formData.ticker.trim(),
+          isin: formData.isin.trim().toUpperCase(),
+          lot_size: Number(formData.lot_size),
+          price: Number(formData.price),
+          currency_id: Number(formData.currency_id),
+        }),
+      });
 
-  } catch (err) {
-    console.error(err);
-    alert("Ошибка соединения с сервером");
-  } finally {
-    setFormLoading(false);
-  }
-};
+      const data = await response.json();
 
+      if (!response.ok) {
+        if (typeof data.detail === "string") {
+          if (data.detail.includes("ISIN")) {
+            setServerErrors({ isin: data.detail });
+          } else if (data.detail.includes("тикер")) {
+            setServerErrors({ ticker: data.detail });
+          } else {
+            alert(data.detail);
+          }
+        } else {
+          alert("Ошибка добавления акции");
+        }
+        return;
+      }
 
-  // Проверка заполнения обязательных полей для активации кнопки
+      setShowForm(false);
+      setFormData({
+        ticker: "",
+        isin: "",
+        lot_size: "1",
+        price: "",
+        currency_id: currencies[0]?.id?.toString() || "",
+      });
+
+      setErrors({});
+      setServerErrors({});
+      setTouched({});
+      setFormSubmitted(false);
+
+      await fetchStocks();
+      alert("Акция успешно добавлена!");
+
+    } catch (err) {
+      console.error(err);
+      alert("Ошибка соединения с сервером");
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
   const isFormValid = () => {
     return (
       formData.ticker.trim() &&
@@ -444,7 +435,6 @@ const ExchangeAdminPage = () => {
     );
   };
 
-  // Функция для сброса формы при закрытии
   const handleCancelForm = () => {
     setShowForm(false);
     setFormData({
@@ -453,12 +443,60 @@ const ExchangeAdminPage = () => {
       lot_size: "1",
       price: "",
       currency_id: currencies[0]?.id?.toString() || "",
-      has_dividends: false,
     });
     setErrors({});
     setServerErrors({});
     setTouched({});
     setFormSubmitted(false);
+  };
+
+  // Редактирование цены акции (inline)
+  const handlePriceChange = (stockId, newPriceStr) => {
+    const newPrice = parseFloat(newPriceStr);
+    if (isNaN(newPrice) || newPrice <= 0) return;
+
+    setStocks(prev =>
+      prev.map(stock =>
+        stock.id === stockId ? { ...stock, edited_price: newPriceStr } : stock
+      )
+    );
+  };
+
+  // Сохранение изменённой цены
+  const handleSavePrice = async (stockId) => {
+    const stock = stocks.find(s => s.id === stockId);
+    if (!stock || stock.edited_price === stock.price.toFixed(2)) return;
+
+    const newPrice = parseFloat(stock.edited_price);
+    if (isNaN(newPrice) || newPrice <= 0) {
+      alert("Цена должна быть положительным числом");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/exchange/stocks/${stockId}/price`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ price: newPrice })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Ошибка сохранения цены");
+        return;
+      }
+
+      fetchStocks();
+    } catch (err) {
+      alert("Ошибка соединения с сервером");
+    }
+  };
+
+  const hasPriceChange = (stock) => {
+    return stock.edited_price && stock.edited_price !== (stock.price?.toFixed(2) || "");
   };
 
   const totalStocks = stocks.length;
@@ -487,14 +525,14 @@ const ExchangeAdminPage = () => {
 
         {/* Кнопка добавления акции */}
         <div className="add-stock-section">
-  <button
-    className="add-stock-btn"
-    onClick={() => setShowForm(!showForm)}
-  >
-    <Plus size={20} />
-    {showForm ? "Отмена" : "Добавить акцию"}
-  </button>
-</div>
+          <button
+            className="add-stock-btn"
+            onClick={() => setShowForm(!showForm)}
+          >
+            <Plus size={20} />
+            {showForm ? "Отмена" : "Добавить акцию"}
+          </button>
+        </div>
 
         {/* Форма добавления */}
         {showForm && (
@@ -502,11 +540,11 @@ const ExchangeAdminPage = () => {
             <h2>Новая акция</h2>
             <form onSubmit={handleAddStock}>
               <div className="ExchangeAdminPage-form-group">
-                <label>Тикер *</label>
+                <label>Название *</label>
                 <input
                   type="text"
                   name="ticker"
-                  placeholder="Например: AAPL"
+                  placeholder="Например 'Сбербанк'"
                   value={formData.ticker}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -518,11 +556,11 @@ const ExchangeAdminPage = () => {
               </div>
 
               <div className="ExchangeAdminPage-form-group">
-                <label>ISIN *</label>
+                <label>ISIN (только латинские буквы) *</label>
                 <input
                   type="text"
                   name="isin"
-                  placeholder="Например: US0378331005"
+                  placeholder="Например: SBER"
                   value={formData.isin}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -534,10 +572,11 @@ const ExchangeAdminPage = () => {
               </div>
 
               <div className="ExchangeAdminPage-form-group">
-                <label>Размер лота * (должен быть целым числом)</label>
+                <label>Размер лота * (целое положительное число)</label>
                 <input
                   type="number"
                   name="lot_size"
+                  placeholder="Целое положительное число"
                   step="1"
                   min="1"
                   value={formData.lot_size}
@@ -551,13 +590,13 @@ const ExchangeAdminPage = () => {
               </div>
 
               <div className="ExchangeAdminPage-form-group">
-                <label>Цена за лот *</label>
+                <label>Цена ценной бумаги в указанной валюте *</label>
                 <input
                   type="number"
                   name="price"
                   step="0.01"
                   min="0.01"
-                  placeholder="Текущая цена"
+                  placeholder="Цена больше нуля"
                   value={formData.price}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -625,31 +664,61 @@ const ExchangeAdminPage = () => {
         {loading && <div className="loading-text">Загрузка акций...</div>}
         {error && <div className="error-text">{error}</div>}
 
-        {/* Список акций */}
-        <div className="admin-list">
-          {stocks.length === 0 && !loading ? (
-            <div className="no-results">На бирже пока нет акций</div>
-          ) : (
-            stocks.map(stock => (
-              <div key={stock.id} className="ExchangeAdminPage-stock-card">
-                <div className="ExchangeAdminPage-stock-info">
-                  <h3 className="ExchangeAdminPage-ticker">{stock.ticker || 'N/A'}</h3>
-                  <span className="ExchangeAdminPage-isin">{stock.isin || ''}</span>
-                </div>
-                <div className="admin-right price-section">
-                  <div className="current-price">
-                    {stock.price?.toLocaleString('ru-RU') || '0'} {stock.currency || ''}
-                  </div>
-                  <div className={`change ${stock.change >= 0 ? "positive" : "negative"}`}>
-                    {stock.change >= 0 ? "+" : ""}{stock.change || 0}%
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
+        {/* Таблица ценных бумаг с возможностью редактирования цены */}
+        <div className="admin-table-wrapper">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Тикер</th>
+                <th>ISIN</th>
+                <th>Размер лота</th>
+                <th>Текущая цена</th>
+                <th>Валюта</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stocks.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan="7" className="no-data">На бирже пока нет акций</td>
+                </tr>
+              ) : (
+                stocks.map(stock => (
+                  <tr key={stock.id}>
+                    <td>{stock.id}</td>
+                    <td>{stock.ticker}</td>
+                    <td>{stock.isin}</td>
+                    <td>{stock.lot_size}</td>
+                    <td>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        value={stock.edited_price ?? stock.price?.toFixed(2) ?? ""}
+                        onChange={(e) => handlePriceChange(stock.id, e.target.value)}
+                        className="price-input"
+                      />
+                    </td>
+                    <td>{stock.currency_symbol || stock.currency_code}</td>
+                    <td className="actions-cell">
+                      {hasPriceChange(stock) && (
+                        <button
+                          onClick={() => handleSavePrice(stock.id)}
+                          className="apply-btn"
+                        >
+                          Сохранить цену
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
 
-        {/* Отчёт по операциям */}
+        {/* Отчёт по операциям (оставляем без изменений) */}
         <div className="report-section">
           <h2>Отчёт по депозитарным операциям</h2>
 

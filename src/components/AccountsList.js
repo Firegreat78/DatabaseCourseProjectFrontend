@@ -363,7 +363,7 @@ const AccountsList = () => {
               <Link key={acc.account_id} to={`/account/${acc.account_id}`} className="account-card-link">
                 <div className="account-card">
                   <div className="card-header">
-                    <span className="account-number">Счёт №{acc.account_id}</span>
+                    <span className="account-number">Брокерский счёт #{acc.account_id}</span>
                     <ArrowRight size={18} className="arrow-icon" />
                   </div>
                   <div className="card-details">

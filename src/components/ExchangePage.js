@@ -1,4 +1,3 @@
-// src/components/ExchangePage.jsx
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AppHeader from './AppHeader';
@@ -133,24 +132,29 @@ const ExchangePage = () => {
         {error && <div className="error-text">{error}</div>}
 
         <div className="stocks-list">
-          {stocks.map((stock) => (
-            <div key={stock.id} className="stock-item">
-              <div className="stock-info">
-                <span className="ticker">{stock.ticker}</span>
-                <div className="price-change">
-                  <span className="price">
-                    {stock.price} {stock.currency}
-                  </span>
-                  <span
-                    className={`change ${stock.change >= 0 ? 'positive' : 'negative'}`}
-                  >
-                    {stock.change >= 0 ? '+' : ''}
-                    {stock.change}%
-                  </span>
+          {stocks.length === 0 && !loading ? (
+            <div className="no-results">На бирже пока нет акций</div>
+          ) : (
+            stocks.map((stock) => (
+              <div key={stock.id} className="stock-item">
+                <div className="stock-info">
+                  <span className="ticker">{stock.ticker} ({stock.isin})</span>
+                  <div className="lot-size">Размер лота: {stock.lot_size}</div>
+                  <div className="price-change">
+                    <span className="price">
+                      {stock.price} {stock.currency}
+                    </span>
+                    <span
+                      className={`change ${stock.change >= 0 ? 'positive' : 'negative'}`}
+                    >
+                      {stock.change >= 0 ? '+' : ''}
+                      {stock.change}%
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </main>
     </div>

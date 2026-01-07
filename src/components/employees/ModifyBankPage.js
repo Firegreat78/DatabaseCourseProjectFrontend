@@ -188,14 +188,14 @@ const ModifyBankPage = () => {
         {/* Добавление банка */}
         <div className="bank-add-card">
           <input
-            placeholder="Наименование"
+            placeholder="Наименование банка"
             value={newBank.name}
             onChange={(e) => setNewBank({ ...newBank, name: e.target.value })}
           />
           <input
             type="text"
             inputMode="numeric"
-            placeholder="ИНН (10 цифр)"
+            placeholder="ИНН банка (10 цифр)"
             value={newBank.inn}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '');
@@ -208,7 +208,7 @@ const ModifyBankPage = () => {
           <input
             type="text"
             inputMode="numeric"
-            placeholder="ОГРН (13 или 15 цифр)"
+            placeholder="ОГРН банка (13 или 15 цифр)"
             value={newBank.ogrn}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '');
