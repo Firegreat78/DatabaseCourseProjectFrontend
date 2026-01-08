@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AdminHeader from "./AdminHeader";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw, Plus, AlertCircle } from "lucide-react";
+import { RefreshCw, Plus, AlertCircle, Save, Archive, ArchiveRestore } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -47,6 +47,9 @@ const ExchangeAdminPage = () => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [serverErrors, setServerErrors] = useState({});
 
+  // Состояние для сохранения изменений
+  const [savingId, setSavingId] = useState(null);
+
   // Загрузка списка акций
   const fetchStocks = async () => {
     setLoading(true);
@@ -63,9 +66,9 @@ const ExchangeAdminPage = () => {
         ...stock,
         edited_ticker: stock.ticker,
         edited_isin: stock.isin,
-        edited_lot_size: stock.lot_size,
-        edited_price: stock.price?.toFixed(2) || "",
-        edited_currency_id: stock.currency_id
+        edited_lot_size: stock.lot_size?.toString() || "",
+        edited_price: stock.price?.toString() || "",
+        edited_currency: stock.currency || ""
       }));
 
       setStocks(enriched);
@@ -123,7 +126,7 @@ const ExchangeAdminPage = () => {
       setChartData(Array.isArray(result) ? result : []);
     } catch (err) {
       console.error(err);
-      setChartError(err.message || "Не удалось загрузить данные операций");
+      setChartError(err.message || "Не удалось загрузить данных операций");
       setChartData([]);
     } finally {
       setChartLoading(false);
@@ -136,6 +139,7 @@ const ExchangeAdminPage = () => {
     fetchDepositaryOperations();
   }, [token]);
 
+  // Функции для формы
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -450,56 +454,147 @@ const ExchangeAdminPage = () => {
     setFormSubmitted(false);
   };
 
-  // Редактирование цены акции (inline)
-  const handlePriceChange = (stockId, newPriceStr) => {
-    const newPrice = parseFloat(newPriceStr);
-    if (isNaN(newPrice) || newPrice <= 0) return;
-
+  // Функции для редактирования строк таблицы
+  const handleFieldChange = (stockId, fieldName, value) => {
+    const stock = stocks.find(s => s.id === stockId);
+    if (stock && stock.is_archived) return; // Не позволяем редактировать архивные
+    
     setStocks(prev =>
       prev.map(stock =>
-        stock.id === stockId ? { ...stock, edited_price: newPriceStr } : stock
+        stock.id === stockId ? { ...stock, [fieldName]: value } : stock
       )
     );
   };
 
-  // Сохранение изменённой цены
-  const handleSavePrice = async (stockId) => {
-    const stock = stocks.find(s => s.id === stockId);
-    if (!stock || stock.edited_price === stock.price.toFixed(2)) return;
+  // Проверка наличия изменений
+  const hasChanges = (stock) => {
+    if (stock.is_archived) return false; // Архивные нельзя изменять
+    
+    return (
+      stock.edited_ticker !== stock.ticker ||
+      stock.edited_isin !== stock.isin ||
+      stock.edited_lot_size !== (stock.lot_size?.toString() || "") ||
+      stock.edited_price !== (stock.price?.toString() || "")
+    );
+  };
 
-    const newPrice = parseFloat(stock.edited_price);
-    if (isNaN(newPrice) || newPrice <= 0) {
-      alert("Цена должна быть положительным числом");
-      return;
-    }
+  // Сохранение изменений акции
+  const handleSaveChanges = async (stockId) => {
+    const stock = stocks.find(s => s.id === stockId);
+    if (!stock || !hasChanges(stock) || stock.is_archived) return;
+
+    setSavingId(stockId);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/exchange/stocks/${stockId}/price`, {
+      const body = {};
+
+      if (stock.edited_ticker !== stock.ticker) {
+        body.ticker = stock.edited_ticker;
+      }
+      
+      if (stock.edited_isin !== stock.isin) {
+        body.isin = stock.edited_isin.toUpperCase();
+      }
+      
+      if (stock.edited_lot_size !== stock.lot_size?.toString()) {
+        const lotSize = parseInt(stock.edited_lot_size);
+        if (isNaN(lotSize) || lotSize <= 0) {
+          alert("Размер лота должен быть положительным целым числом");
+          setSavingId(null);
+          return;
+        }
+        body.lot_size = lotSize;
+      }
+      
+      if (stock.edited_price !== stock.price?.toString()) {
+        const price = parseFloat(stock.edited_price);
+        if (isNaN(price) || price <= 0) {
+          alert("Цена должна быть положительным числом");
+          setSavingId(null);
+          return;
+        }
+        body.price = price;
+      }
+
+      if (Object.keys(body).length === 0) {
+        setSavingId(null);
+        return;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/api/exchange/stocks/${stockId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ price: newPrice })
+        body: JSON.stringify(body)
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        alert(err.detail || "Ошибка сохранения цены");
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.detail || "Ошибка сохранения изменений");
+        fetchStocks();
         return;
       }
 
       fetchStocks();
-    } catch (err) {
+      alert("Изменения успешно сохранены!");
+    } catch {
       alert("Ошибка соединения с сервером");
+      fetchStocks();
+    } finally {
+      setSavingId(null);
     }
   };
 
-  const hasPriceChange = (stock) => {
-    return stock.edited_price && stock.edited_price !== (stock.price?.toFixed(2) || "");
+  // Архивация/разархивация ценной бумаги
+  const handleArchiveStock = async (stockId, archive = true) => {
+    const action = archive ? "архивировать" : "разархивировать";
+    const confirmMessage = archive 
+      ? "Вы уверены, что хотите архивировать эту ценную бумагу? Архивные бумаги нельзя будет редактировать."
+      : "Вы уверены, что хотите разархивировать эту ценную бумагу?";
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setSavingId(stockId);
+
+    try {
+      const endpoint = archive 
+        ? `${API_BASE_URL}/api/exchange/stocks/${stockId}/archive`
+        : `${API_BASE_URL}/api/exchange/stocks/${stockId}/restore`;
+      
+      const method = archive ? "POST" : "PUT";
+
+      const res = await fetch(endpoint, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ archive: archive })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.detail || `Ошибка при ${action} ценной бумаги`);
+        return;
+      }
+
+      fetchStocks();
+      alert(`Ценная бумага успешно ${archive ? "архивирована" : "разархивирована"}!`);
+    } catch (error) {
+      console.error(`Ошибка ${action}:`, error);
+      alert("Ошибка соединения с сервером");
+    } finally {
+      setSavingId(null);
+    }
   };
 
   const totalStocks = stocks.length;
+  const archivedStocks = stocks.filter(stock => stock.is_archived).length;
+  const activeStocks = stocks.filter(stock => !stock.is_archived).length;
 
   return (
     <div className="admin-page">
@@ -517,8 +612,16 @@ const ExchangeAdminPage = () => {
           </div>
           <div className="header-stats">
             <div className="stat-item">
-              <span className="stat-label">Акций на бирже:</span>
+              <span className="stat-label">Всего бумаг:</span>
               <span className="stat-value">{totalStocks}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Активных:</span>
+              <span className="stat-value" style={{ color: '#10b981' }}>{activeStocks}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Архивных:</span>
+              <span className="stat-value" style={{ color: '#64748b' }}>{archivedStocks}</span>
             </div>
           </div>
         </div>
@@ -664,61 +767,142 @@ const ExchangeAdminPage = () => {
         {loading && <div className="loading-text">Загрузка акций...</div>}
         {error && <div className="error-text">{error}</div>}
 
-        {/* Таблица ценных бумаг с возможностью редактирования цены */}
+        {/* Таблица ценных бумаг */}
         <div className="admin-table-wrapper">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Тикер</th>
-                <th>ISIN</th>
-                <th>Размер лота</th>
-                <th>Текущая цена</th>
-                <th>Валюта</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stocks.length === 0 && !loading ? (
+          <h2 style={{ marginBottom: '20px', color: '#1e293b' }}>Список ценных бумаг</h2>
+          
+          {stocks.length === 0 && !loading ? (
+            <div className="no-data" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+              На бирже пока нет акций
+            </div>
+          ) : (
+            <table className="currency-table" style={{ width: '100%', marginTop: '20px' }}>
+              <thead>
                 <tr>
-                  <td colSpan="7" className="no-data">На бирже пока нет акций</td>
+                  <th>ID</th>
+                  <th>Тикер</th>
+                  <th>ISIN</th>
+                  <th>Размер лота</th>
+                  <th>Цена</th>
+                  <th>Валюта</th>
+                  <th>Изменение</th>
+                  <th>Статус</th>
+                  <th>Действия</th>
                 </tr>
-              ) : (
-                stocks.map(stock => (
-                  <tr key={stock.id}>
+              </thead>
+              <tbody>
+                {stocks.map(stock => (
+                  <tr key={stock.id} className={stock.is_archived ? "archived-row" : ""}>
                     <td>{stock.id}</td>
-                    <td>{stock.ticker}</td>
-                    <td>{stock.isin}</td>
-                    <td>{stock.lot_size}</td>
+                    <td>
+                      <input
+                        value={stock.edited_ticker ?? stock.ticker}
+                        onChange={(e) => handleFieldChange(stock.id, 'edited_ticker', e.target.value)}
+                        className={`table-input ${stock.is_archived ? 'archived-input' : ''}`}
+                        style={{ width: '100%' }}
+                        disabled={stock.is_archived}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        value={stock.edited_isin ?? stock.isin}
+                        onChange={(e) => handleFieldChange(stock.id, 'edited_isin', e.target.value.toUpperCase())}
+                        className={`table-input ${stock.is_archived ? 'archived-input' : ''}`}
+                        style={{ width: '100%' }}
+                        disabled={stock.is_archived}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        step="1"
+                        min="1"
+                        value={stock.edited_lot_size ?? stock.lot_size}
+                        onChange={(e) => handleFieldChange(stock.id, 'edited_lot_size', e.target.value)}
+                        className={`table-input ${stock.is_archived ? 'archived-input' : ''}`}
+                        style={{ width: '100%' }}
+                        disabled={stock.is_archived}
+                      />
+                    </td>
                     <td>
                       <input
                         type="number"
                         step="0.01"
                         min="0.01"
-                        value={stock.edited_price ?? stock.price?.toFixed(2) ?? ""}
-                        onChange={(e) => handlePriceChange(stock.id, e.target.value)}
-                        className="price-input"
+                        value={stock.edited_price ?? (stock.price?.toString() || "")}
+                        onChange={(e) => handleFieldChange(stock.id, 'edited_price', e.target.value)}
+                        className={`table-input ${stock.is_archived ? 'archived-input' : ''}`}
+                        style={{ width: '100%' }}
+                        disabled={stock.is_archived}
                       />
                     </td>
-                    <td>{stock.currency_symbol || stock.currency_code}</td>
+                    <td>{stock.currency}</td>
+                    <td>
+                      <span className={`change ${stock.change >= 0 ? 'positive' : 'negative'}`}>
+                        {stock.change >= 0 ? '+' : ''}{stock.change}%
+                      </span>
+                    </td>
+                    <td className="status-cell">
+                      <span className={`status-badge ${stock.is_archived ? 'archived' : 'active'}`}>
+                        {stock.is_archived ? 'Архивная' : 'Активная'}
+                      </span>
+                    </td>
                     <td className="actions-cell">
-                      {hasPriceChange(stock) && (
+                      {hasChanges(stock) && !stock.is_archived && (
                         <button
-                          onClick={() => handleSavePrice(stock.id)}
+                          onClick={() => handleSaveChanges(stock.id)}
                           className="apply-btn"
+                          disabled={savingId === stock.id}
+                          style={{ marginRight: '8px' }}
                         >
-                          Сохранить цену
+                          {savingId === stock.id ? (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <RefreshCw size={14} className="spin" />
+                              Сохранение...
+                            </span>
+                          ) : (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <Save size={14} />
+                              Сохранить
+                            </span>
+                          )}
+                        </button>
+                      )}
+                      
+                      {stock.is_archived ? (
+                        <button
+                          onClick={() => handleArchiveStock(stock.id, false)}
+                          className="restore-btn"
+                          disabled={savingId === stock.id}
+                          title="Разархивировать"
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <ArchiveRestore size={14} />
+                            {savingId === stock.id ? "..." : "Разархивировать"}
+                          </span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleArchiveStock(stock.id, true)}
+                          className="archive-btn"
+                          disabled={savingId === stock.id}
+                          title="Архивировать"
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <Archive size={14} />
+                            {savingId === stock.id ? "..." : "Архивировать"}
+                          </span>
                         </button>
                       )}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
-        {/* Отчёт по операциям (оставляем без изменений) */}
+        {/* Отчёт по операциям */}
         <div className="report-section">
           <h2>Отчёт по депозитарным операциям</h2>
 

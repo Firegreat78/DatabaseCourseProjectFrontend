@@ -201,7 +201,7 @@ const ModifyCurrencyPage = () => {
         {/* Добавление валюты */}
         <div className="currency-add-card">
           <input
-            placeholder="Код (USD)"
+            placeholder="Код валюты"
             maxLength={3}
             value={newCurrency.code}
             onChange={(e) =>
@@ -210,7 +210,7 @@ const ModifyCurrencyPage = () => {
             onKeyPress={handleKeyPress}
           />
           <input
-            placeholder="Символ ($)"
+            placeholder="Символ валюты"
             value={newCurrency.symbol}
             onChange={(e) =>
               setNewCurrency({ ...newCurrency, symbol: e.target.value })
@@ -218,7 +218,7 @@ const ModifyCurrencyPage = () => {
             onKeyPress={handleKeyPress}
           />
           <input
-            placeholder="Курс к RUB (опционально)"
+            placeholder="Курс валюты к RUB"
             value={newCurrency.rate}
             onChange={(e) =>
               setNewCurrency({ ...newCurrency, rate: e.target.value })
@@ -232,10 +232,10 @@ const ModifyCurrencyPage = () => {
         <table className="currency-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Код</th>
-              <th>Символ</th>
-              <th>Курс к RUB</th>
+              <th>ID валюты</th>
+              <th>Код валюты</th>
+              <th>Символ валюты</th>
+              <th>Курс валюты к RUB</th>
               <th>Архивная</th>
               <th>Действия</th>
             </tr>
