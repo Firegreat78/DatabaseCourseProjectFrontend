@@ -47,8 +47,15 @@ const ExchangePage = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch(`${API_BASE_URL}/api/exchange/stocks`);
-      if (!response.ok) throw new Error('Ошибка загрузки данных');
+      const response = await fetch(`${API_BASE_URL}/api/exchange/stocks`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Ошибка загрузки данных');
+      }
       const data = await response.json();
       setStocks(data);
     } catch (err) {
