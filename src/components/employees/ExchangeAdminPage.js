@@ -576,6 +576,7 @@ const ExchangeAdminPage = () => {
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         alert(errData.detail || "Ошибка при архивации ценной бумаги");
+        console.log("Ошибка при архивации ценной бумаги:", errData.detail);
         return;
       }
 

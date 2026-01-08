@@ -36,7 +36,8 @@ const ModifyCurrencyPage = () => {
         ...curr,
         edited_code: curr.code,
         edited_symbol: curr.symbol,
-        edited_rate: curr.rate_to_ruble !== null ? parseFloat(curr.rate_to_ruble).toFixed(4) : ""
+        // Для архивных валют используем прочерк вместо значения курса
+        edited_rate: curr.archived ? "—" : (curr.rate_to_ruble !== null ? parseFloat(curr.rate_to_ruble).toFixed(4) : "")
       }));
 
       setCurrencies(enriched);
@@ -113,7 +114,11 @@ const ModifyCurrencyPage = () => {
       if (currency.edited_symbol !== currency.symbol) {
         body.symbol = currency.edited_symbol;
       }
-      if (currency.edited_rate !== "" && currency.edited_rate !== parseFloat(currency.rate_to_ruble).toFixed(4)) {
+      // Не позволяем изменять курс для архивных валют
+      if (!currency.archived && 
+          currency.edited_rate !== "" && 
+          currency.edited_rate !== "—" &&
+          currency.edited_rate !== (currency.rate_to_ruble !== null ? parseFloat(currency.rate_to_ruble).toFixed(4) : "")) {
         const numValue = parseFloat(currency.edited_rate.replace(",", "."));
         if (isNaN(numValue) || numValue <= 0) {
           alert("Курс должен быть положительным числом");
@@ -153,12 +158,12 @@ const ModifyCurrencyPage = () => {
     }
   };
 
-    const handleArchiveCurrency = async (id) => {
-    setSavingId(id); // Используем тот же индикатор сохранения
+  const handleArchiveCurrency = async (id) => {
+    setSavingId(id);
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/archive_currency/${id}`, {
-        method: "POST", // или PUT — в зависимости от вашего эндпоинта
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -180,12 +185,41 @@ const ModifyCurrencyPage = () => {
     }
   };
 
+  const handleFieldChange = (id, field, value) => {
+    setCurrencies((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, [field]: value } : c
+      )
+    );
+  };
+
+  const handleRateChange = (id, value) => {
+    const currency = currencies.find(c => c.id === id);
+    if (currency && currency.archived) {
+      // Не позволяем менять значение для архивных валют
+      return;
+    }
+    handleFieldChange(id, 'edited_rate', value);
+  };
+
   const hasChanges = (curr) => {
+    // Для архивных валют нет изменений
+    if (curr.archived) return false;
+    
     return (
       curr.edited_code !== curr.code ||
       curr.edited_symbol !== curr.symbol ||
-      curr.edited_rate !== (curr.rate_to_ruble !== null ? parseFloat(curr.rate_to_ruble).toFixed(4) : "")
+      (curr.edited_rate !== "" && 
+       curr.edited_rate !== "—" &&
+       curr.edited_rate !== (curr.rate_to_ruble !== null ? parseFloat(curr.rate_to_ruble).toFixed(4) : ""))
     );
+  };
+
+  const formatRateForDisplay = (currency) => {
+    if (currency.archived) {
+      return "—";
+    }
+    return currency.rate_to_ruble !== null ? parseFloat(currency.rate_to_ruble).toFixed(4) : "";
   };
 
   return (
@@ -265,6 +299,7 @@ const ModifyCurrencyPage = () => {
                       )
                     }
                     disabled={curr.archived || curr.id === 1}
+                    className={curr.archived ? "archived-input" : ""}
                   />
                 </td>
                 <td>
@@ -278,27 +313,26 @@ const ModifyCurrencyPage = () => {
                       )
                     }
                     disabled={curr.archived || curr.id === 1}
+                    className={curr.archived ? "archived-input" : ""}
                   />
                 </td>
                 <td>
-                  <input
-                    type="text"
-                    value={curr.edited_rate ?? (curr.rate_to_ruble !== null ? parseFloat(curr.rate_to_ruble).toFixed(4) : "")}
-                    placeholder={curr.rate_to_ruble == null ? "Не установлен" : ""}
-                    onChange={(e) =>
-                      setCurrencies((prev) =>
-                        prev.map((c) =>
-                          c.id === curr.id ? { ...c, edited_rate: e.target.value } : c
-                        )
-                      )
-                    }
-                    disabled={curr.archived || curr.id === 1}
-                  />
+                  {curr.archived ? (
+                    <span className="archived-rate">—</span>
+                  ) : (
+                    <input
+                      type="text"
+                      value={curr.edited_rate ?? formatRateForDisplay(curr)}
+                      placeholder={curr.rate_to_ruble == null ? "Не установлен" : ""}
+                      onChange={(e) => handleRateChange(curr.id, e.target.value)}
+                      disabled={curr.archived || curr.id === 1}
+                    />
+                  )}
                 </td>
                 <td className="archived-cell">
                   {curr.archived ? "Да" : "Нет"}
                 </td>
-                  <td className="actions-cell">
+                <td className="actions-cell">
                   {/* Кнопка "Применить изменения" */}
                   {hasChanges(curr) && !curr.archived && curr.id !== 1 && (
                     <button

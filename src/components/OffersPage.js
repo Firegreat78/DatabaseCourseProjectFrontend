@@ -181,7 +181,7 @@ const OffersPage = () => {
     if (!user?.token) return;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/security`, {
+      const res = await fetch(`${API_BASE_URL}/api/securities`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
