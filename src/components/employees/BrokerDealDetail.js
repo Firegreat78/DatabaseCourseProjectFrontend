@@ -56,7 +56,7 @@ const BrokerDealDetail = () => {
   try {
     const verify = action === "approve";
     const response = await fetch(
-      `${API_BASE_URL}/api/proposal/${id}/process`,
+      `${API_BASE_URL}/api/broker/proposal/${id}/process`,
       {
         method: "PATCH",
         headers: {

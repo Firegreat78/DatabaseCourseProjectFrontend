@@ -25,7 +25,7 @@ const ModifyBankPage = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API_BASE_URL}/api/banks`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/banks`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) {
@@ -63,7 +63,7 @@ const ModifyBankPage = () => {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/banks`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/banks`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -113,7 +113,7 @@ const ModifyBankPage = () => {
         return;
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/banks/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/banks/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -144,7 +144,7 @@ const ModifyBankPage = () => {
     setDeletingId(id);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/banks/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/banks/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });

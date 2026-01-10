@@ -18,7 +18,7 @@ const AdminMainPage = () => {
 
     const fetchStaff = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/staff`, {
+        const response = await fetch(`${API_BASE_URL}/api/public/staff`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },

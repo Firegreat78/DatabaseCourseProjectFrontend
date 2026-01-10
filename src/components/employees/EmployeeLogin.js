@@ -20,7 +20,7 @@ const EmployeeLogin = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/login/staff`, {
+      const response = await fetch(`${API_BASE_URL}/api/public/login/staff`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

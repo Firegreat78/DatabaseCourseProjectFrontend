@@ -47,7 +47,7 @@ const BrokerAccountPage = () => {
 
     setBanCheckLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/user_ban_status/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/user/user_ban_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
@@ -76,8 +76,8 @@ const BrokerAccountPage = () => {
         Authorization: `Bearer ${user.token}`,
       };
       const [accountRes, txRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/brokerage-accounts/${id}`, { headers }),
-        fetch(`${API_BASE_URL}/api/brokerage-accounts/${id}/operations`, { headers }),
+        fetch(`${API_BASE_URL}/api/user/brokerage-accounts/${id}`, { headers }),
+        fetch(`${API_BASE_URL}/api/user/brokerage-accounts/${id}/operations`, { headers }),
       ]);
 
       if (!accountRes.ok) throw new Error('Счёт не найден');
@@ -125,7 +125,7 @@ const BrokerAccountPage = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/brokerage-accounts/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/user/brokerage-accounts/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -182,7 +182,7 @@ const BrokerAccountPage = () => {
         Authorization: `Bearer ${user.token}`,
       };
       const response = await fetch(
-        `${API_BASE_URL}/api/brokerage-accounts/${id}/balance-change-requests`,
+        `${API_BASE_URL}/api/user/brokerage-accounts/${id}/balance-change-requests`,
         {
           method: 'POST',
           headers,

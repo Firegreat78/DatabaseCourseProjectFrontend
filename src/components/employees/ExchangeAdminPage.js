@@ -55,7 +55,7 @@ const ExchangeAdminPage = () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`${API_BASE_URL}/api/exchange/stocks`, {
+      const response = await fetch(`${API_BASE_URL}/api/public/exchange/stocks`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error("Ошибка загрузки данных");
@@ -88,7 +88,7 @@ const ExchangeAdminPage = () => {
     }
     setCurrenciesLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/currencies`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/currencies`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error(`Не удалось загрузить валюты`);
@@ -181,7 +181,7 @@ const ExchangeAdminPage = () => {
     switch (fieldName) {
       case 'ticker':
         if (!formData.ticker.trim()) {
-          newErrors.ticker = 'Название ценной бумаги обязательно';
+          newErrors.ticker = 'Тикер обязателен';
           hasError = true;
         } else {
           const tickerExists = stocks.some(stock => 
@@ -189,7 +189,7 @@ const ExchangeAdminPage = () => {
             stock.ticker.toLowerCase() === formData.ticker.trim().toLowerCase()
           );
           if (tickerExists) {
-            newErrors.ticker = 'Название ценной бумаги уже существует';
+            newErrors.ticker = 'Тикер уже существует';
             hasError = true;
           } else {
             delete newErrors.ticker;
@@ -277,7 +277,7 @@ const ExchangeAdminPage = () => {
     let isValid = true;
 
     if (!formData.ticker.trim()) {
-      newErrors.ticker = 'Название ценной бумаги обязателен';
+      newErrors.ticker = 'Тикер обязателен';
       isValid = false;
     } else {
       const tickerExists = stocks.some(stock => 
@@ -285,7 +285,7 @@ const ExchangeAdminPage = () => {
         stock.ticker.toLowerCase() === formData.ticker.trim().toLowerCase()
       );
       if (tickerExists) {
-        newErrors.ticker = 'Название ценной бумаги уже существует';
+        newErrors.ticker = 'Тикер уже существует';
         isValid = false;
       }
     }
@@ -371,7 +371,7 @@ const ExchangeAdminPage = () => {
     setServerErrors({});
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/exchange/stocks`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/exchange/stocks`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -385,8 +385,11 @@ const ExchangeAdminPage = () => {
           currency_id: Number(formData.currency_id),
         }),
       });
-
+      console.log("Отправляемые данные: ", formData);
       const data = await response.json();
+
+      console.log("STATUS:", response.status);
+      console.log("RESPONSE:", data);
 
       if (!response.ok) {
         if (typeof data.detail === "string") {
@@ -521,7 +524,7 @@ const ExchangeAdminPage = () => {
         return;
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/exchange/stocks/${stockId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/exchange/stocks/${stockId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -564,7 +567,7 @@ const ExchangeAdminPage = () => {
     setSavingId(stockId);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/exchange/stocks/${stockId}/archive`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/exchange/stocks/${stockId}/archive`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -641,11 +644,11 @@ const ExchangeAdminPage = () => {
             <h2>Новая акция</h2>
             <form onSubmit={handleAddStock}>
               <div className="ExchangeAdminPage-form-group">
-                <label>Название *</label>
+                <label>Тикер *</label>
                 <input
                   type="text"
                   name="ticker"
-                  placeholder="Например 'Сбербанк'"
+                  placeholder="Например: 'SBER', 'GAZP'"
                   value={formData.ticker}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -657,11 +660,11 @@ const ExchangeAdminPage = () => {
               </div>
 
               <div className="ExchangeAdminPage-form-group">
-                <label>ISIN (только латинские буквы) *</label>
+                <label>ISIN *</label>
                 <input
                   type="text"
                   name="isin"
-                  placeholder="Например: SBER"
+                  placeholder="Например: 'RU0009029540', 'RU000A0JR4A1'"
                   value={formData.isin}
                   onChange={handleChange}
                   onBlur={handleBlur}

@@ -33,12 +33,12 @@ const AdminEmployeeCreate = () => {
     const fetchDictionaries = async () => {
       try {
         const [rightsRes, statusRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/rights_levels`, {
+          fetch(`${API_BASE_URL}/api/admin/rights_levels`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('authToken')}`,
             },
           }),
-          fetch(`${API_BASE_URL}/api/employment_statuses`, {
+          fetch(`${API_BASE_URL}/api/admin/employment_statuses`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('authToken')}`,
             },
@@ -170,7 +170,7 @@ const AdminEmployeeCreate = () => {
     setServerErrors({});
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/staff/new`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/staff/new`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

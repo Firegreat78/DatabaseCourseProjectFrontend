@@ -39,7 +39,7 @@ const DepositaryAccount = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/user_ban_status/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/user/user_ban_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
@@ -85,8 +85,7 @@ const DepositaryAccount = () => {
   // -----------------------------
   const fetchDepositaryAccount = async () => {
     try {
-      // Используем новый эндпоинт: /users/me/depositary-account
-      const response = await fetch(`${API_BASE_URL}/api/users/me/depositary-account`, {
+      const response = await fetch(`${API_BASE_URL}/api/user/depositary_account`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 

@@ -31,7 +31,7 @@ const PortfolioPage = () => {
 
     setBanCheckLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/user_ban_status/${user.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/user/user_ban_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 
@@ -56,7 +56,7 @@ const PortfolioPage = () => {
 
     setVerificationLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/user_verification_status/${user.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/user/user_verification_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 
@@ -83,7 +83,7 @@ const PortfolioPage = () => {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/portfolio/securities`, {
+      const response = await fetch(`${API_BASE_URL}/api/user/portfolio/securities`, {
         headers: {
           'Authorization': `Bearer ${user.token}`,
         },

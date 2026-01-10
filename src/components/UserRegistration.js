@@ -31,7 +31,7 @@ const UserRegistration = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/register/user`, {
+      const response = await fetch(`${API_BASE_URL}/api/public/register/user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -44,8 +44,19 @@ const UserRegistration = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || 'Ошибка регистрации');
-      }
+  let message = 'Ошибка регистрации';
+
+  if (Array.isArray(data.detail)) {
+    message = data.detail
+      .map(err => err.msg)
+      .join(', ');
+  } else if (typeof data.detail === 'string') {
+    message = data.detail;
+  }
+
+  throw new Error(message);
+}
+
 
       alert('Регистрация прошла успешно! Теперь вы можете войти.');
       navigate('/login');

@@ -17,7 +17,7 @@ const BrokerMainPage = () => {
   // Загрузка списка ID заявок
   const fetchProposalIds = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/proposal`, {
+      const response = await fetch(`${API_BASE_URL}/api/broker/proposal`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

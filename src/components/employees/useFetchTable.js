@@ -10,7 +10,7 @@ export const useFetchTable = (tableName, token) => {
 
     const fetchData = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/${tableName}`, {
+        const response = await fetch(`http://localhost:8000/api/public/${tableName}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error("Ошибка получения данных");

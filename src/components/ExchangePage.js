@@ -26,7 +26,7 @@ const ExchangePage = () => {
 
     setBanCheckLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/user_ban_status/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/user/user_ban_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
@@ -47,7 +47,7 @@ const ExchangePage = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch(`${API_BASE_URL}/api/exchange/stocks`, {
+      const response = await fetch(`${API_BASE_URL}/api/public/exchange/stocks`, {
         headers: {
           Authorization: `Bearer ${user.token}`
         }

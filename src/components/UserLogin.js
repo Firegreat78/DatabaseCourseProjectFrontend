@@ -20,7 +20,7 @@ const UserLogin = () => {
     setIsLoading(true);
 
     try {
-      const loginResponse = await fetch(`${API_BASE_URL}/api/login/user`, {
+      const loginResponse = await fetch(`${API_BASE_URL}/api/public/login/user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ login, password }),
@@ -40,7 +40,7 @@ const UserLogin = () => {
       }
 
       // Проверка бана
-      const banResponse = await fetch(`${API_BASE_URL}/api/user_ban_status/${user_id}`, {
+      const banResponse = await fetch(`${API_BASE_URL}/api/user/user_ban_status/${user_id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

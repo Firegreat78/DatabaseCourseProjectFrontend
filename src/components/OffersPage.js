@@ -70,7 +70,7 @@ const OffersPage = () => {
 
     setVerificationLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/user_verification_status/${user.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/user/user_verification_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 
@@ -94,7 +94,7 @@ const OffersPage = () => {
     setCancellingId(proposalId);
     
     try {
-      const res = await fetch(`${API_BASE_URL}/api/proposal/${proposalId}/cancel`, {
+      const res = await fetch(`${API_BASE_URL}/api/user/proposal/${proposalId}/cancel`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${user.token}`,
@@ -132,7 +132,7 @@ const OffersPage = () => {
 
     setBanCheckLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/user_ban_status/${user.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/user/user_ban_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 
@@ -157,7 +157,7 @@ const OffersPage = () => {
     setError('');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/offers`, {
+      const res = await fetch(`${API_BASE_URL}/api/user/offers`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
@@ -181,7 +181,7 @@ const OffersPage = () => {
     if (!user?.token) return;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/securities`, {
+      const res = await fetch(`${API_BASE_URL}/api/user/securities`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
@@ -198,7 +198,7 @@ const OffersPage = () => {
     if (!user?.token) return;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/brokerage-accounts`, {
+      const res = await fetch(`${API_BASE_URL}/api/user/brokerage-accounts`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
@@ -264,7 +264,7 @@ const OffersPage = () => {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/offers`, {
+      const res = await fetch(`${API_BASE_URL}/api/user/offers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

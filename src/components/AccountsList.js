@@ -42,7 +42,7 @@ const AccountsList = () => {
 
     setBanCheckLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/user_ban_status/${user.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/user/user_ban_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 
@@ -65,7 +65,7 @@ const AccountsList = () => {
 
     setVerificationLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/user_verification_status/${user.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/user/user_verification_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 
@@ -87,9 +87,9 @@ const AccountsList = () => {
 
     try {
       const [accountsRes, banksRes, currenciesRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/brokerage-accounts`, { headers: { Authorization: `Bearer ${user.token}` } }),
-        fetch(`${API_BASE_URL}/api/bank`, { headers: { Authorization: `Bearer ${user.token}` } }),
-        fetch(`${API_BASE_URL}/api/currency`, { headers: { Authorization: `Bearer ${user.token}` } }),
+        fetch(`${API_BASE_URL}/api/user/brokerage-accounts`, { headers: { Authorization: `Bearer ${user.token}` } }),
+        fetch(`${API_BASE_URL}/api/public/bank`, { headers: { Authorization: `Bearer ${user.token}` } }),
+        fetch(`${API_BASE_URL}/api/public/currency`, { headers: { Authorization: `Bearer ${user.token}` } }),
       ]);
 
       const balanceResSelected = await fetch(
@@ -205,7 +205,7 @@ const AccountsList = () => {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/brokerage-accounts/`, {
+      const res = await fetch(`${API_BASE_URL}/api/user/brokerage-accounts/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

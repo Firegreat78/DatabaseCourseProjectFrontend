@@ -254,7 +254,7 @@ const AdminUserEdit = () => {
         return; // Запрос на сервер не уходит
       }
       
-      const response = await fetch(`${API_BASE_URL}/api/user/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/staff/user/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

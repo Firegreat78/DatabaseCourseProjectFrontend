@@ -19,7 +19,7 @@ const VerifierUserDetail = () => {
     const fetchPassport = async () => {
       try {
         const response = await fetch(
-          `${API_BASE_URL}/api/user/${id}/passport`,
+          `${API_BASE_URL}/api/verifier/user/${id}/passport`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -60,7 +60,7 @@ const VerifierUserDetail = () => {
   try {
     if (statusId === 1) {
       // DELETE паспорт
-      const deleteResp = await fetch(`${API_BASE_URL}/api/user/${id}/passport`, {
+      const deleteResp = await fetch(`${API_BASE_URL}/api/verifier/user/${id}/passport`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -69,9 +69,7 @@ const VerifierUserDetail = () => {
 
       if (!deleteResp.ok) throw new Error("Ошибка удаления паспорта");
     } else if (statusId === 2) {
-      // --- НОВЫЙ БЛОК ---
-      // Вызов эндпоинта, который выполнит verify_user_passport
-      const verifyResp = await fetch(`${API_BASE_URL}/api/user/${id}/verify_passport`, {
+      const verifyResp = await fetch(`${API_BASE_URL}/api/verifier/${id}/verify_passport`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -80,13 +78,14 @@ const VerifierUserDetail = () => {
 
       if (!verifyResp.ok) {
         const errorData = await verifyResp.json().catch(() => ({ detail: "Неизвестная ошибка" }));
+        console.log(errorData.detail);
         throw new Error(errorData.detail || "Ошибка при верификации паспорта");
       }
       // ------------------
     }
 
     // Обновление статуса (для обоих случаев: 1 или 2)
-    const response = await fetch(`${API_BASE_URL}/api/user/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/staff/user/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

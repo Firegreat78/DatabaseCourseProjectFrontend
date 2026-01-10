@@ -34,131 +34,166 @@ const VerificationPage = () => {
     issuedBy: ''
   });
 
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Исправлено: добавлена закрывающая скобка
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Для полей ФИО разрешаем только русские буквы, дефис и пробел
+    if (['lastName', 'firstName', 'middleName'].includes(name)) {
+      // Удаляем все символы, кроме русских букв, дефиса и пробела
+      const cleanedValue = value.replace(/[^А-Яа-яЁё\-\s]/g, '');
+      setFormData(prev => ({ ...prev, [name]: cleanedValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleGender = (gender) => {
     setFormData(prev => ({ ...prev, gender }));
   };
 
-const nameRegex = /^[А-Яа-яЁё\- ]+$/;
-const digitsOnly = /^\d+$/;
+  const nameRegex = /^[А-Яа-яЁё\- ]+$/;
+  const digitsOnly = /^\d+$/;
 
-const validateForm = () => {
-  // ФИО
-  if (!nameRegex.test(formData.lastName) || formData.lastName.length < 2) {
-    return 'Фамилия должна содержать только кириллицу и быть не короче 2 символов';
-  }
+  // Функция для точного расчета возраста
+  const calculateAge = (fromDate, toDate) => {
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+    
+    let years = to.getFullYear() - from.getFullYear();
+    const monthDiff = to.getMonth() - from.getMonth();
+    const dayDiff = to.getDate() - from.getDate();
+    
+    // Если месяц ещё не наступил или месяц тот же, но день ещё не наступил
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      years--;
+    }
+    
+    return years;
+  };
 
-  if (!nameRegex.test(formData.firstName) || formData.firstName.length < 2) {
-    return 'Имя должно содержать только кириллицу и быть не короче 2 символов';
-  }
+  const validateForm = () => {
+    // ФИО
+    if (!nameRegex.test(formData.lastName) || formData.lastName.length < 2) {
+      return 'Фамилия должна содержать только кириллицу и быть не короче 2 символов';
+    }
 
-  if (!nameRegex.test(formData.middleName) || formData.middleName.length < 2) {
-    return 'Отчество должно содержать только кириллицу и быть не короче 2 символов';
-  }
+    if (!nameRegex.test(formData.firstName) || formData.firstName.length < 2) {
+      return 'Имя должно содержать только кириллицу и быть не короче 2 символов';
+    }
 
-  // Серия
-  if (!digitsOnly.test(formData.series) || formData.series.length !== 4) {
-    return 'Серия паспорта должна состоять из 4 цифр';
-  }
+    if (!nameRegex.test(formData.middleName) || formData.middleName.length < 2) {
+      return 'Отчество должно содержать только кириллицу и быть не короче 2 символов';
+    }
 
-  // Номер
-  if (!digitsOnly.test(formData.number) || formData.number.length !== 6) {
-    return 'Номер паспорта должен состоять из 6 цифр';
-  }
+    // Серия
+    if (!digitsOnly.test(formData.series) || formData.series.length !== 4) {
+      return 'Серия паспорта должна состоять из 4 цифр';
+    }
 
-  // Пол
-  if (!['м', 'ж'].includes(formData.gender)) {
-    return 'Некорректно указан пол';
-  }
+    // Номер
+    if (!digitsOnly.test(formData.number) || formData.number.length !== 6) {
+      return 'Номер паспорта должен состоять из 6 цифр';
+    }
 
-  // Даты
-  const birthDate = new Date(formData.birthDate);
-  const issueDate = new Date(formData.issueDate);
-  const now = new Date();
+    // Пол
+    if (!['м', 'ж'].includes(formData.gender)) {
+      return 'Некорректно указан пол';
+    }
 
-  const age = now.getFullYear() - birthDate.getFullYear();
-  if (age < 14) {
-    return 'Паспорт можно оформить только с 14 лет';
-  }
+    // Проверка дат
+    const birthDate = new Date(formData.birthDate);
+    const issueDate = new Date(formData.issueDate);
+    const now = new Date();
 
-  if (issueDate < birthDate) {
-    return 'Дата выдачи паспорта не может быть раньше даты рождения';
-  }
+    // 1. Если дата выдачи паспорта < дата рождения
+    if (issueDate < birthDate) {
+      return 'Дата выдачи паспорта не может быть меньше даты рождения';
+    }
 
-  if (issueDate > now) {
-    return 'Дата выдачи паспорта не может быть в будущем';
-  }
+    // 2. Если дата выдачи паспорта > текущая дата
+    if (issueDate > now) {
+      return 'Дата выдачи паспорта не может быть в будущем';
+    }
 
-  // Текстовые поля
-  if (formData.birthPlace.length < 5) {
-    return 'Место рождения указано некорректно';
-  }
+    // 3. Если дата рождения > текущая дата
+    if (birthDate > now) {
+      return 'Дата рождения не может быть в будущем';
+    }
 
-  if (formData.registrationPlace.length < 5) {
-    return 'Место прописки указано некорректно';
-  }
+    // 4. Если дата выдачи паспорта - Дата рождения < 14 лет
+    const ageAtIssue = calculateAge(formData.birthDate, formData.issueDate);
+    if (ageAtIssue < 14) {
+      return 'Паспорт не может быть выдан лицу, которому не исполнилось 14 лет';
+    }
 
-  if (formData.issuedBy.length < 5) {
-    return 'Поле "Кем выдан" заполнено некорректно';
-  }
+    // 5. Если Текущая дата - Дата рождения < 18 лет
+    const currentAge = calculateAge(formData.birthDate, new Date());
+    if (currentAge < 18) {
+      return 'Регистрация возможна только для лиц, достигших совершеннолетия';
+    }
 
-  return null;
-};
+    // Текстовые поля
+    if (formData.birthPlace.length < 5) {
+      return 'Место рождения указано некорректно';
+    }
 
+    if (formData.registrationPlace.length < 5) {
+      return 'Место прописки указано некорректно';
+    }
+
+    if (formData.issuedBy.length < 5) {
+      return 'Поле "Кем выдан" заполнено некорректно';
+    }
+
+    return null;
+  };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setSuccess('');
+    e.preventDefault();
+    setError('');
+    setSuccess('');
 
-  const validationError = validateForm();
-  if (validationError) {
-    setError(validationError);
-    return;
-  }
-  
-  setIsSubmitting(true);
-
-  try {
-    if (!user?.token) {
-      setError('Пользователь не авторизован');
-      setIsSubmitting(false);
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
       return;
     }
+    
+    setIsSubmitting(true);
 
-    const response = await fetch('http://localhost:8000/api/passport', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${user.token}`, // <-- токен из контекста
-      },
-      body: JSON.stringify(formData)
-    });
+    try {
+      if (!user?.token) {
+        setError('Пользователь не авторизован');
+        setIsSubmitting(false);
+        return;
+      }
 
+      const response = await fetch('http://localhost:8000/api/user/passport', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`, // <-- токен из контекста
+        },
+        body: JSON.stringify(formData)
+      });
 
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.detail || 'Ошибка сервера');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Ошибка сервера');
+      }
+
+      setSuccess('Верификация успешно отправлена! Ожидайте подтверждения в течение 1–3 дней.');
+      // setTimeout(() => navigate('/profile'), 3000);
+    } catch (err) {
+      setError(err.message || 'Ошибка отправки данных. Попробуйте позже.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setSuccess('Верификация успешно отправлена! Ожидайте подтверждения в течение 1–3 дней.');
-    // setTimeout(() => navigate('/profile'), 3000);
-  } catch (err) {
-    setError(err.message || 'Ошибка отправки данных. Попробуйте позже.');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   return (
     <div className="verification-page">
@@ -190,15 +225,36 @@ const validateForm = () => {
           <form onSubmit={handleSubmit} className="verification-form">
             <div className="form-grid">
               <div className="input-group">
-                <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} required />
+                <input 
+                  type="text" 
+                  name="lastName" 
+                  value={formData.lastName} 
+                  onChange={handleChange} 
+                  required 
+                  placeholder="Иванов"
+                />
                 <label>Фамилия</label>
               </div>
               <div className="input-group">
-                <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} required />
+                <input 
+                  type="text" 
+                  name="firstName" 
+                  value={formData.firstName} 
+                  onChange={handleChange} 
+                  required 
+                  placeholder="Иван"
+                />
                 <label>Имя</label>
               </div>
               <div className="input-group">
-                <input type="text" name="middleName" value={formData.middleName} onChange={handleChange} required />
+                <input 
+                  type="text" 
+                  name="middleName" 
+                  value={formData.middleName} 
+                  onChange={handleChange} 
+                  required 
+                  placeholder="Иванович"
+                />
                 <label>Отчество</label>
               </div>
             </div>
@@ -251,7 +307,6 @@ const validateForm = () => {
               />
               <label><Building size={18} /> Место прописки</label>
             </div>
-
 
             <button type="submit" disabled={isSubmitting} className="submit-button">
               {isSubmitting ? (

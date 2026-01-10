@@ -22,7 +22,7 @@ const ModifyCurrencyPage = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API_BASE_URL}/api/currencies`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/currencies`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) {
@@ -65,7 +65,7 @@ const ModifyCurrencyPage = () => {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/currencies`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/currencies`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -133,7 +133,7 @@ const ModifyCurrencyPage = () => {
         return;
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/currencies/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/currencies/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -162,7 +162,7 @@ const ModifyCurrencyPage = () => {
     setSavingId(id);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/archive_currency/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/archive_currency/${id}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`
