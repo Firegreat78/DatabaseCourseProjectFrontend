@@ -29,8 +29,6 @@ const AdminMainPage = () => {
         }
 
         const data = await response.json();
-
-        // Сохраняем полный список без предварительной фильтрации
         setAdminItems(data);
       } catch (err) {
         console.error('Ошибка загрузки сотрудников:', err);
@@ -41,7 +39,6 @@ const AdminMainPage = () => {
   }, [user]);
 
   const filteredItems = adminItems.filter((item) => {
-    // Поиск по ID, логину, договору
     const matchesSearch =
       String(item.id).includes(query) ||
       item.login.toLowerCase().includes(query.toLowerCase()) ||
@@ -49,14 +46,9 @@ const AdminMainPage = () => {
 
     if (!matchesSearch) return false;
 
-    // Логика видимости
     if (user.staff_id === 1) {
-      // Мегаадмин видит всех, кроме системного аккаунта (id=2)
       return item.id !== 2;
     } else {
-      // Обычный админ НЕ видит:
-      // - мегаадмина (1), других админов (2), систему (5)
-      // - самого себя
       return (
         ![1, 2, 5].includes(item.rights_level_id) &&
         item.id !== user.staff_id
@@ -83,7 +75,6 @@ const AdminMainPage = () => {
           />
         </div>
 
-        {/* Кнопка добавления сотрудника */}
         <div
           className="admin-row add-row"
           onClick={() => navigate('/admin/employees/new')}
@@ -92,7 +83,6 @@ const AdminMainPage = () => {
           <span>Добавить сотрудника</span>
         </div>
 
-        {/* Список сотрудников */}
         <div className="admin-list">
           {filteredItems.length > 0 ? (
             filteredItems.map((item) => (

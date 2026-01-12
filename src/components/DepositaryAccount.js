@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import AppHeader from './AppHeader';
 import DepositaryBalanceChart from './DepositaryBalanceChart';
-import './DepositaryAccount.css'; // Убедитесь, что стили подключены
+import './DepositaryAccount.css';
 import { useAuth } from '../context/AuthContext';
 import {
   Package,
@@ -18,26 +18,18 @@ const API_BASE_URL = 'http://localhost:8000';
 
 const DepositaryAccount = () => {
   const { user, logout } = useAuth();
-
   const [depositaryData, setDepositaryData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [isBanned, setIsBanned] = useState(false);
   const [banCheckLoading, setBanCheckLoading] = useState(true);
-
   const [verificationStatusId, setVerificationStatusId] = useState(null);
   const [verificationLoading, setVerificationLoading] = useState(true);
-
-  // -----------------------------
-  // Проверка блокировки
-  // -----------------------------
   const checkBanStatus = async () => {
     if (!user?.id || !user?.token) {
       setBanCheckLoading(false);
       return;
     }
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/user/user_ban_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` },
@@ -56,10 +48,6 @@ const DepositaryAccount = () => {
       setBanCheckLoading(false);
     }
   };
-
-  // -----------------------------
-  // Получение статуса верификации и других данных профиля
-  // -----------------------------
   const fetchClient = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/user/${user?.id}`, {
@@ -79,10 +67,6 @@ const DepositaryAccount = () => {
       setVerificationLoading(false);
     }
   };
-
-  // -----------------------------
-  // Загрузка депозитарного счёта
-  // -----------------------------
   const fetchDepositaryAccount = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/user/depositary_account`, {
@@ -91,7 +75,7 @@ const DepositaryAccount = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          setDepositaryData(null); // Счёт не найден
+          setDepositaryData(null);
           return;
         }
         throw new Error('Не удалось загрузить депозитарный счёт');
@@ -99,7 +83,6 @@ const DepositaryAccount = () => {
 
       const result = await response.json();
 
-      // Валидация ответа (проверим наличие полей, соответствующих схеме)
       if (!result.account || !Array.isArray(result.balance) || !Array.isArray(result.operations)) {
         throw new Error('Некорректные данные депозитарного счёта от сервера');
       }
@@ -111,10 +94,6 @@ const DepositaryAccount = () => {
       setLoading(false);
     }
   };
-
-  // -----------------------------
-  // Загрузка всех данных
-  // -----------------------------
   useEffect(() => {
     if (user?.id) {
       checkBanStatus();
@@ -126,17 +105,9 @@ const DepositaryAccount = () => {
       setBanCheckLoading(false);
     }
   }, [user?.id]);
-
-  // -----------------------------
-  // Статусы верификации
-  // -----------------------------
   const isVerified = verificationStatusId === 2;
   const isPendingVerification = verificationStatusId === 3;
   const isNotVerified = verificationStatusId === 1 || verificationStatusId === undefined;
-
-  // -----------------------------
-  // Загрузка
-  // -----------------------------
   if (banCheckLoading || verificationLoading || loading) {
     return (
       <div className="depositary-account-page">
@@ -147,10 +118,6 @@ const DepositaryAccount = () => {
       </div>
     );
   }
-
-  // -----------------------------
-  // Аккаунт заблокирован
-  // -----------------------------
   if (isBanned) {
     return (
       <div className="depositary-account-page">
@@ -165,10 +132,6 @@ const DepositaryAccount = () => {
       </div>
     );
   }
-
-  // -----------------------------
-  // Не верифицирован / ожидает
-  // -----------------------------
   if (isNotVerified || isPendingVerification) {
     return (
       <div className="depositary-account-page">
@@ -185,10 +148,6 @@ const DepositaryAccount = () => {
       </div>
     );
   }
-
-  // -----------------------------
-  // Ошибка
-  // -----------------------------
   if (error) {
     return (
       <div className="depositary-account-page">
@@ -200,10 +159,6 @@ const DepositaryAccount = () => {
       </div>
     );
   }
-
-  // -----------------------------
-  // Счёт не найден (после успешной загрузки, но без данных)
-  // -----------------------------
   if (!depositaryData) {
     return (
       <div className="depositary-account-page">
@@ -225,15 +180,7 @@ const DepositaryAccount = () => {
       </div>
     );
   }
-
-  // -----------------------------
-  // Используем данные из API
-  // -----------------------------
   const { account, balance, operations } = depositaryData;
-
-  // -----------------------------
-  // Основной UI
-  // -----------------------------
   return (
     <div className="depositary-account-page">
       <AppHeader />
@@ -271,14 +218,12 @@ const DepositaryAccount = () => {
           ) : (
             <p>Баланс пуст</p>
           )}
-          {/* Диаграмма баланса депозитарного счёта */}
 {balance.length > 0 && (
   <div style={{ marginTop: '40px' }}>
     <DepositaryBalanceChart />
   </div>
 )}
 
-          {/* Отображение истории операций */}
           <h2 style={{ marginTop: '30px' }}>История операций</h2>
           {operations.length > 0 ? (
             <table className="operations-table">

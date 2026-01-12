@@ -1,4 +1,3 @@
-// src/components/admin/AdminUserEdit.js
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './AdminUserEdit.css';
@@ -7,7 +6,6 @@ import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:8000';
 
-// Опции для статуса блокировки
 const blockStatusOptions = [
   { value: 1, label: 'Активен' },
   { value: 2, label: 'Заблокирован' },
@@ -24,42 +22,41 @@ const AdminUserEdit = () => {
   const [success, setSuccess] = useState(false);
   const { user } = useAuth();
   const [touched, setTouched] = useState({});
-  
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         setLoading(true);
         setErrors({});
         setServerErrors({});
-        
+
         const response = await fetch(`${API_BASE_URL}/api/user/${id}`, {
-          headers: { 
+          headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
             'Content-Type': 'application/json'
           },
         });
-        
+
         if (!response.ok) {
           throw new Error(`Ошибка ${response.status}: ${response.statusText}`);
         }
-        
+
         const data = await response.json();
-        
-        // Преобразуем дату для отображения
-        const formattedDate = data.registration_date 
+
+        const formattedDate = data.registration_date
           ? new Date(data.registration_date).toLocaleDateString('ru-RU')
           : 'Не указана';
-        
+
         setForm({
           id: data.id,
           login: data.login || '',
           email: data.email || '',
-          password: '', // Пароль оставляем пустым по умолчанию
+          password: '',
           verification_status_id: data.verification_status_id || 1,
           block_status_id: data.block_status_id || 1,
-          reset_verification: false, // Чекбокс по умолчанию выключен
+          reset_verification: false,
           registration_date: formattedDate,
-          originalData: data // Сохраняем оригинальные данные для сравнения
+          originalData: data
         });
       } catch (err) {
         console.error('Ошибка загрузки пользователя:', err);
@@ -73,15 +70,13 @@ const AdminUserEdit = () => {
   }, [id]);
 
   const handleChange = (field, value) => {
-    setForm((prev) => ({ 
-      ...prev, 
-      [field]: value 
+    setForm((prev) => ({
+      ...prev,
+      [field]: value
     }));
-    
-    // Отмечаем поле как "тронутое"
+
     setTouched(prev => ({ ...prev, [field]: true }));
-    
-    // Очищаем ошибки для этого поля
+
     if (errors[field]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -89,7 +84,7 @@ const AdminUserEdit = () => {
         return newErrors;
       });
     }
-    
+
     if (serverErrors[field]) {
       setServerErrors(prev => {
         const newServerErrors = { ...prev };
@@ -107,8 +102,6 @@ const AdminUserEdit = () => {
 
     switch (fieldName) {
       case 'login':
-        // Логин может быть пустым (оставляем старый)
-        // Проверяем только если не пустой и меньше 3 символов
         if (form.login.trim() !== '' && form.login.length < 3) {
           newErrors.login = 'Логин должен содержать минимум 3 символа';
           hasError = true;
@@ -116,10 +109,8 @@ const AdminUserEdit = () => {
           delete newErrors.login;
         }
         break;
-        
+
       case 'email':
-        // Email может быть пустым (оставляем старый)
-        // Проверяем только если не пустой и невалидный
         if (form.email.trim() !== '' && !/\S+@\S+\.\S+/.test(form.email)) {
           newErrors.email = 'Введите корректный email';
           hasError = true;
@@ -127,9 +118,8 @@ const AdminUserEdit = () => {
           delete newErrors.email;
         }
         break;
-        
+
       case 'password':
-        // Проверяем пароль только если он указан
         if (form.password && form.password.length > 0 && form.password.length < 6) {
           newErrors.password = 'Пароль должен содержать минимум 6 символов';
           hasError = true;
@@ -137,7 +127,7 @@ const AdminUserEdit = () => {
           delete newErrors.password;
         }
         break;
-        
+
       default:
         break;
     }
@@ -156,33 +146,29 @@ const AdminUserEdit = () => {
     const newErrors = {};
     let isValid = true;
 
-    // Проверка логина (только если не пустой)
     if (form.login.trim() !== '' && form.login.length < 3) {
       newErrors.login = 'Логин должен содержать минимум 3 символа';
       isValid = false;
     }
 
-    // Проверка email (только если не пустой)
     if (form.email.trim() !== '' && !/\S+@\S+\.\S+/.test(form.email)) {
       newErrors.email = 'Введите корректный email';
       isValid = false;
     }
 
-    // Проверка пароля (если указан)
     if (form.password && form.password.length > 0 && form.password.length < 6) {
       newErrors.password = 'Пароль должен содержать минимум 6 символов';
       isValid = false;
     }
 
     setErrors(newErrors);
-    
-    // Отмечаем как тронутые только если поля не пустые
+
     setTouched({
       login: form.login.trim() !== '',
       email: form.email.trim() !== '',
       password: !!form.password
     });
-    
+
     return isValid;
   };
 
@@ -191,45 +177,38 @@ const AdminUserEdit = () => {
   };
 
   const isFormValid = () => {
-    // Форма валидна, если нет ошибок валидации
     return Object.keys(errors).length === 0;
   };
 
   const handleSave = async () => {
     if (!validateForm()) return;
-    
+
     setSaving(true);
     setErrors({});
     setServerErrors({});
     setSuccess(false);
-    
+
     try {
-      // Подготовка данных для отправки
       const updateData = {
         block_status_id: parseInt(form.block_status_id),
       };
-      
-      // Добавляем логин только если он не пустой
+
       if (form.login.trim() !== '') {
         updateData.login = form.login;
       }
-      
-      // Добавляем email только если он не пустой
+
       if (form.email.trim() !== '') {
         updateData.email = form.email;
       }
-      
-      // Добавляем пароль только если он был указан
+
       if (form.password && form.password.trim() !== '') {
         updateData.password = form.password;
       }
-      
-      // Если включён чекбокс — сбрасываем статус верификации на 1
+
       if (form.reset_verification) {
         updateData.verification_status_id = 1;
       }
-      
-            // Проверка на изменения
+
       const hasChanges = Object.keys(updateData).some(key => {
         if (key === 'password') return true;
         if (key === 'login' && updateData.login) {
@@ -246,14 +225,14 @@ const AdminUserEdit = () => {
         }
         return false;
       });
-      
+
       if (!hasChanges) {
         setErrors({ general: 'Нет изменений для сохранения' });
         setTimeout(() => setErrors({}), 2500);
         setSaving(false);
-        return; // Запрос на сервер не уходит
+        return;
       }
-      
+
       const response = await fetch(`${API_BASE_URL}/api/staff/user/${id}`, {
         method: 'PUT',
         headers: {
@@ -264,9 +243,8 @@ const AdminUserEdit = () => {
       });
 
       const responseData = await response.json();
-      
+
       if (!response.ok) {
-        // Обработка ошибок с сервера
         if (responseData.detail === "Логин уже занят") {
           setServerErrors(prev => ({ ...prev, login: "Этот логин уже занят" }));
           setTouched(prev => ({ ...prev, login: true }));
@@ -280,28 +258,27 @@ const AdminUserEdit = () => {
         }
         return;
       }
-      
-      // Обновляем оригинальные данные после успешного сохранения
+
       setForm(prev => ({
         ...prev,
         login: '',
         email: responseData.email || prev.email,
         verification_status_id: responseData.verification_status_id || (form.reset_verification ? 1 : prev.verification_status_id),
         block_status_id: responseData.block_status_id,
-        reset_verification: false, // Сбрасываем чекбокс после сохранения
-        originalData: { 
-          ...prev.originalData, 
+        reset_verification: false,
+        originalData: {
+          ...prev.originalData,
           login: responseData.login || prev.originalData.login,
           email: responseData.email || prev.originalData.email,
           verification_status_id: responseData.verification_status_id || (form.reset_verification ? 1 : prev.originalData.verification_status_id),
           block_status_id: responseData.block_status_id
         },
-        password: '' // Сбрасываем поле пароля после сохранения
+        password: ''
       }));
-      
+
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-      
+
     } catch (err) {
       console.error('Ошибка при обновлении пользователя:', err);
       setErrors({ general: err.message || 'Не удалось обновить данные пользователя' });
@@ -367,12 +344,12 @@ const AdminUserEdit = () => {
       <div className="form-grid">
         <div className="form-section">
           <h2>Основная информация</h2>
-          
+
           <div className="form-group">
             <label>ID пользователя</label>
-            <input 
-              value={form.id} 
-              disabled 
+            <input
+              value={form.id}
+              disabled
               className="disabled-input"
             />
           </div>
@@ -390,8 +367,8 @@ const AdminUserEdit = () => {
               <span className="field-error">{getFieldError('login')}</span>
             )}
             <div className="form-hint">
-              {form.login.trim() === '' 
-                ? `Оставьте пустым, чтобы сохранить текущий логин` 
+              {form.login.trim() === ''
+                ? `Оставьте пустым, чтобы сохранить текущий логин`
                 : 'Введите новый логин (минимум 3 символа)'}
             </div>
           </div>
@@ -410,17 +387,17 @@ const AdminUserEdit = () => {
               <span className="field-error">{getFieldError('email')}</span>
             )}
             <div className="form-hint">
-              {form.email.trim() === '' 
-                ? `Оставьте пустым, чтобы сохранить текущий email: ${form.originalData.email}` 
+              {form.email.trim() === ''
+                ? `Оставьте пустым, чтобы сохранить текущий email: ${form.originalData.email}`
                 : 'Введите новый email'}
             </div>
           </div>
 
           <div className="form-group">
             <label>Дата регистрации</label>
-            <input 
-              value={form.registration_date} 
-              disabled 
+            <input
+              value={form.registration_date}
+              disabled
               className="disabled-input"
             />
           </div>
@@ -428,7 +405,7 @@ const AdminUserEdit = () => {
 
         <div className="form-section">
           <h2>Безопасность и статусы</h2>
-          
+
           <div className="form-group">
             <label>Новый пароль</label>
             <input
@@ -445,7 +422,6 @@ const AdminUserEdit = () => {
             <div className="form-hint">Оставьте пустым, чтобы не менять пароль</div>
           </div>
 
-                    {/* Чекбокс сброса верификации показываем только если статус не "Не верифицирован" (id !== 1) */}
           {form.verification_status_id !== 1 && (
             <div className="form-group">
               <label>Сброс статуса верификации</label>
@@ -468,7 +444,6 @@ const AdminUserEdit = () => {
             </div>
           )}
 
-          {/* Если статус уже "Не верифицирован" — просто показываем информацию */}
           {form.verification_status_id === 1 && (
             <div className="form-group">
               <label>Статус верификации</label>
@@ -506,15 +481,15 @@ const AdminUserEdit = () => {
       </div>
 
       <div className="form-actions">
-        <button 
-          onClick={handleCancel} 
+        <button
+          onClick={handleCancel}
           className="cancel-btn"
           disabled={saving}
         >
           Отмена
         </button>
-        <button 
-          onClick={handleSave} 
+        <button
+          onClick={handleSave}
           disabled={saving}
           className={`save-btn ${(!isFormValid() || saving) ? 'button-disabled' : ''}`}
         >

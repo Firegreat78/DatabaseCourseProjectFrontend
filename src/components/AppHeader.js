@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   Wallet,
   TrendingUp,
-  Package, // Иконка для "Предложения" и "Депозитарный счёт"
+  Package,
   ArrowLeftRight,
   User,
   LogOut
@@ -14,22 +14,18 @@ import './AppHeader.css';
 
 const AppHeader = () => {
   const { user, logout } = useAuth();
-
-  // Если пользователь не авторизован — хедер не отображаем
-  // (на страницах логина/регистрации он и не нужен)
   if (!user) {
     return null;
   }
 
   const handleLogout = () => {
     if (window.confirm('Вы действительно хотите выйти из аккаунта?')) {
-      logout(); // очистит localStorage и перенаправит на /login
+      logout();
     }
   };
 
   return (
     <header className="app-header">
-      {/* Логотип — ведёт на список счетов */}
       <NavLink to="/accounts" className="logo-link">
         <div className="logo">
           <div className="logo-icon">
@@ -39,8 +35,6 @@ const AppHeader = () => {
           <div className="logo-glow"></div>
         </div>
       </NavLink>
-
-      {/* Основная навигация */}
       <nav className="nav">
         <NavLink
           to="/portfolio"
@@ -67,7 +61,6 @@ const AppHeader = () => {
         </NavLink>
       </nav>
 
-      {/* Правая часть: профиль + выход */}
       <div className="header-right">
         <NavLink
           to="/profile"

@@ -1,3 +1,4 @@
+// src/components/employees/AdminEmployeeCreate.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -26,9 +27,6 @@ const AdminEmployeeCreate = () => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /* =======================
-     Загрузка справочников
-     ======================= */
   useEffect(() => {
     const fetchDictionaries = async () => {
       try {
@@ -62,9 +60,6 @@ const AdminEmployeeCreate = () => {
     fetchDictionaries();
   }, []);
 
-  /* =======================
-     Обработчики формы
-     ======================= */
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -94,9 +89,6 @@ const AdminEmployeeCreate = () => {
     validateField(name);
   };
 
-  /* =======================
-     Валидация
-     ======================= */
   const validateField = (field) => {
     if (!touched[field] && !formSubmitted) return;
 
@@ -160,9 +152,6 @@ const AdminEmployeeCreate = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  /* =======================
-     Создание сотрудника
-     ======================= */
   const handleCreate = async () => {
     if (!validateForm()) return;
 
@@ -201,12 +190,7 @@ const AdminEmployeeCreate = () => {
       setIsSubmitting(false);
     }
   };
-
   const getFieldError = (field) => serverErrors[field] || errors[field];
-
-  /* =======================
-     Render
-     ======================= */
   return (
     <div className="admin-employee-edit">
       <h1>Создание нового сотрудника</h1>

@@ -13,17 +13,11 @@ const AdminUsersPage = () => {
 
   const { data: users, loading, error, refetch } = useFetchTable("user", token);
   const [query, setQuery] = useState('');
-  const [showPendingOnly, setShowPendingOnly] = useState(false);
-  const [showBlockedOnly, setShowBlockedOnly] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'pending', 'blocked', 'verified'
+  const [activeFilter, setActiveFilter] = useState('all');
 
   if (loading) return <div className="admin-content">Загрузка...</div>;
   if (error) return <div className="admin-content">Ошибка: {error}</div>;
-
-  // Фильтрация данных
   let filteredUsers = users.slice();
-
-  // Применение фильтров
   if (activeFilter === 'pending') {
     filteredUsers = filteredUsers.filter(u => u.verification_status_id === 3);
   } else if (activeFilter === 'blocked') {
@@ -31,16 +25,12 @@ const AdminUsersPage = () => {
   } else if (activeFilter === 'verified') {
     filteredUsers = filteredUsers.filter(u => u.verification_status_id === 2);
   }
-
-  // Применение поиска
   filteredUsers = filteredUsers.filter(
     u =>
       u.login.toLowerCase().includes(query.toLowerCase()) ||
       u.email.toLowerCase().includes(query.toLowerCase()) ||
       String(u.id).includes(query)
   );
-
-  // Сортировка по дате регистрации (новые сверху)
   filteredUsers.sort((a, b) => new Date(b.registration_date) - new Date(a.registration_date));
 
   const getVerificationStatusLabel = (statusId) => {

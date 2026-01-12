@@ -11,8 +11,6 @@ const AdminEmployeeEdit = () => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  
-  // Состояния для валидации
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [formSubmitted, setFormSubmitted] = useState(false);
@@ -20,43 +18,34 @@ const AdminEmployeeEdit = () => {
   const [rightsLevels, setRightsLevels] = useState([]);
   const [employmentStatuses, setEmploymentStatuses] = useState([]);
   const [, setDictLoading] = useState(true);
-  
-  const isMegaAdmin = form?.id === 1; // Сотрудник с id 1 — мегаадминистратор, его роль нельзя менять
+
+  const isMegaAdmin = form?.id === 1;
 
   const extractErrorMessage = async (response) => {
-  let errorData = {};
-  try {
-    errorData = await response.json();
-  } catch {
-    return `Ошибка ${response.status}`;
-  }
-
-  if (!errorData.detail) {
-    return `Ошибка ${response.status}`;
-  }
-
-  // detail — строка
-  if (typeof errorData.detail === 'string') {
-    return errorData.detail;
-  }
-
-  // detail — массив (Pydantic)
-  if (Array.isArray(errorData.detail)) {
-    return errorData.detail
-      .map(err => err.msg)
-      .join(', ');
-  }
-
-  // detail — объект
-  if (typeof errorData.detail === 'object') {
-    return Object.values(errorData.detail)
-      .map(err => err.msg || err)
-      .join(', ');
-  }
-
-  return 'Неизвестная ошибка';
-};
-
+    let errorData = {};
+    try {
+      errorData = await response.json();
+    } catch {
+      return `Ошибка ${response.status}`;
+    }
+    if (!errorData.detail) {
+      return `Ошибка ${response.status}`;
+    }
+    if (typeof errorData.detail === 'string') {
+      return errorData.detail;
+    }
+    if (Array.isArray(errorData.detail)) {
+      return errorData.detail
+        .map(err => err.msg)
+        .join(', ');
+    }
+    if (typeof errorData.detail === 'object') {
+      return Object.values(errorData.detail)
+        .map(err => err.msg || err)
+        .join(', ');
+    }
+    return 'Неизвестная ошибка';
+  };
 
   useEffect(() => {
     const fetchStaffData = async () => {
@@ -131,11 +120,7 @@ const AdminEmployeeEdit = () => {
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    
-    // Отмечаем поле как "тронутое"
     setTouched(prev => ({ ...prev, [field]: true }));
-    
-    // Очищаем ошибки для этого поля
     if (errors[field]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -143,8 +128,6 @@ const AdminEmployeeEdit = () => {
         return newErrors;
       });
     }
-    
-    // Очищаем серверные ошибки при изменении поля
     if (serverErrors[field]) {
       setServerErrors(prev => {
         const newServerErrors = { ...prev };
@@ -154,19 +137,16 @@ const AdminEmployeeEdit = () => {
     }
   };
 
-  // Валидация поля при потере фокуса
   const handleBlur = (field) => {
     setTouched(prev => ({ ...prev, [field]: true }));
     validateField(field);
   };
 
-  // Валидация отдельного поля
   const validateField = (fieldName) => {
     if (!touched[fieldName] && !formSubmitted) return;
 
     const newErrors = { ...errors };
     let hasError = false;
-
     switch (fieldName) {
       case 'login':
         if (!form.login || !form.login.trim()) {
@@ -179,9 +159,7 @@ const AdminEmployeeEdit = () => {
           delete newErrors.login;
         }
         break;
-        
       case 'password':
-        // Пароль не обязателен при редактировании, но если введен - проверяем длину
         if (form.password && form.password.trim() && form.password.length < 6) {
           newErrors.password = 'Пароль должен содержать минимум 6 символов';
           hasError = true;
@@ -189,7 +167,6 @@ const AdminEmployeeEdit = () => {
           delete newErrors.password;
         }
         break;
-        
       case 'contractNumber':
         if (!form.contractNumber || !form.contractNumber.trim()) {
           newErrors.contractNumber = 'Номер договора обязателен';
@@ -198,7 +175,6 @@ const AdminEmployeeEdit = () => {
           delete newErrors.contractNumber;
         }
         break;
-        
       case 'role':
         if (!form.role) {
           newErrors.role = 'Уровень прав обязателен';
@@ -207,7 +183,6 @@ const AdminEmployeeEdit = () => {
           delete newErrors.role;
         }
         break;
-        
       case 'employmentStatus':
         if (!form.employmentStatus) {
           newErrors.employmentStatus = 'Статус трудоустройства обязателен';
@@ -216,7 +191,6 @@ const AdminEmployeeEdit = () => {
           delete newErrors.employmentStatus;
         }
         break;
-        
       default:
         break;
     }
@@ -226,12 +200,9 @@ const AdminEmployeeEdit = () => {
     }
   };
 
-  // Полная валидация формы перед отправкой
   const validateForm = () => {
     const newErrors = {};
     let isValid = true;
-
-    // Проверка логина
     if (!form.login || !form.login.trim()) {
       newErrors.login = 'Логин обязателен';
       isValid = false;
@@ -239,26 +210,18 @@ const AdminEmployeeEdit = () => {
       newErrors.login = 'Логин должен содержать минимум 3 символа';
       isValid = false;
     }
-
-    // Проверка пароля (только если введен)
     if (form.password && form.password.trim() && form.password.length < 6) {
       newErrors.password = 'Пароль должен содержать минимум 6 символов';
       isValid = false;
     }
-
-    // Проверка номера договора
     if (!form.contractNumber || !form.contractNumber.trim()) {
       newErrors.contractNumber = 'Номер договора обязателен';
       isValid = false;
     }
-
-    // Проверка уровня прав
     if (!form.role) {
       newErrors.role = 'Уровень прав обязателен';
       isValid = false;
     }
-
-    // Проверка статуса трудоустройства
     if (!form.employmentStatus) {
       newErrors.employmentStatus = 'Статус трудоустройства обязателен';
       isValid = false;
@@ -277,44 +240,37 @@ const AdminEmployeeEdit = () => {
     return isValid;
   };
 
-  // Функция для объединения ошибок валидации и серверных ошибок
   const getFieldError = (fieldName) => {
     return serverErrors[fieldName] || errors[fieldName];
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return; // Прерываем отправку при ошибках валидации
+    if (!validateForm()) return;
     
     setSaving(true);
     setServerErrors({});
     
     try {
-      // Подготавливаем данные для отправки
       const requestData = {};
       
-      // Добавляем логин, если он изменился
       if (form.login !== undefined && form.login !== '') {
         requestData.login = form.login;
       }
       
-      // Добавляем пароль, если он не пустой
       if (form.password && form.password.trim() !== '') {
         requestData.password = form.password;
       }
       
-      // Добавляем номер договора
       if (form.contractNumber !== undefined) {
         requestData.contract_number = form.contractNumber;
       }
       
-      // Добавляем уровень прав
       if (isMegaAdmin) {
         requestData.rights_level = "1";
       } else if (form.role !== undefined) {
         requestData.rights_level = String(form.role);
       }
       
-      // Добавляем статус трудоустройства
       if (form.employmentStatus !== undefined) {
         requestData.employment_status_id = parseInt(form.employmentStatus);
       }
@@ -331,14 +287,13 @@ const AdminEmployeeEdit = () => {
       });
 
       if (!response.ok) {
-  const message = await extractErrorMessage(response);
-  throw new Error(message);
-}
+        const message = await extractErrorMessage(response);
+        throw new Error(message);
+      }
 
       const result = await response.json();
       alert(result.message || 'Сотрудник успешно обновлён');
       
-      // Обновляем форму с сервера, чтобы получить актуальные данные
       const updatedResponse = await fetch(`${API_BASE_URL}/api/staff/${id}`, {
         headers: { 
           'Authorization': `Bearer ${localStorage.getItem('authToken')}` 
@@ -349,27 +304,24 @@ const AdminEmployeeEdit = () => {
         setForm({
           id: updatedData.id,
           login: updatedData.login,
-          password: '', // Сбрасываем поле пароля
+          password: '',
           contractNumber: updatedData.contract_number,
           role: updatedData.rights_level,
           employmentStatus: updatedData.employment_status_id,
         });
-        // Сбрасываем ошибки после успешного сохранения
         setErrors({});
         setServerErrors({});
         setFormSubmitted(false);
       }
       
     } catch (err) {
-  console.error('Ошибка обновления сотрудника:', err);
-  alert(err.message); // ← теперь detail всегда здесь
-}
- finally {
+      console.error('Ошибка обновления сотрудника:', err);
+      alert(err.message);
+    } finally {
       setSaving(false);
     }
   };
 
-  // Проверка заполнения обязательных полей для активации кнопки
   const isFormValid = () => {
     return (
       form &&
@@ -470,9 +422,9 @@ const AdminEmployeeEdit = () => {
               .filter((level) => {
                 const roleNum = Number(user?.role);
                 if (roleNum === 1) {
-                  return level.id !== 1; // мегаадмин видит все кроме "Мегаадмин"
+                  return level.id !== 1;
                 }
-                return level.id === 3 || level.id === 4; // админ видит только брокер и верификатор
+                return level.id === 3 || level.id === 4;
               })
               .map((level) => (
                 <option key={level.id} value={level.id}>
@@ -488,7 +440,6 @@ const AdminEmployeeEdit = () => {
         <div className="form-group">
           <label>Уровень прав</label>
           <input value="Мегаадминистратор" disabled />
-          {/* Скрытое поле, чтобы форма знала значение */}
           <input type="hidden" value={form.role || ''} />
         </div>
       )}

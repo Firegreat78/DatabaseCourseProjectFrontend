@@ -13,22 +13,15 @@ const PortfolioPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-
-  // Статус верификации
   const [isVerified, setIsVerified] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(true);
-
-  // Статус блокировки
   const [isBanned, setIsBanned] = useState(false);
   const [banCheckLoading, setBanCheckLoading] = useState(true);
-
-  // Проверка блокировки
   const checkBanStatus = async () => {
     if (!user?.token || !user?.id) {
       setBanCheckLoading(false);
       return;
     }
-
     setBanCheckLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/user/user_ban_status/${user.id}`, {
@@ -46,8 +39,6 @@ const PortfolioPage = () => {
       setBanCheckLoading(false);
     }
   };
-
-  // Загрузка статуса верификации
   const fetchVerificationStatus = async () => {
     if (!user?.token || !user?.id) {
       setVerificationLoading(false);
@@ -104,7 +95,6 @@ const PortfolioPage = () => {
       setRefreshing(false);
     }
   };
-
   useEffect(() => {
     checkBanStatus();
     fetchVerificationStatus();
@@ -116,8 +106,6 @@ const PortfolioPage = () => {
     fetchPortfolio(true);
     fetchVerificationStatus();
   };
-
-  // Вспомогательная функция для склонения
   const declOfNum = (number, titles) => {
     const cases = [2, 0, 1, 1, 1, 2];
     return titles[
@@ -126,8 +114,6 @@ const PortfolioPage = () => {
         : cases[number % 10 < 5 ? number % 10 : 5]
     ];
   };
-
-  // Если пользователь не авторизован
   if (!user) {
     return (
       <div className="portfolio-container">
@@ -138,8 +124,6 @@ const PortfolioPage = () => {
       </div>
     );
   }
-
-  // Если пользователь заблокирован
   if (isBanned) {
     return (
       <div className="portfolio-container">
@@ -154,8 +138,6 @@ const PortfolioPage = () => {
       </div>
     );
   }
-
-  // Пока идёт проверка блокировки
   if (banCheckLoading) {
     return (
       <div className="portfolio-container">
@@ -186,8 +168,6 @@ const PortfolioPage = () => {
             />
           </button>
         </div>
-
-        {/* Предупреждение о верификации — отображается всегда, если пользователь не верифицирован */}
         {verificationLoading ? (
           <div className="status-message loading">Проверка статуса верификации...</div>
         ) : !isVerified ? (

@@ -5,20 +5,15 @@ import './ProfilePage.css';
 import { useAuth } from '../context/AuthContext';
 import { User, Mail, Calendar, ShieldCheck, ShieldAlert, LogOut, AlertTriangle, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
 const API_BASE_URL = 'http://localhost:8000';
-
 const ProfilePage = () => {
   const [clientData, setClientData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isBanned, setIsBanned] = useState(false);
   const [banCheckLoading, setBanCheckLoading] = useState(true);
-
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-
-  // Проверка статуса блокировки
   const checkBanStatus = async () => {
     if (!user?.id || !user?.token) {
       setBanCheckLoading(false);
@@ -43,8 +38,6 @@ const ProfilePage = () => {
       setBanCheckLoading(false);
     }
   };
-
-  // Загрузка данных профиля
   const fetchClient = async () => {
   try {
     const response = await fetch(
@@ -55,9 +48,7 @@ const ProfilePage = () => {
         },
       }
     );
-
     const data = await response.json();
-
     if (!response.ok) {
       throw new Error(data.detail || 'Ошибка загрузки профиля');
     }
@@ -92,10 +83,6 @@ const ProfilePage = () => {
 
   const isVerified = clientData?.verificationStatusId === 2;
 const isPendingVerification = clientData?.verificationStatusId === 3;
-const isNotVerified = clientData?.verificationStatusId === 1 || clientData?.verificationStatusId === undefined;
-  
-
-  // Если пользователь заблокирован — показываем только хедер и сообщение
   if (isBanned) {
     return (
       <div className="client-profile-page">
@@ -110,8 +97,6 @@ const isNotVerified = clientData?.verificationStatusId === 1 || clientData?.veri
       </div>
     );
   }
-
-  // Если идёт проверка блокировки
   if (banCheckLoading || loading) {
     return (
       <div className="client-profile-page">
@@ -122,8 +107,6 @@ const isNotVerified = clientData?.verificationStatusId === 1 || clientData?.veri
       </div>
     );
   }
-
-  // Если ошибка
   if (error) {
     return (
       <div className="client-profile-page">
@@ -135,8 +118,6 @@ const isNotVerified = clientData?.verificationStatusId === 1 || clientData?.veri
       </div>
     );
   }
-
-  // Обычный профиль
   return (
     <div className="client-profile-page">
       <AppHeader />
@@ -148,7 +129,6 @@ const isNotVerified = clientData?.verificationStatusId === 1 || clientData?.veri
             <h1>Личный кабинет</h1>
             <p>ID: {user?.id}</p>
           </div>
-
           <div className="profile-grid">
             <div className="info-item">
               <Mail size={20} />
@@ -157,7 +137,6 @@ const isNotVerified = clientData?.verificationStatusId === 1 || clientData?.veri
                 <span className="value">{clientData.email}</span>
               </div>
             </div>
-
             <div className="info-item">
               <Calendar size={20} />
               <div>
@@ -165,7 +144,6 @@ const isNotVerified = clientData?.verificationStatusId === 1 || clientData?.veri
                 <span className="value">{clientData.registrationDate}</span>
               </div>
             </div>
-
             <div className="info-item">
               {isVerified ? <ShieldCheck size={20} /> : <ShieldAlert size={20} />}
               <div>
@@ -186,7 +164,7 @@ const isNotVerified = clientData?.verificationStatusId === 1 || clientData?.veri
           </div>
 
           <div className="profile-actions">
-  {clientData?.verificationStatusId === 1 && ( // <-- Изменённое условие
+  {clientData?.verificationStatusId === 1 && (
     <button 
       onClick={() => navigate('/verification')} 
       className="btn-primary"

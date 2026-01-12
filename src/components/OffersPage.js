@@ -5,38 +5,25 @@ import AppHeader from './AppHeader';
 import { RefreshCw, X, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './OffersPage.css';
-
 const API_BASE_URL = 'http://localhost:8000';
-
 const OffersPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-
   const [offers, setOffers] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
-
-  // Статус верификации
   const [isVerified, setIsVerified] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(true);
-
-  // Статус блокировки
   const [isBanned, setIsBanned] = useState(false);
   const [banCheckLoading, setBanCheckLoading] = useState(true);
-
-  // ===== Modal =====
   const [modalOpen, setModalOpen] = useState(false);
   const [securities, setSecurities] = useState([]);
   const [accounts, setAccounts] = useState([]);
-
   const [selectedSecurity, setSelectedSecurity] = useState('');
   const [selectedAccount, setSelectedAccount] = useState('');
   const [quantity, setQuantity] = useState('');
-
   const [cancellingId, setCancellingId] = useState(null);
-
   const openModal = () => setModalOpen(true);
   const closeModal = () => {
     setModalOpen(false);
@@ -44,10 +31,6 @@ const OffersPage = () => {
     setSelectedAccount('');
     setQuantity('');
   };
-
-  
-
-  // ===== Статусы предложений =====
   const getStatusInfo = (statusId) => {
     switch (statusId) {
       case 1:
@@ -60,20 +43,16 @@ const OffersPage = () => {
         return { text: 'Неизвестно', color: 'pending' };
     }
   };
-
-  // ===== Загрузка статуса верификации =====
   const fetchVerificationStatus = async () => {
     if (!user?.token || !user?.id) {
       setVerificationLoading(false);
       return;
     }
-
     setVerificationLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/user/user_verification_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
-
       if (!res.ok) throw new Error();
       const data = await res.json();
       setIsVerified(data.is_verified);
@@ -84,15 +63,11 @@ const OffersPage = () => {
       setVerificationLoading(false);
     }
   };
-
-  // ===== Отмена предложения =====
   const handleCancelOffer = async (proposalId) => {
     if (!window.confirm('Вы уверены, что хотите отменить это предложение?')) {
       return;
     }
-
     setCancellingId(proposalId);
-    
     try {
       const res = await fetch(`${API_BASE_URL}/api/user/proposal/${proposalId}/cancel`, {
         method: 'PATCH',
@@ -101,18 +76,12 @@ const OffersPage = () => {
           'Content-Type': 'application/json',
         },
       });
-
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.detail || `Ошибка отмены предложения: ${res.status}`);
       }
-
       const data = await res.json();
-      
-      // Показываем сообщение об успехе
       alert(data.message || 'Предложение успешно отменено');
-      
-      // Обновляем список предложений
       await fetchOffers();
       
     } catch (err) {
@@ -122,8 +91,6 @@ const OffersPage = () => {
       setCancellingId(null);
     }
   };
-
-  // ===== Проверка блокировки =====
   const checkBanStatus = async () => {
     if (!user?.token || !user?.id) {
       setBanCheckLoading(false);
@@ -146,8 +113,6 @@ const OffersPage = () => {
       setBanCheckLoading(false);
     }
   };
-
-  // ===== Fetch offers =====
   const fetchOffers = async (isRefresh = false) => {
     if (!user?.token) return;
 
@@ -175,8 +140,6 @@ const OffersPage = () => {
       setRefreshing(false);
     }
   };
-
-  // ===== Fetch securities =====
   const fetchSecurities = async () => {
     if (!user?.token) return;
 
@@ -192,8 +155,6 @@ const OffersPage = () => {
       setSecurities([]);
     }
   };
-
-  // ===== Fetch accounts =====
   const fetchAccounts = async () => {
     if (!user?.token) return;
 
@@ -225,36 +186,24 @@ const OffersPage = () => {
   const handleRefresh = () => {
     fetchOffers(true);
     fetchVerificationStatus();
-    checkBanStatus();  // Добавляем повторную проверку блокировки при обновлении
+    checkBanStatus();
   };
-
-  // ===== Валидация ввода количества =====
   const handleQuantityChange = (e) => {
     const value = e.target.value;
-    
-    // Разрешаем: пустую строку, или только цифры, начинающиеся не с нуля
     if (value === '') {
       setQuantity('');
       return;
     }
-    
-    // Проверяем, что значение содержит только цифры
     if (!/^\d+$/.test(value)) {
-      return; // Игнорируем ввод, если это не только цифры
+      return;
     }
-    
-    // Убираем ведущие нули и преобразуем в число
     const numValue = parseInt(value, 10);
-    
-    // Проверяем, что число положительное
     if (numValue > 0) {
       setQuantity(String(numValue));
     } else if (value === '0') {
-      setQuantity(''); // Скрываем нулевое значение
+      setQuantity('');
     }
   };
-
-  // ===== Create offer =====
   const handleSubmit = async (proposalTypeId) => {
     const qty = Number(quantity);
 
@@ -290,8 +239,6 @@ const OffersPage = () => {
       alert(err.message);
     }
   };
-
-  // Если пользователь не авторизован
   if (!user) {
     return (
       <div className="offers-container">
@@ -304,8 +251,6 @@ const OffersPage = () => {
       </div>
     );
   }
-
-  // Если пользователь заблокирован — только хедер и сообщение
   if (isBanned) {
     return (
       <div className="offers-container">
@@ -320,8 +265,6 @@ const OffersPage = () => {
       </div>
     );
   }
-
-  // Пока идёт проверка блокировки
   if (banCheckLoading) {
     return (
       <div className="offers-container">
@@ -332,8 +275,6 @@ const OffersPage = () => {
       </div>
     );
   }
-
-  // Основной контент для разблокированных пользователей
   return (
     <div className="offers-container">
       <AppHeader />
@@ -437,22 +378,17 @@ const OffersPage = () => {
                     </div>
                   )}
                 </div>
-                
               );
             })}
           </div>
         )}
-
-        {/* ===== Modal ===== */}
         {modalOpen && (
           <div className="modal-overlay">
             <div className="modal">
               <button className="modal-close" onClick={closeModal}>
                 <X size={18} />
               </button>
-
               <h2>Добавить предложение</h2>
-
               <div className="modal-row">
                 <label>Акция</label>
                 <select
@@ -467,7 +403,6 @@ const OffersPage = () => {
                   ))}
                 </select>
               </div>
-
               <div className="modal-row">
                 <label>Брокерский счёт</label>
                 <select
@@ -483,7 +418,6 @@ const OffersPage = () => {
                   ))}
                 </select>
               </div>
-
               <div className="modal-row">
                 <label>Количество лотов</label>
                 <input
@@ -493,7 +427,6 @@ const OffersPage = () => {
                   value={quantity}
                   onChange={handleQuantityChange}
                   onKeyDown={(e) => {
-                    // Блокируем ввод нецифровых символов (кроме Backspace, Delete, Tab, стрелок)
                     if (
                       !/[\d]/.test(e.key) &&
                       !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)
@@ -502,7 +435,6 @@ const OffersPage = () => {
                     }
                   }}
                   onBlur={(e) => {
-                    // При потере фокуса, если значение меньше 1, очищаем поле
                     if (parseInt(e.target.value) < 1) {
                       setQuantity('');
                     }
@@ -510,7 +442,6 @@ const OffersPage = () => {
                   placeholder="Введите целое положительное число"
                 />
               </div>
-
               <div className="modal-actions">
                 <button
                   className="buy-btn"

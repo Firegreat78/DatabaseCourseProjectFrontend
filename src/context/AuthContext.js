@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // { id, role, type ("staff"|"client"), staff_id, user_id, token }
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -14,13 +14,13 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('authToken');
     const userId = localStorage.getItem('userId');
     const role = localStorage.getItem('role');
-    const userType = localStorage.getItem('userType'); // "staff" или "client"
+    const userType = localStorage.getItem('userType');
     const staffId = localStorage.getItem('staffId');
 
     if (token && userId) {
       setUser({
         id: Number(userId),
-        role: userType === 'staff' ? Number(role) : role, // для staff — число, для клиента — "user"
+        role: userType === 'staff' ? Number(role) : role,
         type: userType,
         staff_id: staffId ? Number(staffId) : null,
         user_id: userType === 'client' ? Number(userId) : null,
@@ -31,14 +31,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData) => {
-    const { token, role, staff_id, user_id } = userData; // backend кладёт в токен sub (логин), role, staff_id или user_id
+    const { token, role, staff_id, user_id } = userData;
 
     let userType, idToSave, roleToSave;
 
     if (staff_id !== undefined) {
       userType = 'staff';
       idToSave = staff_id;
-      roleToSave = Number(role); // роль сотрудника всегда число
+      roleToSave = Number(role);
     } else if (user_id !== undefined && role === 'user') {
       userType = 'client';
       idToSave = user_id;
@@ -47,16 +47,14 @@ export const AuthProvider = ({ children }) => {
       throw new Error('Некорректные данные авторизации');
     }
 
-    // Сохраняем в localStorage
     localStorage.setItem('authToken', token);
-    localStorage.setItem('userId', String(idToSave));           // общий id
+    localStorage.setItem('userId', String(idToSave));
     localStorage.setItem('role', String(roleToSave));
     localStorage.setItem('userType', userType);
     if (userType === 'staff') {
       localStorage.setItem('staffId', String(staff_id));
     }
 
-    // Сохраняем в состояние
     setUser({
       id: idToSave,
       role: roleToSave,

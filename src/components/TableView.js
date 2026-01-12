@@ -16,10 +16,8 @@ function TableView({ tableName }) {
         setLoading(false);
       });
   }, [tableName]);
-
   if (loading) return <p>Loading...</p>;
   if (data.error) return <p>{data.error}</p>;
-
   return (
     <table border="1" cellPadding="5">
       <thead>

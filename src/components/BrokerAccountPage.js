@@ -26,18 +26,14 @@ const BrokerAccountPage = () => {
   const { user } = useAuth();
 
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(''); // 'deposit' | 'withdraw'
+  const [modalType, setModalType] = useState('');
   const [amount, setAmount] = useState('');
   const [account, setAccount] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  // Статус блокировки
   const [isBanned, setIsBanned] = useState(false);
   const [banCheckLoading, setBanCheckLoading] = useState(true);
-
-  // Проверка статуса блокировки (с возвратом результата)
   const checkBanStatus = async () => {
     if (!user?.id || !user?.token) {
       setIsBanned(false);
@@ -65,8 +61,6 @@ const BrokerAccountPage = () => {
       setBanCheckLoading(false);
     }
   };
-
-  // Загрузка данных счёта и операций
   const fetchAccountData = async () => {
     if (!user?.token) return;
 
@@ -95,17 +89,15 @@ const BrokerAccountPage = () => {
     }
   };
 
-  // Обновление данных
   const handleRefresh = async () => {
     await checkBanStatus();
     fetchAccountData();
   };
 
-  // --- Удаление счёта ---
   const handleDeleteRequest = async () => {
     const banned = await checkBanStatus();
     if (banned) {
-      return; // Ничего не делаем — рендер покажет блокировку
+      return;
     }
 
     const confirmed = window.confirm(
@@ -117,8 +109,6 @@ const BrokerAccountPage = () => {
     if (!confirmed) {
       return;
     }
-
-    // Финальная проверка блокировки перед отправкой
     const bannedAgain = await checkBanStatus();
     if (bannedAgain) {
       return;
@@ -138,7 +128,7 @@ const BrokerAccountPage = () => {
       }
 
       alert('Брокерский счёт успешно удалён');
-      navigate('/accounts'); // Переход обратно в список счетов
+      navigate('/accounts');
     } catch (err) {
       alert('Ошибка при удалении счёта: ' + err.message);
     }
@@ -149,7 +139,6 @@ const BrokerAccountPage = () => {
     fetchAccountData();
   }, [id, user]);
 
-  // Открытие модального окна с проверкой блокировки
   const handleOpenModal = async (type) => {
     const banned = await checkBanStatus();
     if (banned) {
@@ -160,7 +149,6 @@ const BrokerAccountPage = () => {
     setShowModal(true);
   };
 
-  // Подтверждение операции — финальная проверка блокировки
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -205,7 +193,6 @@ const BrokerAccountPage = () => {
     }
   };
 
-  // Если пользователь заблокирован
   if (isBanned) {
     return (
       <div className="broker-page">
@@ -221,7 +208,6 @@ const BrokerAccountPage = () => {
     );
   }
 
-  // Пока идёт проверка блокировки
   if (banCheckLoading) {
     return (
       <div className="broker-page">
@@ -234,7 +220,6 @@ const BrokerAccountPage = () => {
     );
   }
 
-  // Загрузка данных счёта
   if (loading) {
     return (
       <div className="broker-page">
@@ -246,7 +231,6 @@ const BrokerAccountPage = () => {
     );
   }
 
-  // Ошибка или счёт не найден
   if (error || !account) {
     return (
       <div className="broker-page">
@@ -263,7 +247,6 @@ const BrokerAccountPage = () => {
     );
   }
 
-  // Основной контент
   return (
     <div className="broker-page">
       <AppHeader />

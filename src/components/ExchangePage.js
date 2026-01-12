@@ -1,3 +1,4 @@
+// src/components/ExchangePage.jsx
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AppHeader from './AppHeader';
@@ -8,22 +9,16 @@ const API_BASE_URL = 'http://localhost:8000';
 
 const ExchangePage = () => {
   const { user } = useAuth();
-
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Статус блокировки
   const [isBanned, setIsBanned] = useState(false);
   const [banCheckLoading, setBanCheckLoading] = useState(true);
-
-  // Проверка блокировки
   const checkBanStatus = async () => {
     if (!user?.token || !user?.id) {
       setBanCheckLoading(false);
       return;
     }
-
     setBanCheckLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/user/user_ban_status/${user.id}`, {
@@ -41,8 +36,6 @@ const ExchangePage = () => {
       setBanCheckLoading(false);
     }
   };
-
-  // Загрузка списка акций с биржи
   const fetchStocks = async () => {
     setLoading(true);
     setError('');
@@ -64,8 +57,6 @@ const ExchangePage = () => {
       setLoading(false);
     }
   };
-
-  // Обновление с проверкой блокировки
   const handleRefresh = async () => {
     await checkBanStatus();
     fetchStocks();
@@ -75,8 +66,6 @@ const ExchangePage = () => {
     checkBanStatus();
     fetchStocks();
   }, [user]);
-
-  // Если пользователь не авторизован
   if (!user) {
     return (
       <div className="exchange-container">
@@ -87,8 +76,6 @@ const ExchangePage = () => {
       </div>
     );
   }
-
-  // Если пользователь заблокирован
   if (isBanned) {
     return (
       <div className="exchange-container">
@@ -103,8 +90,6 @@ const ExchangePage = () => {
       </div>
     );
   }
-
-  // Пока идёт проверка блокировки
   if (banCheckLoading) {
     return (
       <div className="exchange-container">

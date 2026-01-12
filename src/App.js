@@ -2,10 +2,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// Контекст авторизации
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Компоненты
 import UserLogin from './components/UserLogin';
 import UserRegistration from './components/UserRegistration';
 import EmployeeLogin from './components/employees/EmployeeLogin';

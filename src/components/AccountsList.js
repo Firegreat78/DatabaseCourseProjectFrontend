@@ -1,3 +1,4 @@
+// src/components/AccountsList.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import AppHeader from './AppHeader';
@@ -234,7 +235,6 @@ const AccountsList = () => {
     }
   };
 
-  // При смене банка обновляем только БИК, а ИНН сбрасываем в пустое значение
   const handleBankChange = (e) => {
     const bankId = e.target.value;
     const bank = banks.find(b => b.id === parseInt(bankId));

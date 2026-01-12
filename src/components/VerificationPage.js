@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from './AppHeader';
 import { useAuth } from '../context/AuthContext';
-
 import {
   User,
   Calendar,
@@ -18,8 +17,7 @@ import './VerificationPage.css';
 
 const VerificationPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth(); // user = { id, role, token }
-
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     lastName: '',
     firstName: '',
@@ -29,126 +27,88 @@ const VerificationPage = () => {
     gender: 'м',
     birthDate: '',
     birthPlace: '',
-    registrationPlace: '',  // <-- добавлено
+    registrationPlace: '',
     issueDate: '',
     issuedBy: ''
   });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // Для полей ФИО разрешаем только русские буквы, дефис и пробел
     if (['lastName', 'firstName', 'middleName'].includes(name)) {
-      // Удаляем все символы, кроме русских букв, дефиса и пробела
       const cleanedValue = value.replace(/[^А-Яа-яЁё\-\s]/g, '');
       setFormData(prev => ({ ...prev, [name]: cleanedValue }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
-
   const handleGender = (gender) => {
     setFormData(prev => ({ ...prev, gender }));
   };
-
   const nameRegex = /^[А-Яа-яЁё\- ]+$/;
   const digitsOnly = /^\d+$/;
-
-  // Функция для точного расчета возраста
   const calculateAge = (fromDate, toDate) => {
     const from = new Date(fromDate);
     const to = new Date(toDate);
-    
     let years = to.getFullYear() - from.getFullYear();
     const monthDiff = to.getMonth() - from.getMonth();
     const dayDiff = to.getDate() - from.getDate();
-    
-    // Если месяц ещё не наступил или месяц тот же, но день ещё не наступил
     if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
       years--;
     }
-    
     return years;
   };
-
   const validateForm = () => {
-    // ФИО
     if (!nameRegex.test(formData.lastName) || formData.lastName.length < 2) {
       return 'Фамилия должна содержать только кириллицу и быть не короче 2 символов';
     }
-
     if (!nameRegex.test(formData.firstName) || formData.firstName.length < 2) {
       return 'Имя должно содержать только кириллицу и быть не короче 2 символов';
     }
-
     if (!nameRegex.test(formData.middleName) || formData.middleName.length < 2) {
       return 'Отчество должно содержать только кириллицу и быть не короче 2 символов';
     }
-
-    // Серия
     if (!digitsOnly.test(formData.series) || formData.series.length !== 4) {
       return 'Серия паспорта должна состоять из 4 цифр';
     }
-
-    // Номер
     if (!digitsOnly.test(formData.number) || formData.number.length !== 6) {
       return 'Номер паспорта должен состоять из 6 цифр';
     }
-
-    // Пол
     if (!['м', 'ж'].includes(formData.gender)) {
       return 'Некорректно указан пол';
     }
-
-    // Проверка дат
     const birthDate = new Date(formData.birthDate);
     const issueDate = new Date(formData.issueDate);
     const now = new Date();
-
-    // 1. Если дата выдачи паспорта < дата рождения
     if (issueDate < birthDate) {
       return 'Дата выдачи паспорта не может быть меньше даты рождения';
     }
-
-    // 2. Если дата выдачи паспорта > текущая дата
     if (issueDate > now) {
       return 'Дата выдачи паспорта не может быть в будущем';
     }
-
-    // 3. Если дата рождения > текущая дата
     if (birthDate > now) {
       return 'Дата рождения не может быть в будущем';
     }
 
-    // 4. Если дата выдачи паспорта - Дата рождения < 14 лет
     const ageAtIssue = calculateAge(formData.birthDate, formData.issueDate);
     if (ageAtIssue < 14) {
       return 'Паспорт не может быть выдан лицу, которому не исполнилось 14 лет';
     }
-
-    // 5. Если Текущая дата - Дата рождения < 18 лет
     const currentAge = calculateAge(formData.birthDate, new Date());
     if (currentAge < 18) {
       return 'Регистрация возможна только для лиц, достигших совершеннолетия';
     }
-
-    // Текстовые поля
     if (formData.birthPlace.length < 5) {
       return 'Место рождения указано некорректно';
     }
-
     if (formData.registrationPlace.length < 5) {
       return 'Место прописки указано некорректно';
     }
-
     if (formData.issuedBy.length < 5) {
       return 'Поле "Кем выдан" заполнено некорректно';
     }
-
     return null;
   };
 
@@ -176,7 +136,7 @@ const VerificationPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`, // <-- токен из контекста
+          'Authorization': `Bearer ${user.token}`,
         },
         body: JSON.stringify(formData)
       });
@@ -187,14 +147,12 @@ const VerificationPage = () => {
       }
 
       setSuccess('Верификация успешно отправлена! Ожидайте подтверждения в течение 1–3 дней.');
-      // setTimeout(() => navigate('/profile'), 3000);
     } catch (err) {
       setError(err.message || 'Ошибка отправки данных. Попробуйте позже.');
     } finally {
       setIsSubmitting(false);
     }
   };
-
   return (
     <div className="verification-page">
       <AppHeader />

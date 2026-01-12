@@ -1,4 +1,3 @@
-// src/components/AdminHeader.jsx
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -9,14 +8,13 @@ import {
   ArrowLeftRight,
   User,
   LogOut,
-  Book // Добавляем иконку для словарей
+  Book
 } from 'lucide-react';
 import './../AppHeader.css';
 
 const AdminHeader = () => {
   const { user, employee_logout } = useAuth();
 
-  // Если пользователь не авторизован — хедер не отображаем
   if (!user) {
     return null;
   }
@@ -29,7 +27,6 @@ const AdminHeader = () => {
 
   return (
     <header className="app-header">
-      {/* Логотип — ведёт на главную админки */}
       <NavLink to="/admin/main" className="logo-link">
         <div className="logo">
           <div className="logo-icon">
@@ -40,8 +37,7 @@ const AdminHeader = () => {
         </div>
       </NavLink>
 
-      {/* Основная навигация для админа */}
-            <nav className="nav">
+      <nav className="nav">
         <NavLink
           to="/admin/main"
           className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
@@ -66,7 +62,6 @@ const AdminHeader = () => {
           <span>Биржа</span>
         </NavLink>
 
-        {/* НОВАЯ ВКЛАДКА: Банки */}
         <NavLink
           to="/admin/modify_banks"
           className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
@@ -75,7 +70,6 @@ const AdminHeader = () => {
           <span>Банки</span>
         </NavLink>
 
-        {/* НОВАЯ ВКЛАДКА: Валюты */}
         <NavLink
           to="/admin/modify_currency"
           className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
@@ -85,7 +79,6 @@ const AdminHeader = () => {
         </NavLink>
       </nav>
 
-      {/* Правая часть: профиль + выход */}
       <div className="header-right">
         <NavLink
           to="/employee/profile"
