@@ -13,9 +13,7 @@ import {
   ShieldCheck,
   ShieldAlert
 } from 'lucide-react';
-
 const API_BASE_URL = 'http://localhost:8000';
-
 const DepositaryAccount = () => {
   const { user, logout } = useAuth();
   const [depositaryData, setDepositaryData] = useState(null);

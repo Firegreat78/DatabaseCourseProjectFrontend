@@ -1,4 +1,4 @@
-// src/components/EmployeeHeader.jsx
+// src/components/employees/EmployeeHeader.jsx
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -8,25 +8,18 @@ import {
   LogOut
 } from 'lucide-react';
 import '../AppHeader.css';
-
 const EmployeeHeader = () => {
   const { user, employee_logout } = useAuth();
-
-  // Если пользователь не авторизован — хедер не отображаем
-  // (на страницах логина/регистрации он и не нужен)
   if (!user) {
     return null;
   }
-
   const handleLogout = () => {
     if (window.confirm('Вы действительно хотите выйти из аккаунта?')) {
-      employee_logout(); // очистит localStorage и перенаправит на /login
+      employee_logout();
     }
   };
-
   return (
     <header className="app-header">
-      {/* Логотип — ведёт на список счетов */}
         <div className="logo">
           <div className="logo-icon">
             <Wallet size={28} strokeWidth={2} />
@@ -34,10 +27,6 @@ const EmployeeHeader = () => {
           <h1 className="logo-text">МИД</h1>
           <div className="logo-glow"></div>
         </div>
-
-      {/* Основная навигация */}
-
-      {/* Правая часть: профиль + выход */}
       <div className="header-right">
        <NavLink
         to="/employee/profile"
@@ -48,7 +37,6 @@ const EmployeeHeader = () => {
             <User size={22} strokeWidth={2} />
           </div>
         </NavLink>
-
         <button
           onClick={handleLogout}
           className="logout-button"
@@ -62,5 +50,4 @@ const EmployeeHeader = () => {
     </header>
   );
 };
-
 export default EmployeeHeader;

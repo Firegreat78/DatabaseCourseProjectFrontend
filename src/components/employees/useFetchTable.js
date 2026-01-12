@@ -1,13 +1,10 @@
 import { useState, useEffect } from "react";
-
 export const useFetchTable = (tableName, token) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   useEffect(() => {
-    if (!token) return; // если нет токена, не запрашиваем
-
+    if (!token) return;
     const fetchData = async () => {
       try {
         const response = await fetch(`http://localhost:8000/api/public/${tableName}`, {
@@ -22,9 +19,7 @@ export const useFetchTable = (tableName, token) => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [tableName, token]);
-
   return { data, loading, error };
 };

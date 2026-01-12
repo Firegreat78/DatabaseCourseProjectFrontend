@@ -1,3 +1,4 @@
+// src/components/employees/AdminUserDetail.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './AdminUserEdit.css';

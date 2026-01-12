@@ -3,10 +3,8 @@ import AdminHeader from "./AdminHeader";
 import "./ModifyCurrencyPage.css";
 
 const API_BASE_URL = "http://localhost:8000";
-
 const ModifyCurrencyPage = () => {
   const token = localStorage.getItem("authToken");
-
   const [currencies, setCurrencies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -17,7 +15,6 @@ const ModifyCurrencyPage = () => {
     symbol: "",
     rate: ""
   });
-
   const fetchCurrencies = async () => {
     setLoading(true);
     setError("");
@@ -30,13 +27,10 @@ const ModifyCurrencyPage = () => {
         throw new Error(errData.detail || "Ошибка загрузки валют");
       }
       const data = await res.json();
-
-      // Добавляем поля для локального редактирования
       const enriched = data.map(curr => ({
         ...curr,
         edited_code: curr.code,
         edited_symbol: curr.symbol,
-        // Для архивных валют используем прочерк вместо значения курса
         edited_rate: curr.archived ? "—" : (curr.rate_to_ruble !== null ? parseFloat(curr.rate_to_ruble).toFixed(4) : "")
       }));
 

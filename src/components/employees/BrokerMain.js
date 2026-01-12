@@ -1,3 +1,4 @@
+// src/components/employees/BrokerMain.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EmployeeHeader from "./EmployeeHeader";
@@ -14,7 +15,6 @@ const BrokerMainPage = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Загрузка списка ID заявок
   const fetchProposalIds = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/broker/proposal`, {
@@ -35,7 +35,6 @@ const BrokerMainPage = () => {
     }
   };
 
-  // Загрузка полной информации по каждой заявке
   const fetchProposalById = async (id) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/broker/proposal/${id}`, {
@@ -80,7 +79,6 @@ const BrokerMainPage = () => {
       maximumFractionDigits: 2,
     });
 
-  // Фильтр поиска
   const filteredProposals = proposals.filter((p) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
@@ -93,7 +91,6 @@ const BrokerMainPage = () => {
     );
   });
 
-  // Преобразование статуса в текст и цвет
   const getStatusLabel = (status) => {
     switch (status) {
       case 1:

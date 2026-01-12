@@ -1,3 +1,4 @@
+// src/components/employees/DepositaryOperationsChart.jsx
 import React, { useEffect, useState } from "react";
 import {
   BarChart,
@@ -44,15 +45,6 @@ const DepositaryOperationsChart = () => {
 
         const result = await response.json();
 
-        // === ВРЕМЕННЫЙ ДЕБАГ === 
-        // Откройте консоль браузера (F12 → Console) и посмотрите, что именно пришло
-        console.log("=== RAW JSON от /api/depositary-operations ===");
-        console.log(JSON.stringify(result, null, 2));
-        console.log("Тип результата:", typeof result);
-        console.log("Это массив?", Array.isArray(result));
-        // === КОНЕЦ ДЕБАГА ===
-
-        // Защищённая установка (чтобы приложение не падало во время отладки)
         if (Array.isArray(result)) {
           setData(result);
         } else {

@@ -1,11 +1,9 @@
-// src/pages/EmployeeLogin.jsx
+// src/components/employees/EmployeeLogin.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './EmployeeLogin.css';
-
 const API_BASE_URL = 'http://localhost:8000';
-
 const EmployeeLogin = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -13,12 +11,10 @@ const EmployeeLogin = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/public/login/staff`, {
         method: 'POST',
@@ -28,20 +24,15 @@ const EmployeeLogin = () => {
           password,
         }),
       });
-
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.detail || 'Ошибка входа');
       }
-
-      // Новый формат для AuthContext.login — передаём staff_id и role
       login({
         token: data.access_token,
-        staff_id: data.user_id,   // на бэкенде для сотрудников это staff_id
-        role: data.role,          // число (1-5)
+        staff_id: data.user_id,
+        role: data.role,       
       });
-
-      // Редирект по роли
       const roleNum = Number(data.role);
       if (isNaN(roleNum)) {
         throw new Error('Неизвестная роль');

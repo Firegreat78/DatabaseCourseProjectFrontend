@@ -1,3 +1,4 @@
+// src/components/employees/BrokerDealDetail.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import EmployeeHeader from "./EmployeeHeader";
@@ -70,7 +71,6 @@ const BrokerDealDetail = () => {
     const data = await response.json();
     
     if (!response.ok) {
-      // Проверяем, есть ли сообщение об ошибке в ответе
       throw new Error(data.detail || data.message || `Ошибка ${response.status}`);
     }
 
@@ -129,7 +129,6 @@ const BrokerDealDetail = () => {
             </div>
           </div>
 
-          {/* КНОПКИ ИЛИ СТАТУС */}
           {status === 3 && token ? (
             <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
               <button

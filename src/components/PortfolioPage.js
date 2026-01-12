@@ -4,9 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import AppHeader from './AppHeader';
 import { RefreshCw, Lock } from 'lucide-react';
 import './PortfolioPage.css';
-
 const API_BASE_URL = 'http://localhost:8000';
-
 const PortfolioPage = () => {
   const { user } = useAuth();
   const [securities, setSecurities] = useState([]);
@@ -27,9 +25,7 @@ const PortfolioPage = () => {
       const res = await fetch(`${API_BASE_URL}/api/user/user_ban_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
-
       if (!res.ok) throw new Error();
-
       const data = await res.json();
       setIsBanned(data.is_banned);
     } catch (err) {
@@ -44,13 +40,11 @@ const PortfolioPage = () => {
       setVerificationLoading(false);
       return;
     }
-
     setVerificationLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/user/user_verification_status/${user.id}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
-
       if (!res.ok) throw new Error();
       const data = await res.json();
       setIsVerified(data.is_verified);
@@ -61,7 +55,6 @@ const PortfolioPage = () => {
       setVerificationLoading(false);
     }
   };
-
   const fetchPortfolio = async (isRefresh = false) => {
     if (!user?.id || !user?.token) {
       setError('Пользователь не авторизован');
@@ -72,19 +65,16 @@ const PortfolioPage = () => {
     if (!isRefresh) setLoading(true);
     if (isRefresh) setRefreshing(true);
     setError('');
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/user/portfolio/securities`, {
         headers: {
           'Authorization': `Bearer ${user.token}`,
         },
       });
-
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         throw new Error(errData.detail || 'Ошибка загрузки портфеля');
       }
-
       const data = await response.json();
       setSecurities(data);
     } catch (err) {
@@ -148,11 +138,9 @@ const PortfolioPage = () => {
       </div>
     );
   }
-
   return (
     <div className="portfolio-container">
       <AppHeader />
-
       <div className="content">
         <div className="page-header">
           <h1>Мой портфель</h1>
@@ -177,7 +165,6 @@ const PortfolioPage = () => {
             </p>
           </div>
         ) : null}
-
         {loading && !refreshing ? (
           <div className="status-message loading">Загрузка портфеля...</div>
         ) : error ? (
@@ -204,7 +191,6 @@ const PortfolioPage = () => {
                   <div className="security-header">
                     <div className="security-name">{asset.security_name}</div>
                   </div>
-
                   <div className="security-details">
                     <div className="detail-row">
                       <span className="label">Количество</span>
@@ -218,14 +204,12 @@ const PortfolioPage = () => {
                         )}
                       </span>
                     </div>
-
                     {lotSize > 1 && (
                       <div className="detail-row">
                         <span className="label">Размер лота</span>
                         <span className="value">{lotSize.toLocaleString('ru-RU')} шт.</span>
                       </div>
                     )}
-
                     <div className="detail-row">
                       <span className="label">ISIN</span>
                       <span className="value isin">{asset.isin || '—'}</span>

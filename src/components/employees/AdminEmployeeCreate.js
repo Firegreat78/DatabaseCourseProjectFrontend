@@ -3,13 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './AdminEmployeeEdit.css';
-
 const API_BASE_URL = 'http://localhost:8000';
-
 const AdminEmployeeCreate = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     login: '',
     password: '',
@@ -17,7 +14,6 @@ const AdminEmployeeCreate = () => {
     rights_level: '',
     employment_status_id: '',
   });
-
   const [rightsLevels, setRightsLevels] = useState([]);
   const [statuses, setStatuses] = useState([]);
 
@@ -42,13 +38,11 @@ const AdminEmployeeCreate = () => {
             },
           }),
         ]);
-
         if (!rightsRes.ok) throw new Error('Ошибка загрузки уровней прав');
         if (!statusRes.ok) throw new Error('Ошибка загрузки статусов');
 
         const rightsData = await rightsRes.json();
         const statusData = await statusRes.json();
-
         setRightsLevels(rightsData);
         setStatuses(statusData);
       } catch (err) {
@@ -56,13 +50,11 @@ const AdminEmployeeCreate = () => {
         alert('Не удалось загрузить справочники');
       }
     };
-
     fetchDictionaries();
   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setFormData(prev => ({ ...prev, [name]: value }));
     setTouched(prev => ({ ...prev, [name]: true }));
 

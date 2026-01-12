@@ -10,9 +10,7 @@ import {
   LabelList
 } from 'recharts';
 import { useAuth } from '../context/AuthContext';
-
 const API_BASE_URL = 'http://localhost:8000';
-
 const DepositaryBalanceChart = () => {
   const { user } = useAuth();
   const [data, setData] = useState([]);
@@ -30,11 +28,9 @@ const DepositaryBalanceChart = () => {
             },
           }
         );
-
         if (!res.ok) {
           throw new Error('Ошибка загрузки данных');
         }
-
         const result = await res.json();
         setData(result);
       } catch (err) {
@@ -47,19 +43,15 @@ const DepositaryBalanceChart = () => {
 
     fetchChartData();
   }, [user]);
-
   if (loading) {
     return <p>Загрузка диаграммы...</p>;
   }
-
   if (error) {
     return <p style={{ color: 'red' }}>{error}</p>;
   }
-
   if (data.length === 0) {
     return <p>Нет данных для отображения</p>;
   }
-
   return (
     <div style={{ width: '100%', height: 420 }}>
       <h2 style={{ marginBottom: 20 }}>
@@ -85,9 +77,7 @@ const DepositaryBalanceChart = () => {
               `${Number(value).toLocaleString('ru-RU')} шт.`
             }
           />
-
           <Bar dataKey="quantity" fill="#2563eb">
-            {/* 👇 подпись значения ПОД столбцом */}
             <LabelList
               dataKey="quantity"
               position="bottom"

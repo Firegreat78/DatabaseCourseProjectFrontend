@@ -1,3 +1,4 @@
+// src/components/employees/AdminMain.jsx
 import React, { useState, useEffect } from 'react';
 import { Search, ArrowRight, Shield, Plus } from 'lucide-react';
 import AdminHeader from './AdminHeader';

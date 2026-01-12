@@ -28,8 +28,6 @@ import AdminUsersPage from './components/employees/AdminUsers';
 import AdminUsersEdit from './components/employees/AdminUserDetail';
 import ModifyCurrencyPage from './components/employees/ModifyCurrencyPage';
 import ModifyBankPage from './components/employees/ModifyBankPage';
-
-// Компонент для защиты клиентских роутов (обычные пользователи)
 const ProtectedClientRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
@@ -54,8 +52,6 @@ const ProtectedClientRoute = ({ children }) => {
 
   return children;
 };
-
-// Компонент для защиты роутов сотрудников
 const ProtectedEmployeeRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
@@ -80,8 +76,6 @@ const ProtectedEmployeeRoute = ({ children }) => {
 
   return children;
 };
-
-// Компонент для публичных роутов (чтобы после логина не показывать логин снова)
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
@@ -93,9 +87,8 @@ const PublicRoute = ({ children }) => {
     if (user.type === 'client') {
       return <Navigate to="/accounts" replace />;
     }
-    // Если сотрудник уже залогинен и зашёл на клиентский логин — отправляем на employee-login (на всякий случай)
     if (user.type === 'staff') {
-      return <Navigate to="/admin/main" replace />; // или другой дефолтный роут сотрудника
+      return <Navigate to="/admin/main" replace />;
     }
   }
 
@@ -107,13 +100,11 @@ function App() {
     <Router>
       <AuthProvider>
         <Routes>
-          {/* Публичные страницы */}
           <Route path="/" element={<PublicRoute><UserLogin /></PublicRoute>} />
           <Route path="/login" element={<PublicRoute><UserLogin /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><UserRegistration /></PublicRoute>} />
           <Route path="/employee-login" element={<EmployeeLogin />} />
 
-          {/* Защищённые страницы клиентов */}
           <Route path="/accounts" element={<ProtectedClientRoute><AccountsList /></ProtectedClientRoute>} />
           <Route path="/depositary_account" element={<ProtectedClientRoute><DepositaryAccount /></ProtectedClientRoute>} />
           <Route path="/portfolio" element={<ProtectedClientRoute><PortfolioPage /></ProtectedClientRoute>} />
@@ -123,7 +114,6 @@ function App() {
           <Route path="/verification" element={<ProtectedClientRoute><VerificationPage /></ProtectedClientRoute>} />
           <Route path="/account/:id" element={<ProtectedClientRoute><BrokerAccountPage /></ProtectedClientRoute>} />
 
-          {/* Защищённые страницы сотрудников */}
           <Route path="/verifier/main" element={<ProtectedEmployeeRoute><VerifierMainPage /></ProtectedEmployeeRoute>} />
           <Route path="/broker/main" element={<ProtectedEmployeeRoute><BrokerMainPage /></ProtectedEmployeeRoute>} />
           <Route path="/admin/main" element={<ProtectedEmployeeRoute><AdminMainPage /></ProtectedEmployeeRoute>} />
@@ -138,7 +128,6 @@ function App() {
           <Route path="/admin/modify_currency" element={<ProtectedEmployeeRoute><ModifyCurrencyPage /></ProtectedEmployeeRoute>} />
           <Route path="/admin/modify_banks" element={<ProtectedEmployeeRoute><ModifyBankPage /></ProtectedEmployeeRoute>} />
 
-          {/* Редирект на соответствующий логин для неизвестных путей */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </AuthProvider>
