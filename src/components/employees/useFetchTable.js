@@ -1,3 +1,4 @@
+// src/components/employees/useFetchTable.jsx
 import { useState, useEffect } from "react";
 export const useFetchTable = (tableName, token) => {
   const [data, setData] = useState([]);

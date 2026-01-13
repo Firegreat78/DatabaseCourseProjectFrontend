@@ -1,3 +1,4 @@
+// src/components/employees/VerifierUserEdit.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import EmployeeHeader from "./EmployeeHeader";
@@ -6,7 +7,7 @@ import "./AdminMain.css";
 const API_BASE_URL = "http://localhost:8000";
 
 const VerifierUserDetail = () => {
-  const { id } = useParams(); // user_id
+  const { id } = useParams();
   const navigate = useNavigate();
   const token = localStorage.getItem("authToken");
 
@@ -59,7 +60,6 @@ const VerifierUserDetail = () => {
   setUpdating(true);
   try {
     if (statusId === 1) {
-      // DELETE паспорт
       const deleteResp = await fetch(`${API_BASE_URL}/api/verifier/user/${id}/passport`, {
         method: "DELETE",
         headers: {
@@ -81,10 +81,8 @@ const VerifierUserDetail = () => {
         console.log(errorData.detail);
         throw new Error(errorData.detail || "Ошибка при верификации паспорта");
       }
-      // ------------------
     }
 
-    // Обновление статуса (для обоих случаев: 1 или 2)
     const response = await fetch(`${API_BASE_URL}/api/staff/user/${id}`, {
       method: "PUT",
       headers: {

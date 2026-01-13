@@ -1,3 +1,4 @@
+// src/components/employees/ModifyCurrencyPage.jsx
 import React, { useEffect, useState } from "react";
 import AdminHeader from "./AdminHeader";
 import "./ModifyCurrencyPage.css";
@@ -108,7 +109,6 @@ const ModifyCurrencyPage = () => {
       if (currency.edited_symbol !== currency.symbol) {
         body.symbol = currency.edited_symbol;
       }
-      // Не позволяем изменять курс для архивных валют
       if (!currency.archived && 
           currency.edited_rate !== "" && 
           currency.edited_rate !== "—" &&
@@ -190,14 +190,12 @@ const ModifyCurrencyPage = () => {
   const handleRateChange = (id, value) => {
     const currency = currencies.find(c => c.id === id);
     if (currency && currency.archived) {
-      // Не позволяем менять значение для архивных валют
       return;
     }
     handleFieldChange(id, 'edited_rate', value);
   };
 
   const hasChanges = (curr) => {
-    // Для архивных валют нет изменений
     if (curr.archived) return false;
     
     return (

@@ -1,3 +1,4 @@
+// src/components/employees/VerifierMain.jsx
 import React, { useState, useEffect } from "react";
 import EmployeeHeader from "./EmployeeHeader";
 import { Search, ArrowRight, Filter } from 'lucide-react';
@@ -13,21 +14,17 @@ const VerifierMainPage = () => {
 
   const { data: users, loading, error } = useFetchTable("user", token);
   const [query, setQuery] = useState('');
-  const [showPendingOnly, setShowPendingOnly] = useState(true); // Состояние для переключателя
+  const [showPendingOnly, setShowPendingOnly] = useState(true);
 
   if (loading) return <div className="admin-content">Загрузка...</div>;
   if (error) return <div className="admin-content">Ошибка: {error}</div>;
 
-  // Фильтрация и сортировка данных
-  let filteredUsers = users.slice(); // Создаем копию массива
+  let filteredUsers = users.slice();
 
-  // Фильтрация по статусу, если включен переключатель
   if (showPendingOnly) {
     filteredUsers = filteredUsers.filter(u => u.verification_status_id === 3);
-    // Сортировка новых заявок первыми
     filteredUsers.sort((a, b) => b.id - a.id);
   } else {
-    // Общая сортировка: ожидающие верификации вверху
     filteredUsers.sort((a, b) => {
       if (a.verification_status_id === 3 && b.verification_status_id !== 3) return -1;
       if (a.verification_status_id !== 3 && b.verification_status_id === 3) return 1;

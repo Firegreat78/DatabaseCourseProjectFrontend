@@ -1,3 +1,4 @@
+// src/components/employees/ExchangeAdminPage.jsx
 import React, { useEffect, useState } from "react";
 import AdminHeader from "./AdminHeader";
 import { useNavigate } from "react-router-dom";
@@ -40,17 +41,11 @@ const ExchangeAdminPage = () => {
     currency_id: "",
   });
   const [formLoading, setFormLoading] = useState(false);
-
-  // Состояния для валидации
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [serverErrors, setServerErrors] = useState({});
-
-  // Состояние для сохранения изменений
   const [savingId, setSavingId] = useState(null);
-
-  // Загрузка списка акций
   const fetchStocks = async () => {
     setLoading(true);
     setError("");
@@ -60,8 +55,6 @@ const ExchangeAdminPage = () => {
       });
       if (!response.ok) throw new Error("Ошибка загрузки данных");
       const data = await response.json();
-
-      // Добавляем поля для локального редактирования
       const enriched = data.map(stock => ({
         ...stock,
         edited_ticker: stock.ticker,
@@ -138,8 +131,6 @@ const ExchangeAdminPage = () => {
     fetchCurrencies();
     fetchDepositaryOperations();
   }, [token]);
-
-  // Функции для формы
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -456,11 +447,9 @@ const ExchangeAdminPage = () => {
     setTouched({});
     setFormSubmitted(false);
   };
-
-  // Функции для редактирования строк таблицы
   const handleFieldChange = (stockId, fieldName, value) => {
     const stock = stocks.find(s => s.id === stockId);
-    if (stock && stock.is_archived) return; // Не позволяем редактировать архивные
+    if (stock && stock.is_archived) return;
     
     setStocks(prev =>
       prev.map(stock =>
@@ -468,10 +457,8 @@ const ExchangeAdminPage = () => {
       )
     );
   };
-
-  // Проверка наличия изменений
   const hasChanges = (stock) => {
-    if (stock.is_archived) return false; // Архивные нельзя изменять
+    if (stock.is_archived) return false;
     
     return (
       stock.edited_ticker !== stock.ticker ||
@@ -480,8 +467,6 @@ const ExchangeAdminPage = () => {
       stock.edited_price !== (stock.price?.toString() || "")
     );
   };
-
-  // Сохранение изменений акции
   const handleSaveChanges = async (stockId) => {
     const stock = stocks.find(s => s.id === stockId);
     if (!stock || !hasChanges(stock) || stock.is_archived) return;
@@ -549,8 +534,6 @@ const ExchangeAdminPage = () => {
       setSavingId(null);
     }
   };
-
-  // Архивация ценной бумаги (разархивация удалена)
   const handleArchiveStock = async (stockId) => {
     const stock = stocks.find(s => s.id === stockId);
     if (!stock) return;

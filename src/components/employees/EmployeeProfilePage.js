@@ -1,15 +1,15 @@
+// src/components/employees/EmployeeProfilePage.jsx
 import React, { useEffect, useState } from 'react';
 import EmployeeHeader from './EmployeeHeader';
 import './EmployeeProfilePage.css';
 import { useAuth } from '../../context/AuthContext';
-import { User, FileText, ShieldCheck, Briefcase, LogOut, AlertTriangle } from 'lucide-react';
+import { User, FileText, ShieldCheck, Briefcase, AlertTriangle } from 'lucide-react';
 
 const roleMap = {
   1: 'Мегаадминистратор',
   2: 'Администратор',
   3: 'Брокер',
   4: 'Верификатор',
-  5: 'Система'
 };
 
 const statusMap = {
@@ -35,7 +35,6 @@ const EmployeeProfilePage = () => {
     }
   }
 );
-
         const data = await response.json();
 
         if (!response.ok) {

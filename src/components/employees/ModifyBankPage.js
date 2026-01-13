@@ -1,3 +1,4 @@
+// src/components/employees/ModifyBankPage.jsx
 import React, { useEffect, useState } from "react";
 import AdminHeader from "./AdminHeader";
 import "./ModifyBankPage.css";
@@ -33,8 +34,6 @@ const ModifyBankPage = () => {
         throw new Error(errData.detail || "Ошибка загрузки банков");
       }
       const data = await res.json();
-
-      // Добавляем поля для локального редактирования
       const enriched = data.map(bank => ({
         ...bank,
         edited_name: bank.name,
